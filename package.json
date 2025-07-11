@@ -1,8 +1,16 @@
 {
   "name": "factory-dashboard",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "license": "MIT",
+  "author": "Héctor Andrade <andrad_h@hotmail.com>",
+  "description": "A modern, interactive factory monitoring dashboard built with React, TypeScript, and GSAP animations",
+  "keywords": ["factory", "dashboard", "react", "typescript", "gsap", "manufacturing", "monitoring"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/handrades/factory-dashboard-test-01.git"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
