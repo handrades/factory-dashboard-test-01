@@ -40,7 +40,7 @@ export const FactoryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       id: 1,
       name: 'Production Line 1',
       status: 'running',
-      efficiency: 85,
+      efficiency: 85.75,
       equipment: [
         { id: 'oven1', name: 'Industrial Oven', type: 'oven', status: 'running', temperature: 350 },
         { id: 'conveyor1', name: 'Conveyor Belt', type: 'conveyor', status: 'running', speed: 2.5 },
@@ -52,7 +52,7 @@ export const FactoryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       id: 2,
       name: 'Production Line 2',
       status: 'running',
-      efficiency: 92,
+      efficiency: 92.33,
       equipment: [
         { id: 'oven2', name: 'Industrial Oven', type: 'oven', status: 'running', temperature: 325 },
         { id: 'conveyor2', name: 'Conveyor Belt', type: 'conveyor', status: 'running', speed: 3.0 },
@@ -76,7 +76,7 @@ export const FactoryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       id: 4,
       name: 'Production Line 4',
       status: 'running',
-      efficiency: 78,
+      efficiency: 78.92,
       equipment: [
         { id: 'oven4', name: 'Industrial Oven', type: 'oven', status: 'running', temperature: 375 },
         { id: 'conveyor4', name: 'Conveyor Belt', type: 'conveyor', status: 'running', speed: 2.0 },
@@ -88,7 +88,7 @@ export const FactoryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       id: 5,
       name: 'Production Line 5',
       status: 'running',
-      efficiency: 95,
+      efficiency: 95.18,
       equipment: [
         { id: 'oven5', name: 'Industrial Oven', type: 'oven', status: 'running', temperature: 340 },
         { id: 'conveyor5', name: 'Conveyor Belt', type: 'conveyor', status: 'running', speed: 3.2 },
@@ -114,7 +114,7 @@ export const FactoryProvider: React.FC<{ children: React.ReactNode }> = ({ child
         prevLines.map(line => ({
           ...line,
           efficiency: line.status === 'running' ? 
-            Math.max(0, Math.min(100, line.efficiency + (Math.random() - 0.5) * 10)) : 0,
+            Math.round(Math.max(0, Math.min(100, line.efficiency + (Math.random() - 0.5) * 10)) * 100) / 100 : 0,
           equipment: line.equipment.map(eq => ({
             ...eq,
             temperature: eq.type === 'oven' && eq.status === 'running' ? 
