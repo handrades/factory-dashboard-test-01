@@ -7,7 +7,7 @@ import './App.css';
 function App() {
   return (
     <FactoryProvider>
-      <Router>
+      <Router basename="/factory-dashboard-test-01">
         <div className="App">
           <Routes>
             <Route path="/" element={<Dashboard />} />
