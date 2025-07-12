@@ -53,6 +53,13 @@ Equipment objects have:
 - Gradient backgrounds and modern UI design
 - Responsive design for desktop, tablet, and mobile
 
+## Development Notes
+
+- GSAP for equipment simulations
+- TypeScript for type safety
+- Follow existing code patterns when making improvements
+- the `PRD.md` file contains detailed specifications for the intended final state of each component
+
 ## Project Maintenance
 
 ### File Structure Updates
@@ -60,3 +67,9 @@ Equipment objects have:
 
 ## Git Workflow
 - Never commit and push changes, this is something I should tell you when to do it
+
+## TypeScript Best Practices
+- You MUST follow the guidelines in `.cursor/typescript-best-practices.mdc` for all TypeScript code
+
+## Todo List Management
+- Every time you have a todo list make sure to use /sync-todos command

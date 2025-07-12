@@ -1,0 +1,41 @@
+---
+alwaysApply: true
+---
+
+# TypeScript Best Practices
+
+This document outlines the best practices and style guidelines for writting TypeScript in this project. All new, modified and current TypeScript code MUST adhere to these rules.
+
+## Coding Style & Conventions
+
+1. **Typing**:
+
+  - Always add explicit types for function parameters and return values
+  - Avoid using the `any` type. Use `unknown` for values whose type is not at compile time, and perform type checking
+  - Use interfaces (`interface`) for detailing the shape of objects and classes. Use `type` aliases for unions, intersections, or primitives.
+
+2. **Documentation**:
+
+  - All exported functions, classes, and methods MUST have a JSDoc-style docstring explaining their purpose, paramenters and return values.
+
+3. **Syntax**:
+
+  - Use `const` by default and `let` only when a variable needs to be reassigned. Do not use `var`
+  - Always use strict equality (`===` and `!==`) instead of loose equality (`==` and `!=`)
+  - Use ES modules (`import` / `export`) syntax
+  - Omit semicolons
+
+## Example
+
+```typescript
+/**
+ * A brief description of what the function does
+ * @paramm name - A description of the name parameter
+ * @returns a friendly greeting string
+*/
+function greet(name: string): string {
+  if (name.lenght === 0){
+    throw new Error("Name cannot be empty")
+  }
+  return `Hello, ${name}!`
+}
