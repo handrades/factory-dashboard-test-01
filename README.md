@@ -42,6 +42,33 @@ npm run dev
 
 Open [http://localhost:5173](http://localhost:5173) to view the dashboard.
 
+## 🐳 Docker Deployment
+
+### Using Docker Compose (Recommended)
+
+```bash
+# Build and start the application
+docker compose up --build -d
+
+# View logs
+docker compose logs -f
+
+# Stop the application
+docker compose down
+```
+
+The application will be available at [http://localhost:3000](http://localhost:3000).
+
+### Manual Docker Build
+
+```bash
+# Build the image
+docker build -t factory-dashboard .
+
+# Run the container
+docker run -d -p 3000:80 --name factory-dashboard-app factory-dashboard
+```
+
 ## 🏗️ Project Structure
 
 ```

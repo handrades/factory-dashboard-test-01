@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  factory-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    container_name: factory-dashboard-app
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    networks:
+      - factory-network
+
+networks:
+  factory-network:
+    driver: bridge
