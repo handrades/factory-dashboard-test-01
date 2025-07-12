@@ -18,3 +18,4 @@ coverage
 dist
 .DS_Store
 Thumbs.db
+vite.config.ts

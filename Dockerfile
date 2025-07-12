@@ -13,8 +13,8 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build the application
-RUN npm run build
+# Build the application with Docker config
+RUN npx vite build --config vite.config.docker.ts
 
 # Production stage
 FROM nginx:alpine
