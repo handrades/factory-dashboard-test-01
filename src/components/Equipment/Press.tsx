@@ -63,14 +63,6 @@ const Press: React.FC<PressProps> = ({ equipment, isActive }) => {
         ease: "power2.out"
       });
 
-      // Press vibration
-      gsap.to(pressRef.current, {
-        duration: 0.1,
-        x: 1,
-        repeat: -1,
-        yoyo: true,
-        ease: "power2.inOut"
-      });
     } else {
       // Stop animations
       gsap.killTweensOf([pressRef.current, pistonRef.current, gaugeRef.current, ...(particlesRef.current?.children || [])]);
