@@ -2,6 +2,12 @@
 
 A modern, interactive factory monitoring dashboard built with React, TypeScript, and GSAP animations. Monitor production lines, equipment status, and manufacturing processes in real-time.
 
+## 🌐 Live Demo
+
+**[View Live Demo →](https://handrades.github.io/factory-dashboard-test-01/)**
+
+Experience the factory dashboard in action with real-time animations and interactive equipment monitoring.
+
 ![Factory Dashboard](https://img.shields.io/badge/React-18.x-blue?logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)
 ![GSAP](https://img.shields.io/badge/GSAP-3.x-green?logo=greensock)
