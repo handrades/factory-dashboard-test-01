@@ -10,6 +10,7 @@ export default defineConfig({
     assetsDir: 'assets',
     sourcemap: false,
     rollupOptions: {
+      input: 'index.docker.html',
       output: {
         manualChunks: undefined,
       },

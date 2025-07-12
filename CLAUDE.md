@@ -57,3 +57,6 @@ Equipment objects have:
 
 ### File Structure Updates
 - Everytime new files or directories are added to this project. Always update the readme file structure. This way we can always keep it up to date.
+
+## Git Workflow
+- Never commit and push changes, this is something I should tell you when to do it

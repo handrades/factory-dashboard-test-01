@@ -5,9 +5,12 @@ import LineDetail from './pages/LineDetail';
 import './App.css';
 
 function App() {
+  // Use root path for Docker, GitHub Pages path for production
+  const basename = import.meta.env.BASE_URL;
+  
   return (
     <FactoryProvider>
-      <Router basename="/factory-dashboard-test-01">
+      <Router basename={basename}>
         <div className="App">
           <Routes>
             <Route path="/" element={<Dashboard />} />
