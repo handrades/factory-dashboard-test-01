@@ -94,19 +94,19 @@ const LineDetail: React.FC = () => {
                 {equipment.temperature && (
                   <div className="metric">
                     <span className="metric-label">Temperature</span>
-                    <span className="metric-value">{equipment.temperature}°C</span>
+                    <span className="metric-value">{equipment.temperature.toFixed(2)}°C</span>
                   </div>
                 )}
                 {equipment.speed && (
                   <div className="metric">
                     <span className="metric-label">Speed</span>
-                    <span className="metric-value">{equipment.speed} m/s</span>
+                    <span className="metric-value">{equipment.speed.toFixed(2)} m/s</span>
                   </div>
                 )}
                 {equipment.pressure && (
                   <div className="metric">
                     <span className="metric-label">Pressure</span>
-                    <span className="metric-value">{equipment.pressure} bar</span>
+                    <span className="metric-value">{equipment.pressure.toFixed(2)} bar</span>
                   </div>
                 )}
               </div>

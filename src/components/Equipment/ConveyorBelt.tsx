@@ -75,7 +75,7 @@ const ConveyorBelt: React.FC<ConveyorBeltProps> = ({ equipment, isActive }) => {
       <div className="belt-metrics">
         <div className="speed-display">
           <span className="metric-label">Speed</span>
-          <span className="metric-value">{equipment.speed} m/s</span>
+          <span className="metric-value">{equipment.speed?.toFixed(2)} m/s</span>
         </div>
       </div>
       <div className="equipment-label">

@@ -105,7 +105,7 @@ const Press: React.FC<PressProps> = ({ equipment, isActive }) => {
           <div className="control-panel">
             <div className="indicator-light running" />
             <div className="pressure-display">
-              {equipment.pressure} bar
+              {equipment.pressure?.toFixed(2)} bar
             </div>
           </div>
         </div>

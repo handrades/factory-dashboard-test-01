@@ -73,7 +73,7 @@ const IndustrialOven: React.FC<IndustrialOvenProps> = ({ equipment, isActive }) 
           <div className="control-knob" />
           <div className="display">
             <span className="temperature" ref={temperatureRef}>
-              {equipment.temperature}°C
+              {equipment.temperature?.toFixed(2)}°C
             </span>
           </div>
         </div>
