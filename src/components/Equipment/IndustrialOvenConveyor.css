@@ -1,0 +1,477 @@
+.industrial-oven-conveyor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+}
+
+.oven-conveyor-assembly {
+  width: 280px;
+  height: 140px;
+  position: relative;
+  background: linear-gradient(145deg, #e8e8e8, #d0d0d0);
+  border-radius: 12px;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  overflow: visible;
+}
+
+/* Conveyor System */
+.conveyor-system {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  right: 10px;
+  height: 25px;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+.ioc-conveyor-belt {
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    #2a2a2a 0px,
+    #2a2a2a 12px,
+    #3a3a3a 12px,
+    #3a3a3a 24px
+  );
+  border-radius: 12px;
+  background-size: 24px 25px;
+  border: 2px solid #1a1a1a;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.conveyor-items {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.conveyor-item {
+  width: 18px;
+  height: 15px;
+  background: linear-gradient(145deg, #ff7043, #ff5722);
+  border-radius: 3px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  border: 1px solid #e64a19;
+}
+
+.conveyor-item:nth-child(1) { left: -25px; }
+.conveyor-item:nth-child(2) { left: -70px; }
+.conveyor-item:nth-child(3) { left: -115px; }
+.conveyor-item:nth-child(4) { left: -160px; }
+
+.conveyor-rollers {
+  position: absolute;
+  top: 50%;
+  left: -5px;
+  right: -5px;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.ioc-roller {
+  width: 25px;
+  height: 25px;
+  background: radial-gradient(circle, #555, #333);
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 2px solid #444;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.ioc-roller.input { left: 0; }
+.ioc-roller.middle-1 { left: 30%; }
+.ioc-roller.middle-2 { right: 30%; }
+.ioc-roller.output { right: 0; }
+
+.ioc-roller::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: #777;
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Oven Chamber */
+.oven-chamber {
+  position: absolute;
+  top: 15px;
+  left: 60px;
+  right: 60px;
+  bottom: 40px;
+  z-index: 2;
+}
+
+.ioc-oven-body {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(145deg, #f0f0f0, #d8d8d8);
+  border-radius: 8px;
+  position: relative;
+  border: 3px solid #bbb;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.oven-interior {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 35px;
+  bottom: 8px;
+  background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.flame-burners {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.ioc-flame {
+  width: 12px;
+  height: 16px;
+  background: radial-gradient(ellipse, #ff6b00, #ff4500);
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  opacity: 0.8;
+  transform: scale(0.9);
+}
+
+.ioc-flame.secondary {
+  width: 10px;
+  height: 14px;
+  background: radial-gradient(ellipse, #ff8c00, #ff6b00);
+}
+
+.ioc-flame.tertiary {
+  width: 8px;
+  height: 12px;
+  background: radial-gradient(ellipse, #ffa500, #ff8c00);
+}
+
+.heating-elements {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+}
+
+.element {
+  height: 3px;
+  background: linear-gradient(90deg, #ff4500, #ff6b00, #ff4500);
+  border-radius: 2px;
+  opacity: 0.7;
+}
+
+.element.top {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  right: 5px;
+}
+
+.element.bottom {
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+  right: 5px;
+}
+
+.ioc-oven-door {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  bottom: 5px;
+  width: 25px;
+  background: linear-gradient(145deg, #f5f5f5, #e0e0e0);
+  border-radius: 4px;
+  border: 2px solid #ccc;
+}
+
+.ioc-door-window {
+  width: 15px;
+  height: 20px;
+  background: rgba(0,0,0,0.8);
+  border-radius: 2px;
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 1px solid #666;
+}
+
+.window-grid {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  background-image: 
+    linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+  background-size: 4px 4px;
+}
+
+.ioc-door-handle {
+  width: 4px;
+  height: 8px;
+  background: #888;
+  border-radius: 2px;
+  position: absolute;
+  top: 50%;
+  right: 2px;
+  transform: translateY(-50%);
+}
+
+.door-insulation {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 8px;
+  bottom: 2px;
+  border: 1px solid #ddd;
+  border-radius: 2px;
+}
+
+/* Control Panel */
+.control-panel {
+  position: absolute;
+  bottom: -35px;
+  left: 0;
+  right: 0;
+  height: 30px;
+  background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+  border-radius: 6px;
+  border: 2px solid #dee2e6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+}
+
+.control-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.control-knobs {
+  display: flex;
+  gap: 6px;
+}
+
+.ioc-control-knob {
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(circle, #666, #444);
+  border-radius: 50%;
+  position: relative;
+  border: 1px solid #333;
+}
+
+.ioc-control-knob::after {
+  content: '';
+  width: 2px;
+  height: 6px;
+  background: #ccc;
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 1px;
+}
+
+.ioc-control-knob.temp::after { background: #ff6b35; }
+.ioc-control-knob.speed::after { background: #4CAF50; }
+.ioc-control-knob.power::after { background: #2196F3; }
+
+.displays {
+  display: flex;
+  gap: 8px;
+}
+
+.temperature-display,
+.speed-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #000;
+  padding: 2px 4px;
+  border-radius: 2px;
+  min-width: 35px;
+}
+
+.ioc-display-label {
+  font-size: 6px;
+  color: #888;
+  font-family: monospace;
+  font-weight: bold;
+}
+
+.ioc-display-value {
+  font-size: 7px;
+  color: #00ff00;
+  font-family: monospace;
+  font-weight: bold;
+}
+
+.status-indicators {
+  display: flex;
+  gap: 4px;
+}
+
+.indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid #333;
+}
+
+.indicator.heating { background: #ff6b35; box-shadow: 0 0 4px #ff6b35; }
+.indicator.conveyor { background: #4CAF50; box-shadow: 0 0 4px #4CAF50; }
+.indicator.ready { background: #2196F3; box-shadow: 0 0 4px #2196F3; }
+
+/* Exhaust System */
+.exhaust-system {
+  position: absolute;
+  top: -20px;
+  right: 20px;
+  z-index: 3;
+}
+
+.exhaust-duct {
+  width: 30px;
+  height: 25px;
+  background: linear-gradient(145deg, #c0c0c0, #a0a0a0);
+  border-radius: 4px 4px 15px 15px;
+  border: 2px solid #888;
+  position: relative;
+}
+
+.exhaust-fan {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+}
+
+.fan-blade {
+  position: absolute;
+  width: 2px;
+  height: 8px;
+  background: #555;
+  border-radius: 1px;
+  top: 50%;
+  left: 50%;
+  transform-origin: 50% 50%;
+}
+
+.fan-blade:nth-child(1) { transform: translate(-50%, -50%) rotate(0deg); }
+.fan-blade:nth-child(2) { transform: translate(-50%, -50%) rotate(90deg); }
+.fan-blade:nth-child(3) { transform: translate(-50%, -50%) rotate(180deg); }
+.fan-blade:nth-child(4) { transform: translate(-50%, -50%) rotate(270deg); }
+
+.exhaust-output {
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 20px;
+}
+
+.exhaust-particle {
+  width: 3px;
+  height: 3px;
+  background: rgba(200, 200, 200, 0.6);
+  border-radius: 50%;
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+}
+
+.exhaust-particle:nth-child(1) { left: 40%; }
+.exhaust-particle:nth-child(2) { left: 45%; }
+.exhaust-particle:nth-child(3) { left: 50%; }
+.exhaust-particle:nth-child(4) { left: 55%; }
+.exhaust-particle:nth-child(5) { left: 60%; }
+.exhaust-particle:nth-child(6) { left: 50%; }
+
+/* Heat Waves */
+.ioc-heat-waves {
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 3px;
+  z-index: 1;
+}
+
+.ioc-heat-wave {
+  width: 2px;
+  height: 12px;
+  background: linear-gradient(to top, transparent, rgba(255, 100, 0, 0.4));
+  border-radius: 1px;
+}
+
+/* Equipment Label */
+.industrial-oven-conveyor .equipment-label {
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+.industrial-oven-conveyor .equipment-label h3 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.industrial-oven-conveyor .status {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.industrial-oven-conveyor .status.running {
+  background: #e8f5e8;
+  color: #2e7d32;
+}
+
+.industrial-oven-conveyor .status.stopped {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.industrial-oven-conveyor .status.error {
+  background: #ffebee;
+  color: #c62828;
+}

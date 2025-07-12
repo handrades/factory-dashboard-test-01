@@ -5,6 +5,7 @@ import IndustrialOven from '../components/Equipment/IndustrialOven';
 import ConveyorBelt from '../components/Equipment/ConveyorBelt';
 import Press from '../components/Equipment/Press';
 import AssemblyTable from '../components/Equipment/AssemblyTable';
+import IndustrialOvenConveyor from '../components/Equipment/IndustrialOvenConveyor';
 import './LineDetail.css';
 
 const LineDetail: React.FC = () => {
@@ -124,6 +125,7 @@ const getEquipmentComponent = (type: string) => {
     case 'conveyor': return ConveyorBelt;
     case 'press': return Press;
     case 'assembly': return AssemblyTable;
+    case 'oven-conveyor': return IndustrialOvenConveyor;
     default: return IndustrialOven;
   }
 };
