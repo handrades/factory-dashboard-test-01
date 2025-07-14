@@ -12,10 +12,10 @@
     "url": "https://github.com/handrades/factory-dashboard-test-01.git"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "dev": "vite --config config/vite.config.ts",
+    "build": "tsc -b config/tsconfig.json && vite build --config config/vite.config.ts",
+    "lint": "eslint . --config config/eslint.config.js",
+    "preview": "vite preview --config config/vite.config.ts"
   },
   "dependencies": {
     "@types/react-router-dom": "^5.3.3",

@@ -58,7 +58,7 @@ Equipment objects have:
 - GSAP for equipment simulations
 - TypeScript for type safety
 - Follow existing code patterns when making improvements
-- the `PRD.md` file contains detailed specifications for the intended final state of each component
+- the `docs/PRD.md` file contains detailed specifications for the intended final state of each component
 
 ## Project Maintenance
 

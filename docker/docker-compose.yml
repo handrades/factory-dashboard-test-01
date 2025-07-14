@@ -1,10 +1,8 @@
-version: '3.8'
-
 services:
   factory-dashboard:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
     ports:
       - "3000:80"
     container_name: factory-dashboard-app

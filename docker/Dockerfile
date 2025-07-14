@@ -11,10 +11,13 @@ COPY package*.json ./
 RUN npm ci
 
 # Copy source code
-COPY . .
+COPY src ./src
+COPY public ./public
+COPY docker/index.html ./index.html
+COPY config ./config
 
 # Build the application with Docker config
-RUN npx vite build --config vite.config.docker.ts
+RUN npx vite build --config config/vite.config.docker.ts
 
 # Production stage
 FROM nginx:alpine
@@ -23,7 +26,7 @@ FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Copy nginx configuration for React Router
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port 80
 EXPOSE 80
