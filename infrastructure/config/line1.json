@@ -1,0 +1,21 @@
+{
+  "id": 1,
+  "name": "Production Line 1",
+  "status": "running",
+  "efficiency": 85.75,
+  "equipment": [
+    {
+      "id": "oven1",
+      "name": "Industrial Oven",
+      "type": "oven",
+      "status": "running",
+      "temperature": 350
+    },
+    {
+      "id": "assembly1",
+      "name": "Assembly Table",
+      "type": "assembly",
+      "status": "running"
+    }
+  ]
+}

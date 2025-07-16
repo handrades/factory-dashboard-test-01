@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { loadProductionLines } from '../utils/configLoader';
 
 export interface Equipment {
   id: string;
@@ -35,79 +36,7 @@ export const useFactory = () => {
 };
 
 export const FactoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [lines, setLines] = useState<FactoryLine[]>([
-    {
-      id: 1,
-      name: 'Production Line 1',
-      status: 'running',
-      efficiency: 85.75,
-      equipment: [
-        { id: 'oven1', name: 'Industrial Oven', type: 'oven', status: 'running', temperature: 350 },
-        { id: 'conveyor1', name: 'Conveyor Belt', type: 'conveyor', status: 'running', speed: 2.5 },
-        { id: 'press1', name: 'Hydraulic Press', type: 'press', status: 'running', pressure: 150 },
-        { id: 'assembly1', name: 'Assembly Table', type: 'assembly', status: 'running' }
-      ]
-    },
-    {
-      id: 2,
-      name: 'Production Line 2',
-      status: 'running',
-      efficiency: 92.33,
-      equipment: [
-        { id: 'oven2', name: 'Industrial Oven', type: 'oven', status: 'running', temperature: 325 },
-        { id: 'conveyor2', name: 'Conveyor Belt', type: 'conveyor', status: 'running', speed: 3.0 },
-        { id: 'press2', name: 'Hydraulic Press', type: 'press', status: 'running', pressure: 180 },
-        { id: 'assembly2', name: 'Assembly Table', type: 'assembly', status: 'running' }
-      ]
-    },
-    {
-      id: 3,
-      name: 'Production Line 3',
-      status: 'stopped',
-      efficiency: 0,
-      equipment: [
-        { id: 'oven3', name: 'Industrial Oven', type: 'oven', status: 'stopped', temperature: 25 },
-        { id: 'conveyor3', name: 'Conveyor Belt', type: 'conveyor', status: 'stopped', speed: 0 },
-        { id: 'press3', name: 'Hydraulic Press', type: 'press', status: 'stopped', pressure: 0 },
-        { id: 'assembly3', name: 'Assembly Table', type: 'assembly', status: 'stopped' }
-      ]
-    },
-    {
-      id: 4,
-      name: 'Production Line 4',
-      status: 'running',
-      efficiency: 78.92,
-      equipment: [
-        { id: 'oven4', name: 'Industrial Oven', type: 'oven', status: 'running', temperature: 375 },
-        { id: 'conveyor4', name: 'Conveyor Belt', type: 'conveyor', status: 'running', speed: 2.0 },
-        { id: 'press4', name: 'Hydraulic Press', type: 'press', status: 'error', pressure: 0 },
-        { id: 'assembly4', name: 'Assembly Table', type: 'assembly', status: 'running' }
-      ]
-    },
-    {
-      id: 5,
-      name: 'Production Line 5',
-      status: 'running',
-      efficiency: 95.18,
-      equipment: [
-        { id: 'oven5', name: 'Industrial Oven', type: 'oven', status: 'running', temperature: 340 },
-        { id: 'conveyor5', name: 'Conveyor Belt', type: 'conveyor', status: 'running', speed: 3.2 },
-        { id: 'press5', name: 'Hydraulic Press', type: 'press', status: 'running', pressure: 165 },
-        { id: 'assembly5', name: 'Assembly Table', type: 'assembly', status: 'running' }
-      ]
-    },
-    {
-      id: 6,
-      name: 'Production Line 6 - Advanced',
-      status: 'running',
-      efficiency: 88.45,
-      equipment: [
-        { id: 'oven-conveyor1', name: 'Industrial Oven with Conveyor', type: 'oven-conveyor', status: 'running', temperature: 385, speed: 1.8 },
-        { id: 'press6', name: 'Hydraulic Press', type: 'press', status: 'running', pressure: 175 },
-        { id: 'assembly6', name: 'Assembly Table', type: 'assembly', status: 'running' }
-      ]
-    }
-  ]);
+  const [lines, setLines] = useState<FactoryLine[]>(loadProductionLines());
 
   const getLine = (id: number) => lines.find(line => line.id === id);
 

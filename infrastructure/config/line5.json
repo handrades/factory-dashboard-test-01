@@ -1,0 +1,28 @@
+{
+  "id": 5,
+  "name": "Production Line 5",
+  "status": "running",
+  "efficiency": 95.18,
+  "equipment": [
+    {
+      "id": "oven5",
+      "name": "Industrial Oven",
+      "type": "oven",
+      "status": "running",
+      "temperature": 340
+    },
+    {
+      "id": "press5",
+      "name": "Hydraulic Press",
+      "type": "press",
+      "status": "running",
+      "pressure": 165
+    },
+    {
+      "id": "assembly5",
+      "name": "Assembly Table",
+      "type": "assembly",
+      "status": "running"
+    }
+  ]
+}

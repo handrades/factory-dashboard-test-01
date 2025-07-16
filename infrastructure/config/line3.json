@@ -1,0 +1,21 @@
+{
+  "id": 3,
+  "name": "Production Line 3",
+  "status": "stopped",
+  "efficiency": 0,
+  "equipment": [
+    {
+      "id": "press3",
+      "name": "Hydraulic Press",
+      "type": "press",
+      "status": "stopped",
+      "pressure": 0
+    },
+    {
+      "id": "assembly3",
+      "name": "Assembly Table",
+      "type": "assembly",
+      "status": "stopped"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": 4,
+  "name": "Production Line 4",
+  "status": "running",
+  "efficiency": 78.92,
+  "equipment": [
+    {
+      "id": "oven-conveyor4",
+      "name": "Industrial Oven with Conveyor",
+      "type": "oven-conveyor",
+      "status": "running",
+      "temperature": 385,
+      "speed": 1.8
+    },
+    {
+      "id": "press4",
+      "name": "Hydraulic Press",
+      "type": "press",
+      "status": "running",
+      "pressure": 175
+    },
+    {
+      "id": "assembly4",
+      "name": "Assembly Table",
+      "type": "assembly",
+      "status": "running"
+    }
+  ]
+}

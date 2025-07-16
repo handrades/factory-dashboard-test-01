@@ -15,6 +15,7 @@ COPY src ./src
 COPY public ./public
 COPY docker/index.html ./index.html
 COPY config ./config
+COPY infrastructure ./infrastructure
 
 # Build the application with Docker config
 RUN npx vite build --config config/vite.config.docker.ts
