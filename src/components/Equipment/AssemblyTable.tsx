@@ -76,14 +76,6 @@ const AssemblyTable: React.FC<AssemblyTableProps> = ({ equipment, isActive }) =>
         ease: "power2.out"
       });
 
-      // Table vibration during assembly
-      gsap.to(tableRef.current, {
-        duration: 0.1,
-        x: 0.5,
-        repeat: -1,
-        yoyo: true,
-        ease: "power2.inOut"
-      });
     } else {
       // Stop animations
       gsap.killTweensOf([tableRef.current, robotArmRef.current, ...(partsRef.current?.children || []), ...(sparksRef.current?.children || [])]);
