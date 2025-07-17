@@ -49,7 +49,7 @@ const Dashboard: React.FC = () => {
               </div>
               <div className="stat">
                 <span className="stat-label">Efficiency</span>
-                <span className="stat-value">{line.efficiency}%</span>
+                <span className="stat-value">{line.efficiency.toFixed(2)}%</span>
               </div>
               <div className="stat">
                 <span className="stat-label">Equipment</span>

@@ -50,7 +50,7 @@ const LineDetail: React.FC = () => {
               style={{ backgroundColor: getStatusColor(line.status) }}
             />
             <span className="status-text">{line.status.toUpperCase()}</span>
-            <span className="efficiency">Efficiency: {line.efficiency}%</span>
+            <span className="efficiency">Efficiency: {line.efficiency.toFixed(2)}%</span>
           </div>
         </div>
       </header>
