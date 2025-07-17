@@ -1,0 +1,74 @@
+{
+  "environment": "production",
+  "services": {
+    "plc-emulator": {
+      "updateInterval": 2000,
+      "heartbeatInterval": 60000,
+      "logLevel": "info",
+      "enableHealthChecks": true,
+      "healthCheckPort": 3000,
+      "redis": {
+        "host": "redis-prod",
+        "port": 6379,
+        "database": 0,
+        "maxRetries": 5,
+        "retryDelay": 2000,
+        "connectionPoolSize": 10
+      },
+      "configPath": "./config/production-lines/all-equipment.json",
+      "watchConfigChanges": true
+    },
+    "queue-consumer": {
+      "concurrency": 10,
+      "batchSize": 20,
+      "processingTimeout": 10000,
+      "logLevel": "info",
+      "enableHealthChecks": true,
+      "healthCheckPort": 8080,
+      "redis": {
+        "host": "redis-prod",
+        "port": 6379,
+        "database": 0,
+        "consumerGroup": "prod-consumers",
+        "deadLetterQueue": "prod-dead-letter-queue"
+      },
+      "influxdb": {
+        "url": "http://influxdb-prod:8086",
+        "token": "${INFLUXDB_TOKEN}",
+        "org": "factory-dashboard",
+        "bucket": "factory-data-prod",
+        "timeout": 5000
+      },
+      "writeOptions": {
+        "batchSize": 200,
+        "flushInterval": 1000,
+        "retryAttempts": 5,
+        "retryDelay": 2000
+      }
+    }
+  },
+  "monitoring": {
+    "metricsEnabled": true,
+    "tracingEnabled": true,
+    "healthCheckInterval": 15000,
+    "alerting": {
+      "enabled": true,
+      "thresholds": {
+        "errorRate": 0.01,
+        "responseTime": 1000,
+        "queueSize": 500
+      }
+    }
+  },
+  "security": {
+    "encryption": {
+      "enabled": true,
+      "algorithm": "aes-256-gcm",
+      "keyRotationInterval": 86400000
+    },
+    "authentication": {
+      "enabled": true,
+      "tokenExpiration": 3600000
+    }
+  }
+}

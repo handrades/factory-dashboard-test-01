@@ -1,0 +1,164 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Equipment Configuration",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the equipment"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name for the equipment"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["oven", "conveyor", "press", "assembly", "oven-conveyor"],
+      "description": "Type of equipment"
+    },
+    "lineId": {
+      "type": "string",
+      "description": "ID of the production line this equipment belongs to"
+    },
+    "tags": {
+      "type": "array",
+      "description": "PLC tags associated with this equipment",
+      "items": {
+        "$ref": "#/definitions/PLCTag"
+      },
+      "minItems": 1
+    },
+    "states": {
+      "type": "array",
+      "description": "Possible states for this equipment",
+      "items": {
+        "$ref": "#/definitions/EquipmentState"
+      },
+      "minItems": 1
+    },
+    "currentState": {
+      "type": "string",
+      "description": "Current state of the equipment"
+    }
+  },
+  "required": ["id", "name", "type", "lineId", "tags", "states", "currentState"],
+  "definitions": {
+    "PLCTag": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the tag"
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name for the tag"
+        },
+        "equipmentId": {
+          "type": "string",
+          "description": "ID of the equipment this tag belongs to"
+        },
+        "dataType": {
+          "type": "string",
+          "enum": ["BOOL", "INT", "REAL", "DINT"],
+          "description": "Data type of the tag value"
+        },
+        "address": {
+          "type": "string",
+          "description": "PLC address for the tag"
+        },
+        "value": {
+          "description": "Current value of the tag"
+        },
+        "behavior": {
+          "$ref": "#/definitions/TagBehavior"
+        }
+      },
+      "required": ["id", "name", "equipmentId", "dataType", "address"]
+    },
+    "TagBehavior": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["sinusoidal", "linear", "random", "stepped", "constant"],
+          "description": "Type of behavior for value generation"
+        },
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "min": {"type": "number"},
+            "max": {"type": "number"},
+            "period": {"type": "number"},
+            "amplitude": {"type": "number"},
+            "offset": {"type": "number"},
+            "slope": {"type": "number"},
+            "stepValues": {"type": "array"},
+            "stepDuration": {"type": "number"},
+            "constantValue": {}
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": ["type", "parameters"]
+    },
+    "EquipmentState": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the state"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the state"
+        },
+        "tagOverrides": {
+          "type": "array",
+          "description": "Tag value overrides for this state",
+          "items": {
+            "type": "object",
+            "properties": {
+              "tagId": {"type": "string"},
+              "value": {}
+            },
+            "required": ["tagId", "value"]
+          }
+        },
+        "transitions": {
+          "type": "array",
+          "description": "Possible transitions from this state",
+          "items": {
+            "$ref": "#/definitions/StateTransition"
+          }
+        }
+      },
+      "required": ["name", "description", "tagOverrides", "transitions"]
+    },
+    "StateTransition": {
+      "type": "object",
+      "properties": {
+        "toState": {
+          "type": "string",
+          "description": "Target state for the transition"
+        },
+        "condition": {
+          "type": "string",
+          "description": "Condition that triggers the transition"
+        },
+        "probability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Probability of this transition occurring"
+        },
+        "delay": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Delay in milliseconds before transition"
+        }
+      },
+      "required": ["toState", "condition"]
+    }
+  }
+}

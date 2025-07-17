@@ -1,6 +1,9 @@
 {
   "id": 6,
   "name": "Production Line 6",
+  "site": "mexico",
+  "type": "esm",
+  "line": 6,
   "status": "running",
   "efficiency": 88.45,
   "equipment": [
@@ -9,28 +12,155 @@
       "name": "Industrial Oven",
       "type": "oven",
       "status": "running",
-      "temperature": 340
+      "tags": [
+        {
+          "id": "temperature",
+          "name": "Oven Temperature",
+          "dataType": "REAL",
+          "value": 340,
+          "behavior": {
+            "type": "sinusoidal",
+            "parameters": {
+              "min": 320,
+              "max": 360,
+              "period": 95000,
+              "amplitude": 18,
+              "offset": 340
+            }
+          }
+        },
+        {
+          "id": "heating_status",
+          "name": "Heating Status",
+          "dataType": "BOOL",
+          "value": true,
+          "behavior": {
+            "type": "constant",
+            "parameters": {
+              "constantValue": true
+            }
+          }
+        }
+      ]
     },
     {
       "id": "press6",
       "name": "Hydraulic Press",
       "type": "press",
       "status": "running",
-      "pressure": 165
+      "tags": [
+        {
+          "id": "pressure",
+          "name": "Hydraulic Pressure",
+          "dataType": "REAL",
+          "value": 165,
+          "behavior": {
+            "type": "sinusoidal",
+            "parameters": {
+              "min": 145,
+              "max": 185,
+              "period": 70000,
+              "amplitude": 15,
+              "offset": 165
+            }
+          }
+        },
+        {
+          "id": "pump_status",
+          "name": "Pump Status",
+          "dataType": "BOOL",
+          "value": true,
+          "behavior": {
+            "type": "constant",
+            "parameters": {
+              "constantValue": true
+            }
+          }
+        }
+      ]
     },
     {
       "id": "oven-conveyor6",
       "name": "Industrial Oven with Conveyor",
       "type": "oven-conveyor",
       "status": "running",
-      "temperature": 385,
-      "speed": 1.8
+      "tags": [
+        {
+          "id": "temperature",
+          "name": "Oven Temperature",
+          "dataType": "REAL",
+          "value": 385,
+          "behavior": {
+            "type": "sinusoidal",
+            "parameters": {
+              "min": 370,
+              "max": 400,
+              "period": 120000,
+              "amplitude": 15,
+              "offset": 385
+            }
+          }
+        },
+        {
+          "id": "speed",
+          "name": "Conveyor Speed",
+          "dataType": "REAL",
+          "value": 1.8,
+          "behavior": {
+            "type": "random",
+            "parameters": {
+              "min": 1.6,
+              "max": 2.0
+            }
+          }
+        },
+        {
+          "id": "combined_status",
+          "name": "Combined System Status",
+          "dataType": "BOOL",
+          "value": true,
+          "behavior": {
+            "type": "constant",
+            "parameters": {
+              "constantValue": true
+            }
+          }
+        }
+      ]
     },
     {
       "id": "assembly6",
       "name": "Assembly Table",
       "type": "assembly",
-      "status": "running"
+      "status": "running",
+      "tags": [
+        {
+          "id": "cycle_count",
+          "name": "Assembly Cycle Count",
+          "dataType": "INT",
+          "value": 0,
+          "behavior": {
+            "type": "linear",
+            "parameters": {
+              "min": 0,
+              "max": 1000,
+              "slope": 1
+            }
+          }
+        },
+        {
+          "id": "active_status",
+          "name": "Assembly Active Status",
+          "dataType": "BOOL",
+          "value": true,
+          "behavior": {
+            "type": "constant",
+            "parameters": {
+              "constantValue": true
+            }
+          }
+        }
+      ]
     }
   ]
 }

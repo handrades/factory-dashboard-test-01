@@ -1,6 +1,9 @@
 {
   "id": 3,
   "name": "Production Line 3",
+  "site": "china",
+  "type": "fleece",
+  "line": 3,
   "status": "stopped",
   "efficiency": 0,
   "equipment": [
@@ -9,13 +12,64 @@
       "name": "Hydraulic Press",
       "type": "press",
       "status": "stopped",
-      "pressure": 0
+      "tags": [
+        {
+          "id": "pressure",
+          "name": "Hydraulic Pressure",
+          "dataType": "REAL",
+          "value": 0,
+          "behavior": {
+            "type": "constant",
+            "parameters": {
+              "constantValue": 0
+            }
+          }
+        },
+        {
+          "id": "pump_status",
+          "name": "Pump Status",
+          "dataType": "BOOL",
+          "value": false,
+          "behavior": {
+            "type": "constant",
+            "parameters": {
+              "constantValue": false
+            }
+          }
+        }
+      ]
     },
     {
       "id": "assembly3",
       "name": "Assembly Table",
       "type": "assembly",
-      "status": "stopped"
+      "status": "stopped",
+      "tags": [
+        {
+          "id": "cycle_count",
+          "name": "Assembly Cycle Count",
+          "dataType": "INT",
+          "value": 0,
+          "behavior": {
+            "type": "constant",
+            "parameters": {
+              "constantValue": 0
+            }
+          }
+        },
+        {
+          "id": "active_status",
+          "name": "Assembly Active Status",
+          "dataType": "BOOL",
+          "value": false,
+          "behavior": {
+            "type": "constant",
+            "parameters": {
+              "constantValue": false
+            }
+          }
+        }
+      ]
     }
   ]
 }

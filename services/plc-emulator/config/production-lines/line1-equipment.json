@@ -1,0 +1,302 @@
+[
+  {
+    "id": "oven1",
+    "name": "Industrial Oven Line 1",
+    "type": "oven",
+    "lineId": "line1",
+    "currentState": "running",
+    "states": [
+      {
+        "name": "startup",
+        "description": "Oven is starting up and heating to operational temperature",
+        "tagOverrides": [
+          { "tagId": "heating_status", "value": true },
+          { "tagId": "door_status", "value": false },
+          { "tagId": "fan_status", "value": true }
+        ],
+        "transitions": [
+          { "toState": "running", "condition": "temperature_reached", "delay": 30000 },
+          { "toState": "fault", "condition": "heating_failure", "probability": 0.001 }
+        ]
+      },
+      {
+        "name": "running",
+        "description": "Oven is running at operational temperature",
+        "tagOverrides": [
+          { "tagId": "heating_status", "value": true },
+          { "tagId": "door_status", "value": false },
+          { "tagId": "fan_status", "value": true }
+        ],
+        "transitions": [
+          { "toState": "stopped", "condition": "manual_stop" },
+          { "toState": "fault", "condition": "temperature_fault", "probability": 0.005 },
+          { "toState": "maintenance", "condition": "scheduled_maintenance", "probability": 0.0001 }
+        ]
+      },
+      {
+        "name": "stopped",
+        "description": "Oven is stopped and cooling down",
+        "tagOverrides": [
+          { "tagId": "heating_status", "value": false },
+          { "tagId": "door_status", "value": true },
+          { "tagId": "fan_status", "value": false }
+        ],
+        "transitions": [
+          { "toState": "startup", "condition": "manual_start" }
+        ]
+      },
+      {
+        "name": "fault",
+        "description": "Oven has a fault condition requiring attention",
+        "tagOverrides": [
+          { "tagId": "heating_status", "value": false },
+          { "tagId": "door_status", "value": true },
+          { "tagId": "fan_status", "value": false },
+          { "tagId": "fault_status", "value": true }
+        ],
+        "transitions": [
+          { "toState": "stopped", "condition": "fault_reset" }
+        ]
+      },
+      {
+        "name": "maintenance",
+        "description": "Oven is in maintenance mode",
+        "tagOverrides": [
+          { "tagId": "heating_status", "value": false },
+          { "tagId": "door_status", "value": true },
+          { "tagId": "fan_status", "value": false },
+          { "tagId": "maintenance_mode", "value": true }
+        ],
+        "transitions": [
+          { "toState": "stopped", "condition": "maintenance_complete" }
+        ]
+      }
+    ],
+    "tags": [
+      {
+        "id": "temperature",
+        "name": "Oven Temperature",
+        "equipmentId": "oven1",
+        "dataType": "REAL",
+        "address": "DB1.DBD0",
+        "value": 350,
+        "behavior": {
+          "type": "sinusoidal",
+          "parameters": {
+            "min": 320,
+            "max": 380,
+            "period": 180000,
+            "amplitude": 15,
+            "offset": 350
+          }
+        }
+      },
+      {
+        "id": "heating_status",
+        "name": "Heating Element Status",
+        "equipmentId": "oven1",
+        "dataType": "BOOL",
+        "address": "DB1.DBX4.0",
+        "value": true,
+        "behavior": {
+          "type": "constant",
+          "parameters": {
+            "constantValue": true
+          }
+        }
+      },
+      {
+        "id": "door_status",
+        "name": "Door Status",
+        "equipmentId": "oven1",
+        "dataType": "BOOL",
+        "address": "DB1.DBX4.1",
+        "value": false,
+        "behavior": {
+          "type": "constant",
+          "parameters": {
+            "constantValue": false
+          }
+        }
+      },
+      {
+        "id": "fan_status",
+        "name": "Circulation Fan Status",
+        "equipmentId": "oven1",
+        "dataType": "BOOL",
+        "address": "DB1.DBX4.2",
+        "value": true,
+        "behavior": {
+          "type": "constant",
+          "parameters": {
+            "constantValue": true
+          }
+        }
+      },
+      {
+        "id": "fault_status",
+        "name": "Fault Status",
+        "equipmentId": "oven1",
+        "dataType": "BOOL",
+        "address": "DB1.DBX4.3",
+        "value": false,
+        "behavior": {
+          "type": "constant",
+          "parameters": {
+            "constantValue": false
+          }
+        }
+      },
+      {
+        "id": "maintenance_mode",
+        "name": "Maintenance Mode",
+        "equipmentId": "oven1",
+        "dataType": "BOOL",
+        "address": "DB1.DBX4.4",
+        "value": false,
+        "behavior": {
+          "type": "constant",
+          "parameters": {
+            "constantValue": false
+          }
+        }
+      },
+      {
+        "id": "energy_consumption",
+        "name": "Energy Consumption",
+        "equipmentId": "oven1",
+        "dataType": "REAL",
+        "address": "DB1.DBD8",
+        "value": 15.5,
+        "behavior": {
+          "type": "random",
+          "parameters": {
+            "min": 12.0,
+            "max": 18.0
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "assembly1",
+    "name": "Assembly Table Line 1",
+    "type": "assembly",
+    "lineId": "line1",
+    "currentState": "running",
+    "states": [
+      {
+        "name": "running",
+        "description": "Assembly table is operating normally",
+        "tagOverrides": [
+          { "tagId": "station1_active", "value": true },
+          { "tagId": "station2_active", "value": true }
+        ],
+        "transitions": [
+          { "toState": "stopped", "condition": "manual_stop" },
+          { "toState": "fault", "condition": "station_fault", "probability": 0.002 }
+        ]
+      },
+      {
+        "name": "stopped",
+        "description": "Assembly table is stopped",
+        "tagOverrides": [
+          { "tagId": "station1_active", "value": false },
+          { "tagId": "station2_active", "value": false },
+          { "tagId": "cycle_time", "value": 0 }
+        ],
+        "transitions": [
+          { "toState": "running", "condition": "manual_start" }
+        ]
+      },
+      {
+        "name": "fault",
+        "description": "Assembly table has a fault condition",
+        "tagOverrides": [
+          { "tagId": "station1_active", "value": false },
+          { "tagId": "station2_active", "value": false },
+          { "tagId": "fault_status", "value": true }
+        ],
+        "transitions": [
+          { "toState": "stopped", "condition": "fault_reset" }
+        ]
+      }
+    ],
+    "tags": [
+      {
+        "id": "station1_active",
+        "name": "Station 1 Active",
+        "equipmentId": "assembly1",
+        "dataType": "BOOL",
+        "address": "DB2.DBX0.0",
+        "value": true,
+        "behavior": {
+          "type": "stepped",
+          "parameters": {
+            "stepValues": [true, false, true, false, true],
+            "stepDuration": 12000
+          }
+        }
+      },
+      {
+        "id": "station2_active",
+        "name": "Station 2 Active",
+        "equipmentId": "assembly1",
+        "dataType": "BOOL",
+        "address": "DB2.DBX0.1",
+        "value": false,
+        "behavior": {
+          "type": "stepped",
+          "parameters": {
+            "stepValues": [false, true, false, true, false],
+            "stepDuration": 12000
+          }
+        }
+      },
+      {
+        "id": "cycle_time",
+        "name": "Assembly Cycle Time",
+        "equipmentId": "assembly1",
+        "dataType": "REAL",
+        "address": "DB2.DBD4",
+        "value": 28.5,
+        "behavior": {
+          "type": "random",
+          "parameters": {
+            "min": 25.0,
+            "max": 35.0
+          }
+        }
+      },
+      {
+        "id": "parts_completed",
+        "name": "Parts Completed Count",
+        "equipmentId": "assembly1",
+        "dataType": "DINT",
+        "address": "DB2.DBD8",
+        "value": 0,
+        "behavior": {
+          "type": "stepped",
+          "parameters": {
+            "stepValues": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            "stepDuration": 30000
+          }
+        }
+      },
+      {
+        "id": "fault_status",
+        "name": "Fault Status",
+        "equipmentId": "assembly1",
+        "dataType": "BOOL",
+        "address": "DB2.DBX0.2",
+        "value": false,
+        "behavior": {
+          "type": "constant",
+          "parameters": {
+            "constantValue": false
+          }
+        }
+      }
+    ]
+  }
+]

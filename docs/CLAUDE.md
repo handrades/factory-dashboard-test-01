@@ -70,6 +70,3 @@ Equipment objects have:
 
 ## TypeScript Best Practices
 - You MUST follow the guidelines in `.cursor/typescript-best-practices.mdc` for all TypeScript code
-
-## Todo List Management
-- Every time you have a todo list make sure to use /sync-todos command

@@ -1,0 +1,184 @@
+import { createCipher, createDecipher, randomBytes, createHash } from 'crypto';
+
+export interface EncryptionConfig {
+  algorithm: string;
+  keyLength: number;
+  ivLength: number;
+}
+
+export interface EncryptedData {
+  data: string;
+  iv: string;
+  tag?: string;
+  algorithm: string;
+}
+
+export class ConfigEncryption {
+  private config: EncryptionConfig;
+  private key: Buffer;
+
+  constructor(secretKey: string, config?: Partial<EncryptionConfig>) {
+    this.config = {
+      algorithm: 'aes-256-gcm',
+      keyLength: 32,
+      ivLength: 16,
+      ...config
+    };
+    
+    this.key = this.deriveKey(secretKey);
+  }
+
+  private deriveKey(secretKey: string): Buffer {
+    return createHash('sha256').update(secretKey).digest();
+  }
+
+  encrypt(data: string): EncryptedData {
+    const iv = randomBytes(this.config.ivLength);
+    
+    if (this.config.algorithm.includes('gcm')) {
+      return this.encryptGCM(data, iv);
+    } else {
+      return this.encryptCBC(data, iv);
+    }
+  }
+
+  private encryptGCM(data: string, iv: Buffer): EncryptedData {
+    const cipher = createCipher(this.config.algorithm, this.key);
+    cipher.setAutoPadding(true);
+    
+    let encrypted = cipher.update(data, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    
+    const tag = (cipher as any).getAuthTag();
+    
+    return {
+      data: encrypted,
+      iv: iv.toString('hex'),
+      tag: tag.toString('hex'),
+      algorithm: this.config.algorithm
+    };
+  }
+
+  private encryptCBC(data: string, iv: Buffer): EncryptedData {
+    const cipher = createCipher(this.config.algorithm, this.key);
+    
+    let encrypted = cipher.update(data, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    
+    return {
+      data: encrypted,
+      iv: iv.toString('hex'),
+      algorithm: this.config.algorithm
+    };
+  }
+
+  decrypt(encryptedData: EncryptedData): string {
+    const iv = Buffer.from(encryptedData.iv, 'hex');
+    
+    if (encryptedData.algorithm.includes('gcm')) {
+      return this.decryptGCM(encryptedData, iv);
+    } else {
+      return this.decryptCBC(encryptedData, iv);
+    }
+  }
+
+  private decryptGCM(encryptedData: EncryptedData, iv: Buffer): string {
+    const decipher = createDecipher(encryptedData.algorithm, this.key);
+    
+    if (encryptedData.tag) {
+      (decipher as any).setAuthTag(Buffer.from(encryptedData.tag, 'hex'));
+    }
+    
+    let decrypted = decipher.update(encryptedData.data, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    
+    return decrypted;
+  }
+
+  private decryptCBC(encryptedData: EncryptedData, iv: Buffer): string {
+    const decipher = createDecipher(encryptedData.algorithm, this.key);
+    
+    let decrypted = decipher.update(encryptedData.data, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    
+    return decrypted;
+  }
+
+  encryptConfiguration(config: any): EncryptedData {
+    const configStr = JSON.stringify(config);
+    return this.encrypt(configStr);
+  }
+
+  decryptConfiguration(encryptedData: EncryptedData): any {
+    const configStr = this.decrypt(encryptedData);
+    return JSON.parse(configStr);
+  }
+
+  // Utility methods for environment variable encryption
+  static encryptEnvVar(value: string, secretKey: string): string {
+    const encryption = new ConfigEncryption(secretKey);
+    const encrypted = encryption.encrypt(value);
+    return Buffer.from(JSON.stringify(encrypted)).toString('base64');
+  }
+
+  static decryptEnvVar(encryptedValue: string, secretKey: string): string {
+    const encryption = new ConfigEncryption(secretKey);
+    const encryptedData = JSON.parse(Buffer.from(encryptedValue, 'base64').toString());
+    return encryption.decrypt(encryptedData);
+  }
+
+  // Key rotation support
+  rotateKey(newSecretKey: string): ConfigEncryption {
+    return new ConfigEncryption(newSecretKey, this.config);
+  }
+
+  // Secure comparison to prevent timing attacks
+  static secureCompare(a: string, b: string): boolean {
+    if (a.length !== b.length) {
+      return false;
+    }
+    
+    let result = 0;
+    for (let i = 0; i < a.length; i++) {
+      result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    }
+    
+    return result === 0;
+  }
+}
+
+// Environment variable helper
+export class SecureEnvironment {
+  private encryption: ConfigEncryption;
+
+  constructor(secretKey: string) {
+    this.encryption = new ConfigEncryption(secretKey);
+  }
+
+  getSecureEnvVar(name: string, defaultValue?: string): string {
+    const encryptedValue = process.env[name];
+    
+    if (!encryptedValue) {
+      if (defaultValue !== undefined) {
+        return defaultValue;
+      }
+      throw new Error(`Required environment variable ${name} not found`);
+    }
+
+    try {
+      return ConfigEncryption.decryptEnvVar(encryptedValue, process.env.ENCRYPTION_KEY || 'default-key');
+    } catch (error) {
+      console.error(`Failed to decrypt environment variable ${name}:`, error);
+      if (defaultValue !== undefined) {
+        return defaultValue;
+      }
+      throw error;
+    }
+  }
+
+  setSecureEnvVar(name: string, value: string): string {
+    const encrypted = ConfigEncryption.encryptEnvVar(value, process.env.ENCRYPTION_KEY || 'default-key');
+    process.env[name] = encrypted;
+    return encrypted;
+  }
+}
