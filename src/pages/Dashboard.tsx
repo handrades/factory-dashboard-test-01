@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFactory } from '../context/FactoryContext';
+import { ConnectionStatus } from '../components/ConnectionStatus';
 import './Dashboard.css';
 
 const Dashboard: React.FC = () => {
@@ -22,6 +23,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="dashboard">
+      <ConnectionStatus />
       <header className="dashboard-header">
         <h1>Factory Dashboard</h1>
         <p>Monitor and control all production lines</p>

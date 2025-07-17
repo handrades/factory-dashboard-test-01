@@ -1,0 +1,333 @@
+import { createLogger, format, transports, Logger } from 'winston';
+import { v4 as uuidv4 } from 'uuid';
+
+export interface LogContext {
+  service: string;
+  version: string;
+  environment: string;
+  correlationId?: string;
+  userId?: string;
+  requestId?: string;
+  equipmentId?: string;
+  messageId?: string;
+  [key: string]: any;
+}
+
+export interface LogEntry {
+  timestamp: string;
+  level: string;
+  message: string;
+  context: LogContext;
+  error?: {
+    name: string;
+    message: string;
+    stack?: string;
+  };
+  duration?: number;
+  metadata?: Record<string, any>;
+}
+
+export class FactoryLogger {
+  private logger: Logger;
+  private context: LogContext;
+  private static instance: FactoryLogger;
+
+  constructor(context: LogContext) {
+    this.context = context;
+    this.logger = this.createLogger();
+  }
+
+  static getInstance(context: LogContext): FactoryLogger {
+    if (!FactoryLogger.instance) {
+      FactoryLogger.instance = new FactoryLogger(context);
+    }
+    return FactoryLogger.instance;
+  }
+
+  private createLogger(): Logger {
+    const logLevel = process.env.LOG_LEVEL || 'info';
+    const environment = process.env.NODE_ENV || 'development';
+    
+    const logFormat = format.combine(
+      format.timestamp(),
+      format.errors({ stack: true }),
+      format.json(),
+      format.printf((info) => {
+        const logEntry: LogEntry = {
+          timestamp: info.timestamp,
+          level: info.level,
+          message: info.message,
+          context: {
+            ...this.context,
+            ...(info.context || {})
+          },
+          error: info.error,
+          duration: info.duration,
+          metadata: info.metadata
+        };
+        return JSON.stringify(logEntry);
+      })
+    );
+
+    const logTransports = [
+      new transports.Console({
+        format: environment === 'development' 
+          ? format.combine(
+              format.colorize(),
+              format.simple(),
+              format.printf((info) => {
+                return `${info.timestamp} [${info.level}] ${this.context.service}: ${info.message}`;
+              })
+            )
+          : logFormat
+      })
+    ];
+
+    // Add file transport for production
+    if (environment === 'production') {
+      logTransports.push(
+        new transports.File({
+          filename: `logs/${this.context.service}-error.log`,
+          level: 'error',
+          format: logFormat,
+          maxsize: 5242880, // 5MB
+          maxFiles: 10
+        }),
+        new transports.File({
+          filename: `logs/${this.context.service}-combined.log`,
+          format: logFormat,
+          maxsize: 5242880, // 5MB
+          maxFiles: 10
+        })
+      );
+    }
+
+    return createLogger({
+      level: logLevel,
+      format: logFormat,
+      transports: logTransports,
+      exceptionHandlers: [
+        new transports.File({ filename: `logs/${this.context.service}-exceptions.log` })
+      ],
+      rejectionHandlers: [
+        new transports.File({ filename: `logs/${this.context.service}-rejections.log` })
+      ]
+    });
+  }
+
+  // Core logging methods
+  debug(message: string, context?: Partial<LogContext>, metadata?: Record<string, any>): void {
+    this.logger.debug(message, { context, metadata });
+  }
+
+  info(message: string, context?: Partial<LogContext>, metadata?: Record<string, any>): void {
+    this.logger.info(message, { context, metadata });
+  }
+
+  warn(message: string, context?: Partial<LogContext>, metadata?: Record<string, any>): void {
+    this.logger.warn(message, { context, metadata });
+  }
+
+  error(message: string, error?: Error, context?: Partial<LogContext>, metadata?: Record<string, any>): void {
+    this.logger.error(message, {
+      error: error ? {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      } : undefined,
+      context,
+      metadata
+    });
+  }
+
+  // Specialized logging methods
+  logRequest(method: string, url: string, correlationId?: string, userId?: string): void {
+    this.info(`${method} ${url}`, {
+      correlationId: correlationId || uuidv4(),
+      userId,
+      requestId: uuidv4()
+    });
+  }
+
+  logResponse(method: string, url: string, statusCode: number, duration: number, correlationId?: string): void {
+    this.info(`${method} ${url} ${statusCode}`, {
+      correlationId
+    }, {
+      statusCode,
+      duration
+    });
+  }
+
+  logEquipmentEvent(equipmentId: string, event: string, data?: any, correlationId?: string): void {
+    this.info(`Equipment event: ${event}`, {
+      equipmentId,
+      correlationId
+    }, {
+      event,
+      data
+    });
+  }
+
+  logMessageProcessed(messageId: string, equipmentId: string, success: boolean, duration: number, correlationId?: string): void {
+    const message = success ? 'Message processed successfully' : 'Message processing failed';
+    const logMethod = success ? this.info.bind(this) : this.error.bind(this);
+    
+    if (success) {
+      (logMethod as any)(message, {
+        messageId,
+        equipmentId,
+        correlationId
+      }, {
+        success,
+        duration
+      });
+    } else {
+      this.error(message, undefined, {
+        messageId,
+        equipmentId,
+        correlationId
+      }, {
+        success,
+        duration
+      });
+    }
+  }
+
+  logDataWrite(measurement: string, pointCount: number, success: boolean, duration: number, correlationId?: string): void {
+    const message = success ? 'Data written successfully' : 'Data write failed';
+    const logMethod = success ? this.info.bind(this) : this.error.bind(this);
+    
+    if (success) {
+      (logMethod as any)(message, {
+        correlationId
+      }, {
+        measurement,
+        pointCount,
+        success,
+        duration
+      });
+    } else {
+      this.error(message, undefined, {
+        correlationId
+      }, {
+        measurement,
+        pointCount,
+        success,
+        duration
+      });
+    }
+  }
+
+  logServiceHealth(serviceName: string, healthy: boolean, checks: Record<string, boolean>, correlationId?: string): void {
+    const message = healthy ? 'Service health check passed' : 'Service health check failed';
+    const logMethod = healthy ? this.info.bind(this) : this.warn.bind(this);
+    
+    logMethod(message, {
+      correlationId
+    }, {
+      serviceName,
+      healthy,
+      checks
+    });
+  }
+
+  // Performance logging
+  createTimer(operation: string, correlationId?: string): () => void {
+    const startTime = Date.now();
+    
+    return () => {
+      const duration = Date.now() - startTime;
+      this.info(`Operation completed: ${operation}`, {
+        correlationId
+      }, {
+        operation,
+        duration
+      });
+    };
+  }
+
+  // Context management
+  withContext(additionalContext: Partial<LogContext>): FactoryLogger {
+    return new FactoryLogger({
+      ...this.context,
+      ...additionalContext
+    });
+  }
+
+  withCorrelationId(correlationId: string): FactoryLogger {
+    return this.withContext({ correlationId });
+  }
+
+  // Structured error logging
+  logCriticalError(error: Error, context?: Partial<LogContext>, metadata?: Record<string, any>): void {
+    this.error(`CRITICAL ERROR: ${error.message}`, error, {
+      ...context,
+      severity: 'critical'
+    }, metadata);
+  }
+
+  logSecurityEvent(event: string, severity: 'low' | 'medium' | 'high' | 'critical', context?: Partial<LogContext>, metadata?: Record<string, any>): void {
+    this.warn(`SECURITY EVENT: ${event}`, {
+      ...context,
+      securityEvent: true,
+      severity
+    }, metadata);
+  }
+}
+
+// Correlation ID middleware for request tracking
+export class CorrelationIdManager {
+  private static correlationIds: Map<string, string> = new Map();
+
+  static generate(): string {
+    return uuidv4();
+  }
+
+  static set(key: string, correlationId: string): void {
+    this.correlationIds.set(key, correlationId);
+  }
+
+  static get(key: string): string | undefined {
+    return this.correlationIds.get(key);
+  }
+
+  static clear(key: string): void {
+    this.correlationIds.delete(key);
+  }
+
+  static createMiddleware() {
+    return (req: any, res: any, next: any) => {
+      const correlationId = req.headers['x-correlation-id'] || CorrelationIdManager.generate();
+      req.correlationId = correlationId;
+      res.setHeader('x-correlation-id', correlationId);
+      next();
+    };
+  }
+}
+
+// Log rotation utility
+export class LogRotationManager {
+  static setupRotation(serviceName: string): void {
+    const logDir = `logs`;
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    const maxFiles = 10;
+    
+    // This would typically use a library like 'rotating-file-stream' in production
+    console.log(`Log rotation configured for ${serviceName}: maxSize=${maxSize}, maxFiles=${maxFiles}`);
+  }
+}
+
+// Export factory function for easy logger creation
+export function createFactoryLogger(
+  service: string,
+  version: string = '1.0.0',
+  environment: string = process.env.NODE_ENV || 'development'
+): FactoryLogger {
+  const context: LogContext = {
+    service,
+    version,
+    environment
+  };
+
+  return new FactoryLogger(context);
+}

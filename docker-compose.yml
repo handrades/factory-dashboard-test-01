@@ -1,0 +1,182 @@
+services:
+  # Infrastructure Services
+  redis:
+    image: redis:7-alpine
+    container_name: factory-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-factory123}
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - factory-network
+
+  influxdb:
+    image: influxdb:2.7
+    container_name: factory-influxdb
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+      - influxdb_config:/etc/influxdb2
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_USERNAME:-admin}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD:-factory123}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG:-factory-dashboard}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET:-factory-data}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN:-factory-admin-token}
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - factory-network
+
+  # Application Services
+  plc-emulator:
+    build:
+      context: ./services
+      dockerfile: plc-emulator/Dockerfile
+    container_name: factory-plc-emulator
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-factory123}
+      - UPDATE_INTERVAL=2000
+      - HEARTBEAT_INTERVAL=30000
+      - CONFIG_DIRECTORY=/app/infrastructure/config
+    volumes:
+      - ./infrastructure/config:/app/infrastructure/config
+      - plc_logs:/app/logs
+    healthcheck:
+      test: ["CMD", "node", "-e", "process.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - factory-network
+
+  queue-consumer:
+    build:
+      context: ./services
+      dockerfile: queue-consumer/Dockerfile
+    container_name: factory-queue-consumer
+    depends_on:
+      redis:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-factory123}
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-factory-admin-token}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-factory-dashboard}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-factory-data}
+      - CONSUMER_CONCURRENCY=5
+      - ENABLE_HEALTH_ENDPOINT=true
+      - HEALTH_PORT=8080
+      - CONFIG_DIRECTORY=/app/infrastructure/config
+    volumes:
+      - ./infrastructure/config:/app/infrastructure/config
+      - consumer_logs:/app/logs
+    ports:
+      - "8083:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - factory-network
+
+  # Dashboard Application
+  dashboard:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: factory-dashboard
+    depends_on:
+      - influxdb
+    environment:
+      - VITE_INFLUXDB_URL=http://localhost:8086
+      - VITE_INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-factory-admin-token}
+      - VITE_INFLUXDB_ORG=${INFLUXDB_ORG:-factory-dashboard}
+      - VITE_INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-factory-data}
+    ports:
+      - "3000:80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - factory-network
+
+  # Monitoring and Management
+  grafana:
+    image: grafana/grafana:latest
+    container_name: factory-grafana
+    depends_on:
+      - influxdb
+    ports:
+      - "3002:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-factory123}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    restart: unless-stopped
+    networks:
+      - factory-network
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: factory-redis-commander
+    depends_on:
+      - redis
+    ports:
+      - "8082:8081"
+    environment:
+      - REDIS_HOSTS=local:redis:6379:0:${REDIS_PASSWORD:-factory123}
+    restart: unless-stopped
+    networks:
+      - factory-network
+
+volumes:
+  redis_data:
+    driver: local
+  influxdb_data:
+    driver: local
+  influxdb_config:
+    driver: local
+  grafana_data:
+    driver: local
+  plc_logs:
+    driver: local
+  consumer_logs:
+    driver: local
+
+networks:
+  factory-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

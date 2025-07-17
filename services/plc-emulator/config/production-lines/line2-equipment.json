@@ -1,0 +1,289 @@
+[
+  {
+    "id": "conveyor1",
+    "name": "Conveyor Belt Line 2",
+    "type": "conveyor",
+    "lineId": "line2",
+    "currentState": "running",
+    "states": [
+      {
+        "name": "running",
+        "description": "Conveyor is running normally",
+        "tagOverrides": [
+          { "tagId": "motor_status", "value": true },
+          { "tagId": "emergency_stop", "value": false }
+        ],
+        "transitions": [
+          { "toState": "stopped", "condition": "manual_stop" },
+          { "toState": "fault", "condition": "belt_fault", "probability": 0.003 },
+          { "toState": "emergency_stop", "condition": "emergency_triggered", "probability": 0.0001 }
+        ]
+      },
+      {
+        "name": "stopped",
+        "description": "Conveyor is stopped",
+        "tagOverrides": [
+          { "tagId": "motor_status", "value": false },
+          { "tagId": "speed", "value": 0 },
+          { "tagId": "emergency_stop", "value": false }
+        ],
+        "transitions": [
+          { "toState": "running", "condition": "manual_start" }
+        ]
+      },
+      {
+        "name": "fault",
+        "description": "Conveyor has a fault condition",
+        "tagOverrides": [
+          { "tagId": "motor_status", "value": false },
+          { "tagId": "speed", "value": 0 },
+          { "tagId": "fault_status", "value": true }
+        ],
+        "transitions": [
+          { "toState": "stopped", "condition": "fault_reset" }
+        ]
+      },
+      {
+        "name": "emergency_stop",
+        "description": "Emergency stop activated",
+        "tagOverrides": [
+          { "tagId": "motor_status", "value": false },
+          { "tagId": "speed", "value": 0 },
+          { "tagId": "emergency_stop", "value": true }
+        ],
+        "transitions": [
+          { "toState": "stopped", "condition": "emergency_reset" }
+        ]
+      }
+    ],
+    "tags": [
+      {
+        "id": "speed",
+        "name": "Belt Speed",
+        "equipmentId": "conveyor1",
+        "dataType": "REAL",
+        "address": "DB3.DBD0",
+        "value": 2.8,
+        "behavior": {
+          "type": "random",
+          "parameters": {
+            "min": 2.5,
+            "max": 3.2
+          }
+        }
+      },
+      {
+        "id": "motor_status",
+        "name": "Motor Status",
+        "equipmentId": "conveyor1",
+        "dataType": "BOOL",
+        "address": "DB3.DBX4.0",
+        "value": true,
+        "behavior": {
+          "type": "constant",
+          "parameters": {
+            "constantValue": true
+          }
+        }
+      },
+      {
+        "id": "belt_tension",
+        "name": "Belt Tension",
+        "equipmentId": "conveyor1",
+        "dataType": "REAL",
+        "address": "DB3.DBD8",
+        "value": 78,
+        "behavior": {
+          "type": "linear",
+          "parameters": {
+            "min": 75,
+            "max": 85,
+            "slope": 0.02
+          }
+        }
+      },
+      {
+        "id": "load_weight",
+        "name": "Load Weight",
+        "equipmentId": "conveyor1",
+        "dataType": "REAL",
+        "address": "DB3.DBD12",
+        "value": 125.5,
+        "behavior": {
+          "type": "random",
+          "parameters": {
+            "min": 100.0,
+            "max": 150.0
+          }
+        }
+      },
+      {
+        "id": "emergency_stop",
+        "name": "Emergency Stop Status",
+        "equipmentId": "conveyor1",
+        "dataType": "BOOL",
+        "address": "DB3.DBX4.1",
+        "value": false,
+        "behavior": {
+          "type": "constant",
+          "parameters": {
+            "constantValue": false
+          }
+        }
+      },
+      {
+        "id": "fault_status",
+        "name": "Fault Status",
+        "equipmentId": "conveyor1",
+        "dataType": "BOOL",
+        "address": "DB3.DBX4.2",
+        "value": false,
+        "behavior": {
+          "type": "constant",
+          "parameters": {
+            "constantValue": false
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "press1",
+    "name": "Hydraulic Press Line 2",
+    "type": "press",
+    "lineId": "line2",
+    "currentState": "running",
+    "states": [
+      {
+        "name": "running",
+        "description": "Press is operating normally",
+        "tagOverrides": [
+          { "tagId": "hydraulic_pump", "value": true },
+          { "tagId": "safety_guard", "value": true }
+        ],
+        "transitions": [
+          { "toState": "stopped", "condition": "manual_stop" },
+          { "toState": "fault", "condition": "pressure_fault", "probability": 0.004 }
+        ]
+      },
+      {
+        "name": "stopped",
+        "description": "Press is stopped",
+        "tagOverrides": [
+          { "tagId": "hydraulic_pump", "value": false },
+          { "tagId": "pressure", "value": 0 },
+          { "tagId": "position", "value": 0 }
+        ],
+        "transitions": [
+          { "toState": "running", "condition": "manual_start" }
+        ]
+      },
+      {
+        "name": "fault",
+        "description": "Press has a fault condition",
+        "tagOverrides": [
+          { "tagId": "hydraulic_pump", "value": false },
+          { "tagId": "fault_status", "value": true }
+        ],
+        "transitions": [
+          { "toState": "stopped", "condition": "fault_reset" }
+        ]
+      }
+    ],
+    "tags": [
+      {
+        "id": "pressure",
+        "name": "Hydraulic Pressure",
+        "equipmentId": "press1",
+        "dataType": "REAL",
+        "address": "DB4.DBD0",
+        "value": 165,
+        "behavior": {
+          "type": "sinusoidal",
+          "parameters": {
+            "min": 140,
+            "max": 190,
+            "period": 45000,
+            "amplitude": 20,
+            "offset": 165
+          }
+        }
+      },
+      {
+        "id": "position",
+        "name": "Press Position",
+        "equipmentId": "press1",
+        "dataType": "REAL",
+        "address": "DB4.DBD4",
+        "value": 45,
+        "behavior": {
+          "type": "sinusoidal",
+          "parameters": {
+            "min": 0,
+            "max": 100,
+            "period": 15000,
+            "amplitude": 50,
+            "offset": 50
+          }
+        }
+      },
+      {
+        "id": "cycle_count",
+        "name": "Cycle Count",
+        "equipmentId": "press1",
+        "dataType": "DINT",
+        "address": "DB4.DBD8",
+        "value": 0,
+        "behavior": {
+          "type": "stepped",
+          "parameters": {
+            "stepValues": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+            "stepDuration": 8000
+          }
+        }
+      },
+      {
+        "id": "hydraulic_pump",
+        "name": "Hydraulic Pump Status",
+        "equipmentId": "press1",
+        "dataType": "BOOL",
+        "address": "DB4.DBX12.0",
+        "value": true,
+        "behavior": {
+          "type": "constant",
+          "parameters": {
+            "constantValue": true
+          }
+        }
+      },
+      {
+        "id": "safety_guard",
+        "name": "Safety Guard Status",
+        "equipmentId": "press1",
+        "dataType": "BOOL",
+        "address": "DB4.DBX12.1",
+        "value": true,
+        "behavior": {
+          "type": "constant",
+          "parameters": {
+            "constantValue": true
+          }
+        }
+      },
+      {
+        "id": "fault_status",
+        "name": "Fault Status",
+        "equipmentId": "press1",
+        "dataType": "BOOL",
+        "address": "DB4.DBX12.2",
+        "value": false,
+        "behavior": {
+          "type": "constant",
+          "parameters": {
+            "constantValue": false
+          }
+        }
+      }
+    ]
+  }
+]

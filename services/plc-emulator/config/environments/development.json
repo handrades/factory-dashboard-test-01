@@ -1,0 +1,63 @@
+{
+  "environment": "development",
+  "services": {
+    "plc-emulator": {
+      "updateInterval": 5000,
+      "heartbeatInterval": 30000,
+      "logLevel": "debug",
+      "enableHealthChecks": true,
+      "healthCheckPort": 3000,
+      "redis": {
+        "host": "localhost",
+        "port": 6379,
+        "database": 0,
+        "maxRetries": 3,
+        "retryDelay": 1000,
+        "connectionPoolSize": 5
+      },
+      "configPath": "./config/production-lines/line1-equipment.json",
+      "watchConfigChanges": true
+    },
+    "queue-consumer": {
+      "concurrency": 3,
+      "batchSize": 5,
+      "processingTimeout": 30000,
+      "logLevel": "debug",
+      "enableHealthChecks": true,
+      "healthCheckPort": 8080,
+      "redis": {
+        "host": "localhost",
+        "port": 6379,
+        "database": 0,
+        "consumerGroup": "dev-consumers",
+        "deadLetterQueue": "dev-dead-letter-queue"
+      },
+      "influxdb": {
+        "url": "http://localhost:8086",
+        "token": "dev-token",
+        "org": "factory-dashboard",
+        "bucket": "factory-data-dev",
+        "timeout": 10000
+      },
+      "writeOptions": {
+        "batchSize": 50,
+        "flushInterval": 2000,
+        "retryAttempts": 3,
+        "retryDelay": 1000
+      }
+    }
+  },
+  "monitoring": {
+    "metricsEnabled": true,
+    "tracingEnabled": true,
+    "healthCheckInterval": 30000,
+    "alerting": {
+      "enabled": false,
+      "thresholds": {
+        "errorRate": 0.05,
+        "responseTime": 2000,
+        "queueSize": 100
+      }
+    }
+  }
+}

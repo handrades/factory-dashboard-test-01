@@ -1,0 +1,193 @@
+[
+  {
+    "id": "oven1",
+    "name": "Industrial Oven Line 1",
+    "type": "oven",
+    "lineId": "line1",
+    "currentState": "running",
+    "states": [
+      {
+        "name": "startup",
+        "description": "Oven is starting up",
+        "tagOverrides": [
+          { "tagId": "heating_status", "value": true },
+          { "tagId": "door_status", "value": false }
+        ],
+        "transitions": [
+          { "toState": "running", "condition": "temperature_reached", "delay": 30000 }
+        ]
+      },
+      {
+        "name": "running",
+        "description": "Oven is running normally",
+        "tagOverrides": [
+          { "tagId": "heating_status", "value": true },
+          { "tagId": "door_status", "value": false }
+        ],
+        "transitions": [
+          { "toState": "stopped", "condition": "manual_stop" },
+          { "toState": "fault", "condition": "temperature_fault", "probability": 0.01 }
+        ]
+      },
+      {
+        "name": "stopped",
+        "description": "Oven is stopped",
+        "tagOverrides": [
+          { "tagId": "heating_status", "value": false },
+          { "tagId": "door_status", "value": true }
+        ],
+        "transitions": [
+          { "toState": "startup", "condition": "manual_start" }
+        ]
+      },
+      {
+        "name": "fault",
+        "description": "Oven has a fault condition",
+        "tagOverrides": [
+          { "tagId": "heating_status", "value": false },
+          { "tagId": "door_status", "value": true }
+        ],
+        "transitions": [
+          { "toState": "stopped", "condition": "fault_reset" }
+        ]
+      }
+    ],
+    "tags": [
+      {
+        "id": "temperature",
+        "name": "Oven Temperature",
+        "equipmentId": "oven1",
+        "dataType": "REAL",
+        "address": "DB1.DBD0",
+        "value": 350,
+        "behavior": {
+          "type": "sinusoidal",
+          "parameters": {
+            "min": 300,
+            "max": 400,
+            "period": 120000,
+            "amplitude": 25,
+            "offset": 350
+          }
+        }
+      },
+      {
+        "id": "heating_status",
+        "name": "Heating Status",
+        "equipmentId": "oven1",
+        "dataType": "BOOL",
+        "address": "DB1.DBX4.0",
+        "value": true,
+        "behavior": {
+          "type": "constant",
+          "parameters": {
+            "constantValue": true
+          }
+        }
+      },
+      {
+        "id": "door_status",
+        "name": "Door Status",
+        "equipmentId": "oven1",
+        "dataType": "BOOL",
+        "address": "DB1.DBX4.1",
+        "value": false,
+        "behavior": {
+          "type": "constant",
+          "parameters": {
+            "constantValue": false
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "conveyor1",
+    "name": "Conveyor Belt Line 1",
+    "type": "conveyor",
+    "lineId": "line1",
+    "currentState": "running",
+    "states": [
+      {
+        "name": "running",
+        "description": "Conveyor is running normally",
+        "tagOverrides": [
+          { "tagId": "motor_status", "value": true }
+        ],
+        "transitions": [
+          { "toState": "stopped", "condition": "manual_stop" },
+          { "toState": "fault", "condition": "belt_fault", "probability": 0.005 }
+        ]
+      },
+      {
+        "name": "stopped",
+        "description": "Conveyor is stopped",
+        "tagOverrides": [
+          { "tagId": "motor_status", "value": false },
+          { "tagId": "speed", "value": 0 }
+        ],
+        "transitions": [
+          { "toState": "running", "condition": "manual_start" }
+        ]
+      },
+      {
+        "name": "fault",
+        "description": "Conveyor has a fault condition",
+        "tagOverrides": [
+          { "tagId": "motor_status", "value": false },
+          { "tagId": "speed", "value": 0 }
+        ],
+        "transitions": [
+          { "toState": "stopped", "condition": "fault_reset" }
+        ]
+      }
+    ],
+    "tags": [
+      {
+        "id": "speed",
+        "name": "Belt Speed",
+        "equipmentId": "conveyor1",
+        "dataType": "REAL",
+        "address": "DB2.DBD0",
+        "value": 2.5,
+        "behavior": {
+          "type": "random",
+          "parameters": {
+            "min": 2.0,
+            "max": 3.0
+          }
+        }
+      },
+      {
+        "id": "motor_status",
+        "name": "Motor Status",
+        "equipmentId": "conveyor1",
+        "dataType": "BOOL",
+        "address": "DB2.DBX4.0",
+        "value": true,
+        "behavior": {
+          "type": "constant",
+          "parameters": {
+            "constantValue": true
+          }
+        }
+      },
+      {
+        "id": "belt_tension",
+        "name": "Belt Tension",
+        "equipmentId": "conveyor1",
+        "dataType": "REAL",
+        "address": "DB2.DBD8",
+        "value": 75,
+        "behavior": {
+          "type": "linear",
+          "parameters": {
+            "min": 70,
+            "max": 80,
+            "slope": 0.1
+          }
+        }
+      }
+    ]
+  }
+]

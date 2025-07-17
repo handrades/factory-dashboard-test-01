@@ -1,0 +1,171 @@
+services:
+  # Test Infrastructure
+  redis-test:
+    image: redis:7-alpine
+    container_name: factory-redis-test
+    ports:
+      - "6380:6379"
+    command: redis-server --appendonly yes --requirepass test123
+    networks:
+      - factory-test-network
+
+  influxdb-test:
+    image: influxdb:2.7
+    container_name: factory-influxdb-test
+    ports:
+      - "8087:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=testuser
+      - DOCKER_INFLUXDB_INIT_PASSWORD=test123
+      - DOCKER_INFLUXDB_INIT_ORG=factory-dashboard-test
+      - DOCKER_INFLUXDB_INIT_BUCKET=factory-data-test
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=test-token
+    volumes:
+      - influxdb_test_data:/var/lib/influxdb2
+    networks:
+      - factory-test-network
+
+  # Test Utilities
+  test-data-generator:
+    build:
+      context: ./tests/utilities
+      dockerfile: Dockerfile.test-data-generator
+    container_name: factory-test-data-generator
+    depends_on:
+      - redis-test
+      - influxdb-test
+    environment:
+      - REDIS_HOST=redis-test
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=test123
+      - INFLUXDB_URL=http://influxdb-test:8086
+      - INFLUXDB_TOKEN=test-token
+      - INFLUXDB_ORG=factory-dashboard-test
+      - INFLUXDB_BUCKET=factory-data-test
+    networks:
+      - factory-test-network
+
+  # Integration Test Services
+  plc-emulator-test:
+    build:
+      context: ./services
+      dockerfile: plc-emulator/Dockerfile.test
+    container_name: factory-plc-emulator-test
+    depends_on:
+      - redis-test
+    environment:
+      - NODE_ENV=test
+      - REDIS_HOST=redis-test
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=test123
+      - UPDATE_INTERVAL=1000
+      - HEARTBEAT_INTERVAL=5000
+      - CONFIG_DIRECTORY=/app/infrastructure/config
+      - LOG_LEVEL=debug
+    volumes:
+      - ./infrastructure/config:/app/infrastructure/config
+    networks:
+      - factory-test-network
+
+  queue-consumer-test:
+    build:
+      context: ./services
+      dockerfile: queue-consumer/Dockerfile.test
+    container_name: factory-queue-consumer-test
+    depends_on:
+      - redis-test
+      - influxdb-test
+    environment:
+      - NODE_ENV=test
+      - REDIS_HOST=redis-test
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=test123
+      - INFLUXDB_URL=http://influxdb-test:8086
+      - INFLUXDB_TOKEN=test-token
+      - INFLUXDB_ORG=factory-dashboard-test
+      - INFLUXDB_BUCKET=factory-data-test
+      - CONSUMER_CONCURRENCY=2
+      - ENABLE_HEALTH_ENDPOINT=true
+      - HEALTH_PORT=8080
+      - CONFIG_DIRECTORY=/app/infrastructure/config
+      - LOG_LEVEL=debug
+    volumes:
+      - ./infrastructure/config:/app/infrastructure/config
+    networks:
+      - factory-test-network
+
+  # E2E Test Runner
+  e2e-tests:
+    build:
+      context: ./tests/e2e
+      dockerfile: Dockerfile
+    container_name: factory-e2e-tests
+    depends_on:
+      - plc-emulator-test
+      - queue-consumer-test
+    environment:
+      - REDIS_HOST=redis-test
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=test123
+      - INFLUXDB_URL=http://influxdb-test:8086
+      - INFLUXDB_TOKEN=test-token
+      - PLC_EMULATOR_URL=http://plc-emulator-test:3000
+      - QUEUE_CONSUMER_URL=http://queue-consumer-test:8080
+    volumes:
+      - ./tests/reports:/app/reports
+    networks:
+      - factory-test-network
+
+  # Performance Test Runner
+  performance-tests:
+    build:
+      context: ./tests/performance
+      dockerfile: Dockerfile
+    container_name: factory-performance-tests
+    depends_on:
+      - plc-emulator-test
+      - queue-consumer-test
+    environment:
+      - REDIS_HOST=redis-test
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=test123
+      - INFLUXDB_URL=http://influxdb-test:8086
+      - INFLUXDB_TOKEN=test-token
+      - PLC_EMULATOR_URL=http://plc-emulator-test:3000
+      - QUEUE_CONSUMER_URL=http://queue-consumer-test:8080
+    volumes:
+      - ./tests/reports:/app/reports
+    networks:
+      - factory-test-network
+
+  # Chaos Testing
+  chaos-tests:
+    build:
+      context: ./tests/chaos
+      dockerfile: Dockerfile
+    container_name: factory-chaos-tests
+    depends_on:
+      - plc-emulator-test
+      - queue-consumer-test
+    environment:
+      - REDIS_HOST=redis-test
+      - INFLUXDB_URL=http://influxdb-test:8086
+      - PLC_EMULATOR_URL=http://plc-emulator-test:3000
+      - QUEUE_CONSUMER_URL=http://queue-consumer-test:8080
+    volumes:
+      - ./tests/reports:/app/reports
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - factory-test-network
+
+volumes:
+  influxdb_test_data:
+    driver: local
+
+networks:
+  factory-test-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16

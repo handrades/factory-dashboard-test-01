@@ -1,6 +1,9 @@
 {
   "id": 2,
   "name": "Production Line 2",
+  "site": "usa",
+  "type": "esm",
+  "line": 2,
   "status": "running",
   "efficiency": 92.33,
   "equipment": [
@@ -9,20 +12,117 @@
       "name": "Conveyor Belt",
       "type": "conveyor",
       "status": "running",
-      "speed": 3.0
+      "tags": [
+        {
+          "id": "speed",
+          "name": "Belt Speed",
+          "dataType": "REAL",
+          "value": 3.0,
+          "behavior": {
+            "type": "random",
+            "parameters": {
+              "min": 2.5,
+              "max": 3.5
+            }
+          }
+        },
+        {
+          "id": "motor_status",
+          "name": "Motor Status",
+          "dataType": "BOOL",
+          "value": true,
+          "behavior": {
+            "type": "constant",
+            "parameters": {
+              "constantValue": true
+            }
+          }
+        },
+        {
+          "id": "belt_tension",
+          "name": "Belt Tension",
+          "dataType": "REAL",
+          "value": 75,
+          "behavior": {
+            "type": "linear",
+            "parameters": {
+              "min": 70,
+              "max": 80,
+              "slope": 0.1
+            }
+          }
+        }
+      ]
     },
     {
       "id": "press2",
       "name": "Hydraulic Press",
       "type": "press",
       "status": "running",
-      "pressure": 180
+      "tags": [
+        {
+          "id": "pressure",
+          "name": "Hydraulic Pressure",
+          "dataType": "REAL",
+          "value": 180,
+          "behavior": {
+            "type": "sinusoidal",
+            "parameters": {
+              "min": 150,
+              "max": 200,
+              "period": 60000,
+              "amplitude": 15,
+              "offset": 180
+            }
+          }
+        },
+        {
+          "id": "pump_status",
+          "name": "Pump Status",
+          "dataType": "BOOL",
+          "value": true,
+          "behavior": {
+            "type": "constant",
+            "parameters": {
+              "constantValue": true
+            }
+          }
+        }
+      ]
     },
     {
       "id": "assembly2",
       "name": "Assembly Table",
       "type": "assembly",
-      "status": "running"
+      "status": "running",
+      "tags": [
+        {
+          "id": "cycle_count",
+          "name": "Assembly Cycle Count",
+          "dataType": "INT",
+          "value": 0,
+          "behavior": {
+            "type": "linear",
+            "parameters": {
+              "min": 0,
+              "max": 1000,
+              "slope": 1
+            }
+          }
+        },
+        {
+          "id": "active_status",
+          "name": "Assembly Active Status",
+          "dataType": "BOOL",
+          "value": true,
+          "behavior": {
+            "type": "constant",
+            "parameters": {
+              "constantValue": true
+            }
+          }
+        }
+      ]
     }
   ]
 }

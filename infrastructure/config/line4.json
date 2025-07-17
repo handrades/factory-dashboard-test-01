@@ -1,6 +1,9 @@
 {
   "id": 4,
   "name": "Production Line 4",
+  "site": "usa",
+  "type": "url",
+  "line": 4,
   "status": "running",
   "efficiency": 78.92,
   "equipment": [
@@ -9,21 +12,119 @@
       "name": "Industrial Oven with Conveyor",
       "type": "oven-conveyor",
       "status": "running",
-      "temperature": 385,
-      "speed": 1.8
+      "tags": [
+        {
+          "id": "temperature",
+          "name": "Oven Temperature",
+          "dataType": "REAL",
+          "value": 385,
+          "behavior": {
+            "type": "sinusoidal",
+            "parameters": {
+              "min": 370,
+              "max": 400,
+              "period": 100000,
+              "amplitude": 15,
+              "offset": 385
+            }
+          }
+        },
+        {
+          "id": "speed",
+          "name": "Conveyor Speed",
+          "dataType": "REAL",
+          "value": 1.8,
+          "behavior": {
+            "type": "random",
+            "parameters": {
+              "min": 1.5,
+              "max": 2.0
+            }
+          }
+        },
+        {
+          "id": "oven_status",
+          "name": "Oven Status",
+          "dataType": "BOOL",
+          "value": true,
+          "behavior": {
+            "type": "constant",
+            "parameters": {
+              "constantValue": true
+            }
+          }
+        }
+      ]
     },
     {
       "id": "press4",
       "name": "Hydraulic Press",
       "type": "press",
       "status": "running",
-      "pressure": 175
+      "tags": [
+        {
+          "id": "pressure",
+          "name": "Hydraulic Pressure",
+          "dataType": "REAL",
+          "value": 175,
+          "behavior": {
+            "type": "sinusoidal",
+            "parameters": {
+              "min": 160,
+              "max": 190,
+              "period": 75000,
+              "amplitude": 10,
+              "offset": 175
+            }
+          }
+        },
+        {
+          "id": "pump_status",
+          "name": "Pump Status",
+          "dataType": "BOOL",
+          "value": true,
+          "behavior": {
+            "type": "constant",
+            "parameters": {
+              "constantValue": true
+            }
+          }
+        }
+      ]
     },
     {
       "id": "assembly4",
       "name": "Assembly Table",
       "type": "assembly",
-      "status": "running"
+      "status": "running",
+      "tags": [
+        {
+          "id": "cycle_count",
+          "name": "Assembly Cycle Count",
+          "dataType": "INT",
+          "value": 0,
+          "behavior": {
+            "type": "linear",
+            "parameters": {
+              "min": 0,
+              "max": 1000,
+              "slope": 1
+            }
+          }
+        },
+        {
+          "id": "active_status",
+          "name": "Assembly Active Status",
+          "dataType": "BOOL",
+          "value": true,
+          "behavior": {
+            "type": "constant",
+            "parameters": {
+              "constantValue": true
+            }
+          }
+        }
+      ]
     }
   ]
 }
