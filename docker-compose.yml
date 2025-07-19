@@ -91,6 +91,7 @@ services:
       - ENABLE_HEALTH_ENDPOINT=true
       - HEALTH_PORT=8080
       - CONFIG_DIRECTORY=/app/infrastructure/config
+      - LOG_TRANSFORMATIONS=true
     volumes:
       - ./infrastructure/config:/app/infrastructure/config
       - consumer_logs:/app/logs
@@ -110,14 +111,16 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
+      args:
+        - VITE_INFLUXDB_URL=http://influxdb:8086
+        - VITE_INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-factory-admin-token}
+        - VITE_INFLUXDB_ORG=${INFLUXDB_ORG:-factory-dashboard}
+        - VITE_INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-factory-data}
+        - VITE_DEPLOYMENT_ENV=docker
+        - VITE_DATA_SOURCE=influxdb
     container_name: factory-dashboard
     depends_on:
       - influxdb
-    environment:
-      - VITE_INFLUXDB_URL=http://localhost:8086
-      - VITE_INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-factory-admin-token}
-      - VITE_INFLUXDB_ORG=${INFLUXDB_ORG:-factory-dashboard}
-      - VITE_INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-factory-data}
     ports:
       - "3000:80"
     healthcheck:

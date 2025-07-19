@@ -6,7 +6,15 @@
   "license": "MIT",
   "author": "Héctor Andrade <andrad_h@hotmail.com>",
   "description": "A modern, interactive factory monitoring dashboard built with React, TypeScript, and GSAP animations",
-  "keywords": ["factory", "dashboard", "react", "typescript", "gsap", "manufacturing", "monitoring"],
+  "keywords": [
+    "factory",
+    "dashboard",
+    "react",
+    "typescript",
+    "gsap",
+    "manufacturing",
+    "monitoring"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/handrades/factory-dashboard-test-01.git"
@@ -18,8 +26,8 @@
     "preview": "vite preview --config config/vite.config.ts"
   },
   "dependencies": {
+    "@influxdata/influxdb-client": "^1.35.0",
     "@types/react-router-dom": "^5.3.3",
-    "@influxdata/influxdb-client": "^1.33.0",
     "gsap": "^3.13.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
