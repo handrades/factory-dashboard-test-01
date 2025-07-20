@@ -1,5 +1,7 @@
 import { InfluxDB, type QueryApi } from '@influxdata/influxdb-client';
 import type { Equipment } from '../context/FactoryContext';
+import { InfluxQueryBuilder } from './influx-query-builder';
+// import { secretManager } from '../security/SecretManager';
 
 export interface InfluxDBServiceConfig {
   url: string;
@@ -49,16 +51,23 @@ export class InfluxDBService {
   private cacheTimeout: number = 0; // Disable caching completely for debugging
   private retryConfig: ConnectionRetryConfig;
   private diagnostics: ConnectionDiagnostics;
+  private queryBuilder: any;
 
   constructor(config: InfluxDBServiceConfig, retryConfig?: Partial<ConnectionRetryConfig>) {
     this.config = config;
-    console.log('InfluxDBService constructor called with config:', {
-      url: config.url,
-      token: config.token ? `${config.token.substring(0, 10)}...` : 'undefined',
-      org: config.org,
-      bucket: config.bucket,
-      timeout: config.timeout
-    });
+    this.queryBuilder = new InfluxQueryBuilder();
+    
+    // Use SecretManager to mask sensitive configuration data
+    // const maskedConfig = secretManager.maskSensitiveData({
+    //   url: config.url,
+    //   token: config.token,
+    //   org: config.org,
+    //   bucket: config.bucket,
+    //   timeout: config.timeout
+    // });
+    
+    console.log('InfluxDBService constructor called with config:', { url: config.url, org: config.org, bucket: config.bucket });
+    
     this.client = new InfluxDB({
       url: config.url,
       token: config.token,
@@ -93,7 +102,8 @@ export class InfluxDBService {
       
       try {
         // Test connection with a simple query
-        await this.queryApi.collectRows('buckets() |> limit(n: 1)');
+        const testQuery = 'buckets() |> limit(n: 1)';
+        await this.queryApi.collectRows(testQuery);
         this.isConnected = true;
         this.diagnostics.isConnected = true;
         this.diagnostics.consecutiveFailures = 0;
@@ -170,16 +180,11 @@ export class InfluxDBService {
         return cached;
       }
 
-      const equipmentFilter = equipmentIds.map(id => `r.equipment_id == "${id}"`).join(' or ');
-      
-      const query = `
-        from(bucket: "${this.config.bucket}")
-          |> range(start: -1h)
-          |> filter(fn: (r) => ${equipmentFilter})
-          |> group(columns: ["equipment_id", "_measurement", "_field"])
-          |> last()
-          |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
-      `;
+      const query = this.queryBuilder.buildLatestEquipmentDataQuery(
+        this.config.bucket,
+        equipmentIds,
+        '1h'
+      );
 
       console.log(`InfluxDB: Fetching fresh data for equipment [${equipmentIds.join(', ')}]`);
       console.log(`InfluxDB: Line 6 equipment should be: oven6, press6, oven-conveyor6, assembly6`);
@@ -232,15 +237,15 @@ export class InfluxDBService {
       const cached = this.getCachedResult(cacheKey);
       if (cached) return cached;
 
-      const query = `
-        from(bucket: "${this.config.bucket}")
-          |> range(start: -${timeRange})
-          |> filter(fn: (r) => r.equipment_id == "${equipmentId}")
-          |> filter(fn: (r) => r._measurement == "${measurement}")
-          |> filter(fn: (r) => r._field == "${field}")
-          |> aggregateWindow(every: ${interval}, fn: mean, createEmpty: false)
-          |> yield(name: "mean")
-      `;
+      const query = this.queryBuilder.buildTimeSeriesQuery(
+        this.config.bucket,
+        equipmentId,
+        measurement,
+        field,
+        timeRange,
+        interval,
+        'mean'
+      );
 
       const result = await this.queryApi.collectRows(query);
       const timeSeriesData = result.map((row: any) => ({
@@ -266,27 +271,14 @@ export class InfluxDBService {
       const cached = this.getCachedResult(cacheKey);
       if (cached) return cached;
 
-      const equipmentFilter = equipmentIds.map(id => `r.equipment_id == "${id}"`).join(' or ');
+      const queries = this.queryBuilder.buildEquipmentStatusQuery(
+        this.config.bucket,
+        equipmentIds,
+        '10m'
+      );
       
-      // Query for message_quality data (numeric fields)
-      const qualityQuery = `
-        from(bucket: "${this.config.bucket}")
-          |> range(start: -10m)
-          |> filter(fn: (r) => ${equipmentFilter})
-          |> filter(fn: (r) => r._measurement == "message_quality")
-          |> group(columns: ["equipment_id"])
-          |> last()
-      `;
-
-      // Query for heartbeat data (boolean fields)
-      const heartbeatQuery = `
-        from(bucket: "${this.config.bucket}")
-          |> range(start: -10m)
-          |> filter(fn: (r) => ${equipmentFilter})
-          |> filter(fn: (r) => r._field == "heartbeat")
-          |> group(columns: ["equipment_id"])
-          |> last()
-      `;
+      const qualityQuery = queries.qualityQuery;
+      const heartbeatQuery = queries.heartbeatQuery;
 
       // Execute both queries separately to avoid schema collision
       const [qualityResult, heartbeatResult] = await Promise.all([
@@ -335,14 +327,11 @@ export class InfluxDBService {
       const cached = this.getCachedResult(cacheKey);
       if (cached !== undefined) return cached;
 
-      const query = `
-        from(bucket: "${this.config.bucket}")
-          |> range(start: -${timeRange})
-          |> filter(fn: (r) => r.line_id == "${lineId}")
-          |> filter(fn: (r) => r._measurement == "message_quality")
-          |> filter(fn: (r) => r._field == "quality_ratio")
-          |> mean()
-      `;
+      const query = this.queryBuilder.buildLineEfficiencyQuery(
+        this.config.bucket,
+        lineId,
+        timeRange
+      );
 
       const result = await this.queryApi.collectRows(query);
       const efficiency = result.length > 0 ? ((result[0] as any)._value * 100) : 85; // Default to 85% if no data
@@ -591,7 +580,8 @@ export class InfluxDBService {
 
   async testConnection(): Promise<boolean> {
     try {
-      await this.queryApi.collectRows('buckets() |> limit(n: 1)');
+      const query = 'buckets() |> limit(n: 1)';
+      await this.queryApi.collectRows(query);
       return true;
     } catch (error) {
       return false;
@@ -653,13 +643,7 @@ export class InfluxDBService {
 
     try {
       // Test for expected measurements and fields
-      const query = `
-        from(bucket: "${this.config.bucket}")
-          |> range(start: -1h)
-          |> group(columns: ["_measurement", "_field"])
-          |> distinct(column: "_measurement")
-          |> limit(n: 10)
-      `;
+      const query = `from(bucket: "${this.config.bucket}") |> range(start: -1h) |> group(columns: ["_measurement", "_field"]) |> distinct(column: "_measurement") |> limit(n: 10)`;
       
       const result = await this.queryApi.collectRows(query);
       

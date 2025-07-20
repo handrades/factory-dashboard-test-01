@@ -69,18 +69,18 @@ export class EnvironmentDetectionService {
       }
     }
 
-    // Force InfluxDB for debugging
-    const dataSource: 'influxdb' | 'simulation' = 'influxdb';
-    const shouldUseInfluxDB = true;
+    // Determine data source based on environment
+    const dataSource: 'influxdb' | 'simulation' = explicitDataSource === 'simulation' ? 'simulation' : 'influxdb';
+    const shouldUseInfluxDB = dataSource === 'influxdb';
 
     // Get InfluxDB configuration if needed
     let influxDBConfig: EnvironmentConfig['influxDBConfig'];
     if (shouldUseInfluxDB) {
       influxDBConfig = {
-        url: 'http://localhost:8086',
-        token: 'factory-admin-token',
-        org: 'factory-dashboard',
-        bucket: 'factory-data',
+        url: import.meta.env.VITE_INFLUXDB_URL || 'http://localhost:8086',
+        token: import.meta.env.VITE_INFLUXDB_TOKEN || 'factory-admin-token',
+        org: import.meta.env.VITE_INFLUXDB_ORG || 'factory-dashboard',
+        bucket: import.meta.env.VITE_INFLUXDB_BUCKET || 'factory-data',
         timeout: 10000
       };
     }
@@ -102,7 +102,15 @@ export class EnvironmentDetectionService {
       explicitEnv,
       explicitDataSource,
       currentUrl: window.location.href,
-      hasDockerIndicators: this.hasDockerIndicators()
+      hasDockerIndicators: this.hasDockerIndicators(),
+      envVars: {
+        VITE_INFLUXDB_URL: import.meta.env.VITE_INFLUXDB_URL,
+        VITE_INFLUXDB_TOKEN: import.meta.env.VITE_INFLUXDB_TOKEN,
+        VITE_INFLUXDB_ORG: import.meta.env.VITE_INFLUXDB_ORG,
+        VITE_INFLUXDB_BUCKET: import.meta.env.VITE_INFLUXDB_BUCKET,
+        VITE_DEPLOYMENT_ENV: import.meta.env.VITE_DEPLOYMENT_ENV,
+        VITE_DATA_SOURCE: import.meta.env.VITE_DATA_SOURCE
+      }
     });
 
     return this.config;

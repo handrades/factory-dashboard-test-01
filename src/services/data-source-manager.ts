@@ -130,7 +130,8 @@ export class DataSourceManagerImpl implements DataSourceManager {
     console.log('DataSourceManager.getCurrentData called:', {
       currentSource: this._currentSource,
       hasInfluxDBService: !!this.influxDBService,
-      linesCount: lines.length
+      linesCount: lines.length,
+      connectionStatus: this.connectionStatus
     });
 
     if (this._currentSource === 'influxdb' && this.influxDBService) {
