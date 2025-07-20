@@ -62,7 +62,7 @@ export class PasswordManager {
       const hashedPassword = await hash(password, salt);
       
       return hashedPassword;
-    } catch (error) {
+    } catch {
       console.error('Password hashing failed:', error);
       throw new Error('Failed to hash password');
     }
@@ -74,7 +74,7 @@ export class PasswordManager {
   public async verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
     try {
       return await compare(password, hashedPassword);
-    } catch (error) {
+    } catch {
       console.error('Password verification failed:', error);
       return false;
     }
@@ -105,7 +105,7 @@ export class PasswordManager {
     const hasUppercase = /[A-Z]/.test(password);
     const hasLowercase = /[a-z]/.test(password);
     const hasNumbers = /\d/.test(password);
-    const hasSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+    const hasSpecialChars = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password);
 
     if (!hasUppercase) {
       feedback.push('Password must contain at least one uppercase letter');

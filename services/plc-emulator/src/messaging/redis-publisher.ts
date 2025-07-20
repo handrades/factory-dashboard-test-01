@@ -1,7 +1,7 @@
 import { createClient, RedisClientType } from 'redis';
-import { PLCMessage, QueueConfig } from '@factory-dashboard/shared-types';
+import { PLCMessage } from '@factory-dashboard/shared-types';
 import { EventEmitter } from 'events';
-import { createLogger } from 'winston';
+import winston, { createLogger } from 'winston';
 
 export interface RedisPublisherConfig {
   host: string;
@@ -27,9 +27,9 @@ export class RedisPublisher extends EventEmitter {
     this.config = config;
     this.logger = createLogger({
       level: 'info',
-      format: require('winston').format.json(),
+      format: winston.format.json(),
       transports: [
-        new (require('winston').transports.Console)()
+        new winston.transports.Console()
       ]
     });
 
@@ -72,7 +72,7 @@ export class RedisPublisher extends EventEmitter {
     try {
       await this.client.connect();
       this.logger.info('Successfully connected to Redis');
-    } catch (error) {
+    } catch {
       this.logger.error(`Failed to connect to Redis: ${error}`);
       throw error;
     }
@@ -97,7 +97,7 @@ export class RedisPublisher extends EventEmitter {
       const serializedMessage = JSON.stringify(message);
       await this.client.xAdd(queueName, '*', { message: serializedMessage });
       this.logger.debug(`Published message to stream ${queueName}: ${message.id}`);
-    } catch (error) {
+    } catch {
       this.logger.error(`Failed to publish message: ${error}`);
       this.bufferMessage(message);
       throw error;
@@ -116,7 +116,7 @@ export class RedisPublisher extends EventEmitter {
         await this.client.xAdd(queueName, '*', { message: serializedMessage });
       }
       this.logger.debug(`Published batch of ${messages.length} messages to stream ${queueName}`);
-    } catch (error) {
+    } catch {
       this.logger.error(`Failed to publish batch: ${error}`);
       this.bufferMessages(messages);
       throw error;
@@ -173,7 +173,7 @@ export class RedisPublisher extends EventEmitter {
       }
 
       this.logger.info('Successfully flushed buffered messages');
-    } catch (error) {
+    } catch {
       this.logger.error(`Failed to flush buffered messages: ${error}`);
       // Put messages back in buffer for retry
       this.messageBuffer.unshift(...messagesToFlush);
@@ -193,7 +193,7 @@ export class RedisPublisher extends EventEmitter {
       this.logger.info(`Attempting to reconnect (attempt ${this.retryAttempts}/${this.config.maxRetries})`);
       try {
         await this.connect();
-      } catch (error) {
+      } catch {
         this.logger.error(`Reconnection attempt failed: ${error}`);
         this.scheduleReconnect();
       }

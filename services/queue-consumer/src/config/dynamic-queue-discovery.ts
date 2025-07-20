@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from 'fs';
 import { resolve, join } from 'path';
 import { LineConfig } from '@factory-dashboard/shared-types';
-import { createLogger } from 'winston';
+import winston, { createLogger } from 'winston';
 
 export interface DynamicQueueDiscoveryOptions {
   configDirectory: string;
@@ -18,9 +18,9 @@ export class DynamicQueueDiscovery {
     this.queueNamePrefix = options.queueNamePrefix || 'plc_data_';
     this.logger = createLogger({
       level: 'info',
-      format: require('winston').format.json(),
+      format: winston.format.json(),
       transports: [
-        new (require('winston').transports.Console)()
+        new winston.transports.Console()
       ]
     });
   }
@@ -38,7 +38,7 @@ export class DynamicQueueDiscovery {
 
       this.logger.info(`Discovered ${queueNames.length} queue names from ${lineFiles.length} line configurations`);
       return queueNames;
-    } catch (error) {
+    } catch {
       this.logger.error(`Failed to discover queue names: ${error}`);
       throw error;
     }
@@ -53,7 +53,7 @@ export class DynamicQueueDiscovery {
       
       this.logger.info(`Found ${lineFiles.length} line configuration files in ${this.configDirectory}`);
       return lineFiles;
-    } catch (error) {
+    } catch {
       this.logger.error(`Failed to read config directory: ${error}`);
       throw error;
     }
@@ -66,7 +66,7 @@ export class DynamicQueueDiscovery {
       
       this.logger.debug(`Loaded line config: ${lineConfig.name} (Line ${lineConfig.line})`);
       return lineConfig;
-    } catch (error) {
+    } catch {
       this.logger.error(`Failed to load line config from ${filePath}: ${error}`);
       throw error;
     }

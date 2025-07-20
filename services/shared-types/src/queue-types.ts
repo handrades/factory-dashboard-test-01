@@ -1,7 +1,7 @@
 export interface QueueMessage {
   id: string;
   timestamp: Date;
-  payload: any;
+  payload: unknown;
   retryCount: number;
   maxRetries: number;
   priority: 'LOW' | 'NORMAL' | 'HIGH' | 'CRITICAL';

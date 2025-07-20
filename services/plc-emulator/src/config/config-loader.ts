@@ -28,9 +28,9 @@ export class ConfigLoader extends EventEmitter {
     this.validator = new ConfigValidator();
     this.logger = createLogger({
       level: 'info',
-      format: require('winston').format.json(),
+      format: winston.format.json(),
       transports: [
-        new (require('winston').transports.Console)()
+        new winston.transports.Console()
       ]
     });
   }
@@ -65,7 +65,7 @@ export class ConfigLoader extends EventEmitter {
       }
       
       return validatedConfigs;
-    } catch (error) {
+    } catch {
       this.logger.error(`Failed to load configuration: ${error}`);
       throw error;
     }
@@ -92,7 +92,7 @@ export class ConfigLoader extends EventEmitter {
       const newConfig = await this.loadConfiguration();
       this.emit('configReloaded', newConfig);
       this.logger.info('Configuration reloaded successfully');
-    } catch (error) {
+    } catch {
       this.emit('configError', error);
       this.logger.error(`Failed to reload configuration: ${error}`);
     }

@@ -295,7 +295,7 @@ describe('End-to-End Data Flow Tests', () => {
     return length === 0;
   }
 
-  async function waitForInfluxData(equipmentId: string, timestamp: Date): Promise<any[]> {
+  async function waitForInfluxData(equipmentId: string, timestamp: Date): Promise<unknown[]> {
     const query = `
       from(bucket: "${process.env.INFLUXDB_BUCKET || 'factory-data-test'}")
         |> range(start: -1h)
@@ -307,7 +307,7 @@ describe('End-to-End Data Flow Tests', () => {
     return result;
   }
 
-  async function getLatestInfluxData(equipmentId: string): Promise<any[]> {
+  async function getLatestInfluxData(equipmentId: string): Promise<unknown[]> {
     const query = `
       from(bucket: "${process.env.INFLUXDB_BUCKET || 'factory-data-test'}")
         |> range(start: -10m)
@@ -335,7 +335,7 @@ describe('End-to-End Data Flow Tests', () => {
           }
           
           setTimeout(check, 500);
-        } catch (error) {
+        } catch {
           reject(error);
         }
       };

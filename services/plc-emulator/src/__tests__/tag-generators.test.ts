@@ -1,7 +1,6 @@
 import { PLCTag } from '@factory-dashboard/shared-types';
 import { 
   SinusoidalGenerator, 
-  LinearGenerator, 
   RandomGenerator, 
   SteppedGenerator, 
   ConstantGenerator,
@@ -9,7 +8,7 @@ import {
 } from '../generators/tag-generators';
 
 describe('Tag Generators', () => {
-  const createTestTag = (behavior: any): PLCTag => ({
+  const createTestTag = (behavior: unknown): PLCTag => ({
     id: 'test_tag',
     name: 'Test Tag',
     equipmentId: 'test_equipment',

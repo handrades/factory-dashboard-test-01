@@ -18,7 +18,7 @@ export interface DataSourceManager {
   getCurrentData(lines: FactoryLine[]): Promise<FactoryLine[]>;
   getConnectionStatus(): ConnectionStatus;
   isHealthy(): boolean;
-  getDataSourceInfo(): any;
+  getDataSourceInfo(): unknown;
 }
 
 export class DataSourceManagerImpl implements DataSourceManager {
@@ -102,7 +102,7 @@ export class DataSourceManagerImpl implements DataSourceManager {
           console.warn('InfluxDB connected but data structure validation failed');
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to switch to InfluxDB:', error);
       this.connectionStatus.error = error.message;
     }
@@ -143,7 +143,7 @@ export class DataSourceManagerImpl implements DataSourceManager {
           firstLineEquipmentCount: result[0]?.equipment?.length || 0
         });
         return result;
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Error getting InfluxDB data, falling back to simulation:', error);
         
         // Switch to fallback data

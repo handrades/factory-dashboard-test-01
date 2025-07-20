@@ -61,7 +61,7 @@ export class SecureConfigService {
       await secretManager.initialize();
       this.initialized = true;
       console.log('✅ SecureConfigService initialized successfully');
-    } catch (error) {
+    } catch {
       console.error('❌ Failed to initialize SecureConfigService:', error);
       throw new Error('SecureConfigService initialization failed');
     }
@@ -195,7 +195,7 @@ export class SecureConfigService {
 
       console.log('✅ All configurations validated successfully');
       return true;
-    } catch (error) {
+    } catch {
       console.error('❌ Configuration validation failed:', error);
       return false;
     }
@@ -204,7 +204,7 @@ export class SecureConfigService {
   /**
    * Get configuration summary (without sensitive data)
    */
-  public async getConfigurationSummary(): Promise<any> {
+  public async getConfigurationSummary(): Promise<Record<string, unknown>> {
     if (!this.initialized) {
       await this.initialize();
     }

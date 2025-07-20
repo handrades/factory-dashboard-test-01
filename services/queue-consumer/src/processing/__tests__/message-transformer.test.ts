@@ -1,5 +1,5 @@
 import { MessageTransformer, TransformationConfig } from '../message-transformer';
-import { PLCMessage, DataPoint } from '@factory-dashboard/shared-types';
+import { PLCMessage } from '@factory-dashboard/shared-types';
 
 describe('MessageTransformer', () => {
   let transformer: MessageTransformer;
@@ -380,11 +380,11 @@ describe('MessageTransformer', () => {
         id: '',
         timestamp: null,
         equipmentId: 'oven1'
-      } as any;
+      } as unknown;
 
       try {
         await transformer.transformMessage(invalidMessage);
-      } catch (error) {
+      } catch {
         // Expected to throw
       }
 

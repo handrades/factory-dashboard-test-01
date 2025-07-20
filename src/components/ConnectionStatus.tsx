@@ -149,10 +149,10 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ detailed = f
 };
 
 interface ConnectionDetailsProps {
-  environmentInfo: any;
+  environmentInfo: unknown;
   dataSource: 'influxdb' | 'simulation';
   lastDataUpdate: Date | null;
-  getDataSourceInfo: () => any;
+  getDataSourceInfo: () => unknown;
 }
 
 const ConnectionDetails: React.FC<ConnectionDetailsProps> = ({ 
@@ -161,7 +161,7 @@ const ConnectionDetails: React.FC<ConnectionDetailsProps> = ({
   lastDataUpdate,
   getDataSourceInfo 
 }) => {
-  const [diagnostics, setDiagnostics] = useState<any>(null);
+  const [diagnostics, setDiagnostics] = useState<unknown>(null);
 
   React.useEffect(() => {
     const updateDiagnostics = () => {

@@ -363,7 +363,7 @@ export class UserService {
    */
   public async refreshToken(
     refreshToken: string,
-    ipAddress: string
+    /* _ipAddress: string */
   ): Promise<AuthResult> {
     try {
       // Validate refresh token
@@ -596,7 +596,7 @@ export class UserService {
     };
   }
 
-  private getUserPermissions(roles: any[]): string[] {
+  private getUserPermissions(roles: unknown[]): string[] {
     // This would be more sophisticated in production
     const permissions: string[] = [];
     
@@ -623,7 +623,7 @@ export class UserService {
     return [...new Set(permissions)]; // Remove duplicates
   }
 
-  private getDefaultRole(): any {
+  private getDefaultRole(): unknown {
     return {
       id: 'role_viewer',
       name: UserRole.VIEWER,

@@ -11,7 +11,7 @@ export abstract class TagGenerator {
     this.startTime = Date.now();
   }
 
-  abstract generateValue(): any;
+  abstract generateValue(): unknown;
 
   protected getElapsedTime(): number {
     return Date.now() - this.startTime;
@@ -52,7 +52,7 @@ export class SteppedGenerator extends TagGenerator {
   private currentStepIndex: number = 0;
   private stepStartTime: number = Date.now();
 
-  generateValue(): any {
+  generateValue(): unknown {
     const { stepValues = [0, 50, 100], stepDuration = 10000 } = this.behavior.parameters;
     const elapsedTime = this.getElapsedTime();
     
@@ -66,7 +66,7 @@ export class SteppedGenerator extends TagGenerator {
 }
 
 export class ConstantGenerator extends TagGenerator {
-  generateValue(): any {
+  generateValue(): unknown {
     return this.behavior.parameters.constantValue ?? this.tag.value;
   }
 }

@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { createLogger } from 'winston';
+import winston, { createLogger } from 'winston';
 import { PLCMessage, InfluxDBConfig, ConsumerConfig, WriteOptions } from '@factory-dashboard/shared-types';
 import { RedisConsumer, RedisConsumerConfig } from '../messaging/redis-consumer';
 import { InfluxDBClient } from '../influxdb/influxdb-client';
@@ -61,13 +61,13 @@ export class QueueConsumerService extends EventEmitter {
     
     this.logger = createLogger({
       level: 'info',
-      format: require('winston').format.combine(
-        require('winston').format.timestamp(),
-        require('winston').format.json()
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
       ),
       transports: [
-        new (require('winston').transports.Console)(),
-        new (require('winston').transports.File)({ filename: 'queue-consumer.log' })
+        new winston.transports.Console(),
+        new winston.transports.File({ filename: 'queue-consumer.log' })
       ]
     });
 
@@ -177,7 +177,7 @@ export class QueueConsumerService extends EventEmitter {
       this.logger.info('Queue Consumer Service started successfully');
       this.emit('started');
       
-    } catch (error) {
+    } catch {
       this.logger.error(`Failed to start service: ${error}`);
       this.emit('startError', error);
       throw error;
@@ -233,7 +233,7 @@ export class QueueConsumerService extends EventEmitter {
       this.logger.debug(`Successfully processed message ${message.id} in ${processingTime}ms`);
       callback();
       
-    } catch (error) {
+    } catch {
       this.metrics.messagesFailedProcessing++;
       this.logger.error(`Failed to process message ${message.id}: ${error}`);
       callback(error as Error);
@@ -291,7 +291,7 @@ export class QueueConsumerService extends EventEmitter {
       await this.stop();
       clearTimeout(shutdownTimeout);
       process.exit(0);
-    } catch (error) {
+    } catch {
       this.logger.error(`Error during shutdown: ${error}`);
       clearTimeout(shutdownTimeout);
       process.exit(1);
@@ -305,10 +305,10 @@ export class QueueConsumerService extends EventEmitter {
 
   getDetailedStats(): {
     service: ServiceMetrics;
-    redis: any;
-    influxdb: any;
-    transformer: any;
-    errorHandler: any;
+    redis: unknown;
+    influxdb: unknown;
+    transformer: unknown;
+    errorHandler: unknown;
   } {
     return {
       service: this.getServiceMetrics(),

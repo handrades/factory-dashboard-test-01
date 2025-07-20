@@ -1,4 +1,4 @@
-import { EquipmentConfig, PLCTag, EquipmentState, StateTransition, TagBehavior } from '@factory-dashboard/shared-types';
+import { EquipmentConfig } from '@factory-dashboard/shared-types';
 
 export interface ConfigurationFile {
   equipment: EquipmentConfig[];

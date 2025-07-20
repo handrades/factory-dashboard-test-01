@@ -59,7 +59,7 @@ export class AuthController {
       };
 
       res.json(response);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error);
       res.status(500).json({ error: 'Login failed' });
     }
@@ -132,7 +132,7 @@ export class AuthController {
         refreshToken: newRefreshToken,
         expiresIn: this.jwtManager.getAccessTokenExpiryTime()
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Token refresh error:', error);
       
       this.securityLogger.logTokenRefresh(
@@ -170,7 +170,7 @@ export class AuthController {
       });
 
       res.json({ message: 'Logged out successfully' });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Logout error:', error);
       res.status(500).json({ error: 'Logout failed' });
     }
@@ -204,7 +204,7 @@ export class AuthController {
         message: 'User created successfully',
         user
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Registration error:', error);
       
       this.securityLogger.logSecurityEvent({
@@ -244,7 +244,7 @@ export class AuthController {
       );
 
       res.json({ message: 'Password changed successfully' });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Change password error:', error);
       res.status(400).json({ error: error.message });
     }
@@ -269,7 +269,7 @@ export class AuthController {
         user,
         permissions
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Get profile error:', error);
       res.status(500).json({ error: 'Failed to get profile' });
     }
@@ -287,7 +287,7 @@ export class AuthController {
         user: req.user,
         expiresIn: this.jwtManager.getAccessTokenExpiryTime()
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Validate token error:', error);
       res.status(401).json({ error: 'Token validation failed' });
     }
@@ -298,7 +298,7 @@ export class AuthController {
     try {
       const users = this.userService.getAllUsers();
       res.json({ users });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Get all users error:', error);
       res.status(500).json({ error: 'Failed to get users' });
     }
@@ -317,7 +317,7 @@ export class AuthController {
       await this.userService.updateUserRoles(userId, roles, req.user!.userId);
 
       res.json({ message: 'User roles updated successfully' });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Update user roles error:', error);
       res.status(400).json({ error: error.message });
     }
@@ -341,7 +341,7 @@ export class AuthController {
       await this.userService.deactivateUser(userId, req.user!.userId);
 
       res.json({ message: 'User deactivated successfully' });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Deactivate user error:', error);
       res.status(400).json({ error: error.message });
     }
@@ -351,7 +351,7 @@ export class AuthController {
     try {
       const roles = this.userService.getAllRoles();
       res.json({ roles });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Get roles error:', error);
       res.status(500).json({ error: 'Failed to get roles' });
     }
@@ -371,7 +371,7 @@ export class AuthController {
           username: event.username || 'anonymous'
         }))
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Get stats error:', error);
       res.status(500).json({ error: 'Failed to get statistics' });
     }

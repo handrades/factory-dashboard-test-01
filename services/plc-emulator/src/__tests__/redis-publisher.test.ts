@@ -13,7 +13,7 @@ jest.mock('redis', () => ({
 
 describe('RedisPublisher', () => {
   let publisher: RedisPublisher;
-  let mockRedisClient: any;
+  let mockRedisClient: unknown;
   const config: RedisPublisherConfig = {
     host: 'localhost',
     port: 6379,
@@ -22,8 +22,9 @@ describe('RedisPublisher', () => {
     connectionPoolSize: 10
   };
 
-  beforeEach(() => {
-    const { createClient } = require('redis');
+  beforeEach(async () => {
+    const redisModule = await import('redis');
+    const { createClient } = redisModule;
     mockRedisClient = createClient();
     publisher = new RedisPublisher(config);
   });

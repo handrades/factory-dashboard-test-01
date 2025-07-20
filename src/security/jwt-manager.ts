@@ -197,7 +197,7 @@ export class JWTManager {
       const payload = verify(token, this.refreshSecret, {
         issuer: this.issuer,
         audience: this.audience
-      }) as any;
+      }) as unknown;
 
       if (payload.type !== 'refresh') {
         return {
@@ -265,7 +265,7 @@ export class JWTManager {
       const decoded = verify(token, this.jwtSecret, { ignoreExpiration: true }) as JWTPayload;
       const currentTime = Math.floor(Date.now() / 1000);
       return decoded.exp < currentTime;
-    } catch (error) {
+    } catch {
       return true;
     }
   }
@@ -277,7 +277,7 @@ export class JWTManager {
     try {
       const decoded = verify(token, this.jwtSecret, { ignoreExpiration: true }) as JWTPayload;
       return new Date(decoded.exp * 1000);
-    } catch (error) {
+    } catch {
       return null;
     }
   }

@@ -2,7 +2,7 @@ import type { Equipment } from '../context/FactoryContext';
 
 export class FallbackDataService {
   private simulationInterval?: number;
-  private simulatedData: Map<string, any> = new Map();
+  private simulatedData: Map<string, unknown> = new Map();
 
   constructor() {
     this.initializeSimulatedData();

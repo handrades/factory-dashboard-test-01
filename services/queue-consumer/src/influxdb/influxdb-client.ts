@@ -1,7 +1,7 @@
 import { InfluxDB, Point, WriteApi, QueryApi } from '@influxdata/influxdb-client';
 import { InfluxDBConfig, DataPoint, WriteOptions } from '@factory-dashboard/shared-types';
 import { EventEmitter } from 'events';
-import { createLogger } from 'winston';
+import winston, { createLogger } from 'winston';
 
 export class InfluxDBClient extends EventEmitter {
   private client: InfluxDB;
@@ -23,13 +23,13 @@ export class InfluxDBClient extends EventEmitter {
     
     this.logger = createLogger({
       level: 'info',
-      format: require('winston').format.combine(
-        require('winston').format.timestamp(),
-        require('winston').format.json()
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
       ),
       transports: [
-        new (require('winston').transports.Console)(),
-        new (require('winston').transports.File)({ filename: 'influxdb-client.log' })
+        new winston.transports.Console(),
+        new winston.transports.File({ filename: 'influxdb-client.log' })
       ]
     });
 
@@ -57,12 +57,12 @@ export class InfluxDBClient extends EventEmitter {
     
     // Handle write errors
     try {
-      (this.writeApi as any).on?.('error', (error: any) => {
+      (this.writeApi as unknown).on?.('error', (error: unknown) => {
         this.logger.error(`InfluxDB write error: ${error}`);
         this.writeErrors++;
         this.emit('writeError', error);
       });
-    } catch (error) {
+    } catch {
       this.logger.debug('WriteApi event handling not available');
     }
   }
@@ -74,7 +74,7 @@ export class InfluxDBClient extends EventEmitter {
       this.isConnected = true;
       this.logger.info('Successfully connected to InfluxDB');
       this.emit('connected');
-    } catch (error) {
+    } catch {
       this.isConnected = false;
       this.logger.error(`Failed to connect to InfluxDB: ${error}`);
       throw error;
@@ -94,7 +94,7 @@ export class InfluxDBClient extends EventEmitter {
       this.isConnected = false;
       this.logger.info('Disconnected from InfluxDB');
       this.emit('disconnected');
-    } catch (error) {
+    } catch {
       this.logger.error(`Error disconnecting from InfluxDB: ${error}`);
     }
   }
@@ -108,7 +108,7 @@ export class InfluxDBClient extends EventEmitter {
       if (this.writeBuffer.length >= this.writeOptions.batchSize) {
         await this.flushBuffer();
       }
-    } catch (error) {
+    } catch {
       this.logger.error(`Error writing data point: ${error}`);
       throw error;
     }
@@ -125,7 +125,7 @@ export class InfluxDBClient extends EventEmitter {
       if (this.writeBuffer.length >= this.writeOptions.batchSize) {
         await this.flushBuffer();
       }
-    } catch (error) {
+    } catch {
       this.logger.error(`Error writing data points: ${error}`);
       throw error;
     }
@@ -170,7 +170,7 @@ export class InfluxDBClient extends EventEmitter {
       await this.writeWithRetry(pointsToWrite);
       this.pointsWritten += pointsToWrite.length;
       this.logger.debug(`Successfully wrote ${pointsToWrite.length} points to InfluxDB`);
-    } catch (error) {
+    } catch {
       this.logger.error(`Failed to write ${pointsToWrite.length} points to InfluxDB: ${error}`);
       this.writeErrors += pointsToWrite.length;
       
@@ -191,7 +191,7 @@ export class InfluxDBClient extends EventEmitter {
         this.writeApi.writePoints(points);
         await this.writeApi.flush();
         return; // Success
-      } catch (error) {
+      } catch {
         lastError = error as Error;
         this.logger.warn(`Write attempt ${attempt} failed: ${error}`);
         
@@ -208,23 +208,23 @@ export class InfluxDBClient extends EventEmitter {
     this.flushTimer = setInterval(async () => {
       try {
         await this.flushBuffer();
-      } catch (error) {
+      } catch {
         this.logger.error(`Error during scheduled flush: ${error}`);
       }
     }, this.writeOptions.flushInterval);
   }
 
-  async query(fluxQuery: string): Promise<any[]> {
+  async query(fluxQuery: string): Promise<unknown[]> {
     try {
       const result = await this.queryApi.collectRows(fluxQuery);
       return result;
-    } catch (error) {
+    } catch {
       this.logger.error(`Query error: ${error}`);
       throw error;
     }
   }
 
-  async getLatestEquipmentData(equipmentId: string, timeRange: string = '1h'): Promise<any[]> {
+  async getLatestEquipmentData(equipmentId: string, timeRange: string = '1h'): Promise<unknown[]> {
     const query = `
       from(bucket: "${this.config.bucket}")
         |> range(start: -${timeRange})
@@ -242,7 +242,7 @@ export class InfluxDBClient extends EventEmitter {
     field: string,
     timeRange: string = '1h',
     interval: string = '1m'
-  ): Promise<any[]> {
+  ): Promise<unknown[]> {
     const query = `
       from(bucket: "${this.config.bucket}")
         |> range(start: -${timeRange})
@@ -256,7 +256,7 @@ export class InfluxDBClient extends EventEmitter {
     return this.query(query);
   }
 
-  async getEquipmentMetrics(equipmentIds: string[], timeRange: string = '1h'): Promise<any[]> {
+  async getEquipmentMetrics(equipmentIds: string[], timeRange: string = '1h'): Promise<unknown[]> {
     const equipmentFilter = equipmentIds.map(id => `r.equipment_id == "${id}"`).join(' or ');
     
     const query = `
@@ -274,7 +274,7 @@ export class InfluxDBClient extends EventEmitter {
     try {
       await this.queryApi.collectRows('buckets() |> limit(n: 1)');
       return true;
-    } catch (error) {
+    } catch {
       this.logger.error(`Connection test failed: ${error}`);
       return false;
     }

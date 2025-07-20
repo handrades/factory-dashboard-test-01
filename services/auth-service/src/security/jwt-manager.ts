@@ -62,7 +62,7 @@ export class JWTManager {
       }
 
       return payload;
-    } catch (error) {
+    } catch {
       if (error instanceof jwt.JsonWebTokenError) {
         throw new Error('Invalid access token');
       } else if (error instanceof jwt.TokenExpiredError) {
@@ -85,7 +85,7 @@ export class JWTManager {
       }
 
       return payload;
-    } catch (error) {
+    } catch {
       if (error instanceof jwt.JsonWebTokenError) {
         throw new Error('Invalid refresh token');
       } else if (error instanceof jwt.TokenExpiredError) {
@@ -111,12 +111,12 @@ export class JWTManager {
 
   getTokenExpiry(token: string): Date {
     try {
-      const decoded = jwt.decode(token) as any;
+      const decoded = jwt.decode(token) as Record<string, unknown>;
       if (!decoded || !decoded.exp) {
         throw new Error('Invalid token structure');
       }
       return new Date(decoded.exp * 1000);
-    } catch (error) {
+    } catch {
       throw new Error('Failed to extract token expiry');
     }
   }
@@ -125,7 +125,7 @@ export class JWTManager {
     try {
       const expiry = this.getTokenExpiry(token);
       return expiry < new Date();
-    } catch (error) {
+    } catch {
       return true;
     }
   }

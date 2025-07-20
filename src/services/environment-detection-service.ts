@@ -191,6 +191,6 @@ export class EnvironmentDetectionService {
     if (EnvironmentDetectionService.instance) {
       EnvironmentDetectionService.instance.config = null;
     }
-    EnvironmentDetectionService.instance = null as any;
+    EnvironmentDetectionService.instance = null as unknown;
   }
 }

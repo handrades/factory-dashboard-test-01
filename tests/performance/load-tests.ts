@@ -152,7 +152,7 @@ export class LoadTestRunner {
         latencies.push(latency);
         messageCount++;
         
-      } catch (error) {
+      } catch {
         errorCount++;
         console.error(`Client ${clientId} error:`, error);
       }
@@ -316,7 +316,7 @@ export class LoadTestRunner {
 
     const result = await this.queryApi.collectRows(query);
     
-    const processed = result.reduce((sum: number, row: any) => sum + row._value, 0);
+    const processed = result.reduce((sum: number, row: unknown) => sum + row._value, 0);
     
     // In a real implementation, we'd compare with sent messages to find lost/duplicated
     return {

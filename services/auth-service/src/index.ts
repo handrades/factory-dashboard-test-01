@@ -8,13 +8,13 @@ import AuthMiddleware from './middleware/auth-middleware.js';
 import createAuthRoutes from './routes/auth-routes.js';
 import { AuthConfig } from './types/auth-types.js';
 
-const SecretManager = require('../../src/security/SecretManager.cjs');
+import { SecretManager } from '../../src/security/SecretManager.cjs';
 
 class AuthService {
   private app: express.Application;
   private authController: AuthController;
   private authMiddleware: AuthMiddleware;
-  private secretManager: any;
+  private secretManager: unknown;
 
   constructor() {
     this.app = express();

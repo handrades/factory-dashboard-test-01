@@ -9,8 +9,8 @@ jest.mock('winston');
 
 describe('PLCEmulatorService', () => {
   let service: PLCEmulatorService;
-  let mockConfigLoader: any;
-  let mockRedisPublisher: any;
+  let mockConfigLoader: unknown;
+  let mockRedisPublisher: unknown;
   
   const testConfig: PLCEmulatorServiceConfig = {
     configPath: resolve(__dirname, '../config/sample-equipment.json'),
@@ -55,9 +55,11 @@ describe('PLCEmulatorService', () => {
     ]
   };
 
-  beforeEach(() => {
-    const { ConfigLoader } = require('../config/config-loader');
-    const { RedisPublisher } = require('../messaging/redis-publisher');
+  beforeEach(async () => {
+    const configModule = await import('../config/config-loader');
+    const redisModule = await import('../messaging/redis-publisher');
+    const { ConfigLoader } = configModule;
+    const { RedisPublisher } = redisModule;
     
     mockConfigLoader = {
       loadConfiguration: jest.fn().mockResolvedValue([testEquipmentConfig]),

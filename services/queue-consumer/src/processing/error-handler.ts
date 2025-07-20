@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { createLogger } from 'winston';
+import winston, { createLogger } from 'winston';
 import { PLCMessage } from '@factory-dashboard/shared-types';
 
 export interface RetryConfig {
@@ -63,13 +63,13 @@ export class ErrorHandler extends EventEmitter {
     
     this.logger = createLogger({
       level: 'info',
-      format: require('winston').format.combine(
-        require('winston').format.timestamp(),
-        require('winston').format.json()
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
       ),
       transports: [
-        new (require('winston').transports.Console)(),
-        new (require('winston').transports.File)({ filename: 'error-handler.log' })
+        new winston.transports.Console(),
+        new winston.transports.File({ filename: 'error-handler.log' })
       ]
     });
 
@@ -101,7 +101,7 @@ export class ErrorHandler extends EventEmitter {
         
         return result;
         
-      } catch (error) {
+      } catch {
         lastError = error as Error;
         const processingTime = Date.now() - startTime;
         

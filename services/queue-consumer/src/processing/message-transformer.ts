@@ -1,13 +1,13 @@
 import { PLCMessage, DataPoint } from '@factory-dashboard/shared-types';
-import { createLogger } from 'winston';
+import winston, { createLogger } from 'winston';
 
 export interface TransformationRule {
   tagId: string | RegExp;
   measurement: string;
   field: string;
   tags?: Record<string, string>;
-  transform?: (value: any) => any;
-  validate?: (value: any) => boolean;
+  transform?: (value: unknown) => unknown;
+  validate?: (value: unknown) => boolean;
 }
 
 export interface TransformationConfig {
@@ -35,13 +35,13 @@ export class MessageTransformer {
     this.config = config;
     this.logger = createLogger({
       level: 'info',
-      format: require('winston').format.combine(
-        require('winston').format.timestamp(),
-        require('winston').format.json()
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
       ),
       transports: [
-        new (require('winston').transports.Console)(),
-        new (require('winston').transports.File)({ filename: 'message-transformer.log' })
+        new winston.transports.Console(),
+        new winston.transports.File({ filename: 'message-transformer.log' })
       ]
     });
   }
@@ -74,14 +74,14 @@ export class MessageTransformer {
       this.transformationStats.dataPointsCreated += dataPoints.length;
       
       return dataPoints;
-    } catch (error) {
+    } catch {
       this.transformationStats.transformationErrors++;
       this.logger.error(`Error transforming message ${message.id}: ${error}`);
       throw error;
     }
   }
 
-  private async transformTag(message: PLCMessage, tag: any): Promise<DataPoint[]> {
+  private async transformTag(message: PLCMessage, tag: unknown): Promise<DataPoint[]> {
     const dataPoints: DataPoint[] = [];
     
     // Find transformation rule for this tag
@@ -115,7 +115,7 @@ export class MessageTransformer {
     if (rule?.transform) {
       try {
         transformedValue = rule.transform(tag.value);
-      } catch (error) {
+      } catch {
         this.logger.error(`Error transforming tag ${tag.tagId}: ${error}`);
         return dataPoints;
       }
@@ -164,7 +164,7 @@ export class MessageTransformer {
   private createDataPointsFromObject(
     measurement: string,
     baseTags: Record<string, string>,
-    obj: any,
+    obj: unknown,
     timestamp: Date,
     prefix: string = ''
   ): DataPoint[] {

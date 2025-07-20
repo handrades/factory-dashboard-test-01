@@ -54,7 +54,7 @@ export class HealthService {
         });
         
         timer();
-      } catch (error) {
+      } catch {
         this.logger.error('Health check failed', error as Error, { correlationId });
         res.status(500).json({
           status: 'unhealthy',
@@ -86,7 +86,7 @@ export class HealthService {
           ready,
           checksCount: checks.length
         });
-      } catch (error) {
+      } catch {
         this.logger.error('Readiness check failed', error as Error, { correlationId });
         res.status(500).json({
           ready: false,
@@ -124,7 +124,7 @@ export class HealthService {
         }
         
         this.logger.debug('Metrics exported', { correlationId }, { format });
-      } catch (error) {
+      } catch {
         this.logger.error('Metrics export failed', error as Error, { correlationId });
         res.status(500).json({ error: 'Metrics export failed' });
       }
@@ -150,8 +150,9 @@ export class HealthService {
   private registerDefaultChecks(): void {
     // System health check
     this.registerHealthCheck('system', async () => {
-      const memUsage = process.memoryUsage();
-      const cpuUsage = process.cpuUsage();
+      // System health monitoring
+      process.memoryUsage();
+      process.cpuUsage();
       
       return {
         name: 'system',
@@ -194,7 +195,7 @@ export class HealthService {
           ...result,
           duration
         });
-      } catch (error) {
+      } catch {
         checks.push({
           name,
           status: 'unhealthy',
@@ -211,7 +212,7 @@ export class HealthService {
   private async getHealthStatus(): Promise<HealthStatus> {
     const checks = await this.runHealthChecks();
     
-    const healthyChecks = checks.filter(check => check.status === 'healthy');
+    checks.filter(check => check.status === 'healthy');
     const unhealthyChecks = checks.filter(check => check.status === 'unhealthy');
     const degradedChecks = checks.filter(check => check.status === 'degraded');
     

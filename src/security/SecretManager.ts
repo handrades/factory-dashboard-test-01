@@ -57,7 +57,7 @@ export class SecretManager {
   /**
    * Get a secret value by key
    */
-  public async getSecret(key: string, _environment?: string): Promise<string> {
+  public async getSecret(key: string /*, _environment?: string */): Promise<string> {
     if (!this.initialized) {
       await this.initialize();
     }
@@ -99,8 +99,8 @@ export class SecretManager {
    */
   public async validateSecrets(): Promise<boolean> {
     const requiredSecrets = Object.entries(this.configuration.secrets)
-      .filter(([_, config]) => config.required)
-      .map(([key, _]) => key);
+      .filter(([, config]) => config.required)
+      .map(([key]) => key);
 
     const missingSecrets: string[] = [];
 

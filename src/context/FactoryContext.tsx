@@ -1,52 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { loadProductionLines } from '../utils/configLoader';
 import { getDataSourceManager } from '../services/data-source-manager';
 import { EnvironmentDetectionService } from '../services/environment-detection-service';
+import type { FactoryLine } from './factory-types';
+import { FactoryContext } from './factory-context';
 
-export interface Equipment {
-  id: string;
-  name: string;
-  type: 'oven' | 'conveyor' | 'press' | 'assembly' | 'oven-conveyor';
-  status: 'running' | 'stopped' | 'error';
-  temperature?: number;
-  speed?: number;
-  pressure?: number;
-}
-
-export interface FactoryLine {
-  id: number;
-  name: string;
-  status: 'running' | 'stopped' | 'error';
-  equipment: Equipment[];
-  efficiency: number;
-}
-
-interface FactoryContextType {
-  lines: FactoryLine[];
-  getLine: (id: number) => FactoryLine | undefined;
-  updateLineStatus: (id: number, status: 'running' | 'stopped' | 'error') => void;
-  isConnectedToInfluxDB: boolean;
-  isUsingFallbackData: boolean;
-  connectionStatus: 'connected' | 'connecting' | 'disconnected' | 'error';
-  dataSource: 'influxdb' | 'simulation';
-  environmentInfo: any;
-  lastDataUpdate: Date | null;
-  forceReconnect: () => Promise<boolean>;
-  forceClearCache: () => void;
-  getDataSourceInfo: () => any;
-}
-
-const FactoryContext = createContext<FactoryContextType | undefined>(undefined);
-
-export const useFactory = () => {
-  const context = useContext(FactoryContext);
-  if (!context) {
-    throw new Error('useFactory must be used within a FactoryProvider');
-  }
-  return context;
-};
-
-export const FactoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const FactoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [lines, setLines] = useState<FactoryLine[]>(loadProductionLines());
   const [isConnectedToInfluxDB, setIsConnectedToInfluxDB] = useState(false);
   const [isUsingFallbackData, setIsUsingFallbackData] = useState(true);
@@ -133,7 +92,7 @@ export const FactoryProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     // Update initial state
     updateConnectionState();
-  }, []);
+  }, [environmentService, updateConnectionState]);
 
   // Data update loop
   useEffect(() => {
@@ -141,7 +100,7 @@ export const FactoryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const interval = setInterval(updateData, 2000); // Update every 2 seconds for more responsive updates
 
     return () => clearInterval(interval);
-  }, [dataSourceManager]);
+  }, [updateData]);
 
   return (
     <FactoryContext.Provider value={{ 
@@ -162,3 +121,5 @@ export const FactoryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     </FactoryContext.Provider>
   );
 };
+
+export { FactoryProvider };

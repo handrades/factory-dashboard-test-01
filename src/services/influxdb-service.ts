@@ -34,7 +34,7 @@ export interface EquipmentData {
   pressure?: number;
   status?: string;
   quality?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface TimeSeriesData {
@@ -47,11 +47,11 @@ export class InfluxDBService {
   private queryApi: QueryApi;
   private config: InfluxDBServiceConfig;
   private isConnected: boolean = false;
-  private connectionCache: Map<string, any> = new Map();
+  private connectionCache: Map<string, unknown> = new Map();
   private cacheTimeout: number = 0; // Disable caching completely for debugging
   private retryConfig: ConnectionRetryConfig;
   private diagnostics: ConnectionDiagnostics;
-  private queryBuilder: any;
+  private queryBuilder: unknown;
 
   constructor(config: InfluxDBServiceConfig, retryConfig?: Partial<ConnectionRetryConfig>) {
     this.config = config;
@@ -111,7 +111,7 @@ export class InfluxDBService {
         this.diagnostics.errorType = undefined;
         console.log('Successfully connected to InfluxDB');
         return true;
-      } catch (error: any) {
+      } catch (error: unknown) {
         this.isConnected = false;
         this.diagnostics.isConnected = false;
         this.diagnostics.consecutiveFailures++;
@@ -139,7 +139,7 @@ export class InfluxDBService {
     return false;
   }
 
-  private categorizeError(error: any): 'network' | 'auth' | 'data' | 'config' {
+  private categorizeError(error: unknown): 'network' | 'auth' | 'data' | 'config' {
     if (!error.message) return 'network';
     
     const message = error.message.toLowerCase();
@@ -215,7 +215,7 @@ export class InfluxDBService {
       
       this.setCachedResult(cacheKey, equipmentData);
       return equipmentData;
-    } catch (error) {
+    } catch {
       console.error('Error querying latest equipment data:', error);
       throw error;
     }
@@ -248,14 +248,14 @@ export class InfluxDBService {
       );
 
       const result = await this.queryApi.collectRows(query);
-      const timeSeriesData = result.map((row: any) => ({
+      const timeSeriesData = result.map((row: unknown) => ({
         timestamp: new Date(row._time),
         value: row._value
       }));
       
       this.setCachedResult(cacheKey, timeSeriesData);
       return timeSeriesData;
-    } catch (error) {
+    } catch {
       console.error('Error querying time series data:', error);
       throw error;
     }
@@ -291,12 +291,12 @@ export class InfluxDBService {
       const statusMap: { [equipmentId: string]: string } = {};
       
       for (const equipmentId of equipmentIds) {
-        const equipmentRows = allResults.filter((row: any) => row.equipment_id === equipmentId);
+        const equipmentRows = allResults.filter((row: unknown) => row.equipment_id === equipmentId);
         
         if (equipmentRows.length === 0) {
           statusMap[equipmentId] = 'error'; // No recent data
         } else {
-          const latestTimestamp = Math.max(...equipmentRows.map((row: any) => new Date(row._time).getTime()));
+          const latestTimestamp = Math.max(...equipmentRows.map((row: unknown) => new Date(row._time).getTime()));
           const timeDiff = Date.now() - latestTimestamp;
           
           if (timeDiff > 60000) { // No data for more than 1 minute
@@ -311,7 +311,7 @@ export class InfluxDBService {
       
       this.setCachedResult(cacheKey, statusMap);
       return statusMap;
-    } catch (error) {
+    } catch {
       console.error('Error querying equipment status:', error);
       throw error;
     }
@@ -334,17 +334,17 @@ export class InfluxDBService {
       );
 
       const result = await this.queryApi.collectRows(query);
-      const efficiency = result.length > 0 ? ((result[0] as any)._value * 100) : 85; // Default to 85% if no data
+      const efficiency = result.length > 0 ? ((result[0] as unknown)._value * 100) : 85; // Default to 85% if no data
       
       this.setCachedResult(cacheKey, efficiency);
       return efficiency;
-    } catch (error) {
+    } catch {
       console.error('Error querying line efficiency:', error);
       return 85; // Default efficiency
     }
   }
 
-  private transformQueryResultToEquipmentData(result: any[]): EquipmentData[] {
+  private transformQueryResultToEquipmentData(result: unknown[]): EquipmentData[] {
     console.log('🔧 transformQueryResultToEquipmentData called with', result.length, 'rows');
     console.log('First row sample:', result[0]);
     
@@ -434,7 +434,7 @@ export class InfluxDBService {
     return Array.from(equipmentMap.values());
   }
 
-  private parseNumericValue(value: any): number | undefined {
+  private parseNumericValue(value: unknown): number | undefined {
     if (typeof value === 'number') return value;
     if (typeof value === 'string') {
       const parsed = parseFloat(value);
@@ -443,7 +443,7 @@ export class InfluxDBService {
     return undefined;
   }
 
-  private parseBooleanValue(value: any): boolean {
+  private parseBooleanValue(value: unknown): boolean {
     if (typeof value === 'boolean') return value;
     if (typeof value === 'string') {
       return value.toLowerCase() === 'true' || value === '1';
@@ -454,7 +454,7 @@ export class InfluxDBService {
     return false;
   }
 
-  private parseStatusValue(value: any): 'running' | 'stopped' | 'error' {
+  private parseStatusValue(value: unknown): 'running' | 'stopped' | 'error' {
     if (typeof value === 'string') {
       const status = value.toLowerCase();
       if (status === 'running' || status === 'active' || status === 'on') return 'running';
@@ -583,12 +583,12 @@ export class InfluxDBService {
       const query = 'buckets() |> limit(n: 1)';
       await this.queryApi.collectRows(query);
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
 
-  private getCachedResult(key: string): any {
+  private getCachedResult(key: string): unknown {
     const cached = this.connectionCache.get(key);
     if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
       return cached.data;
@@ -596,7 +596,7 @@ export class InfluxDBService {
     return null;
   }
 
-  private setCachedResult(key: string, data: any): void {
+  private setCachedResult(key: string, data: unknown): void {
     this.connectionCache.set(key, {
       data,
       timestamp: Date.now()
@@ -648,7 +648,7 @@ export class InfluxDBService {
       const result = await this.queryApi.collectRows(query);
       
       // Check if we have expected measurements
-      const measurements = result.map((row: any) => row._value);
+      const measurements = result.map((row: unknown) => row._value);
       const expectedMeasurements = ['temperature', 'conveyor_speed', 'hydraulic_pressure', 'heating_status', 'motor_status', 'message_quality'];
       
       const hasExpectedData = expectedMeasurements.some(expected => 
@@ -661,7 +661,7 @@ export class InfluxDBService {
       });
       
       return hasExpectedData;
-    } catch (error) {
+    } catch {
       console.warn('Data structure validation failed:', error);
       return false;
     }

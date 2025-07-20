@@ -2,7 +2,7 @@ import { createClient } from 'redis';
 import { InfluxDB } from '@influxdata/influxdb-client';
 import { PLCMessage } from '@factory-dashboard/shared-types';
 import { v4 as uuidv4 } from 'uuid';
-const SafeCommandExecutor = require('../../src/security/SafeCommandExecutor.cjs');
+import { SafeCommandExecutor } from '../../src/security/SafeCommandExecutor';
 
 interface ChaosTestConfig {
   testDuration: number; // seconds
@@ -32,15 +32,15 @@ interface ChaosTestResults {
 }
 
 export class ChaosTestRunner {
-  private redisClient: any;
+  private redisClient: unknown;
   private influxDB: InfluxDB;
-  private queryApi: any;
+  private queryApi: unknown;
   private testStartTime: number = 0;
   private messagesSent: number = 0;
   private messagesReceived: number = 0;
   private serviceFaults: { [service: string]: number } = {};
   private recoveryTimes: number[] = [];
-  private commandExecutor: any;
+  private commandExecutor: unknown;
 
   constructor() {
     this.commandExecutor = new SafeCommandExecutor();
@@ -116,7 +116,7 @@ export class ChaosTestRunner {
         await this.redisClient.lPush(queueName, JSON.stringify(message));
         
         this.messagesSent++;
-      } catch (error) {
+      } catch {
         console.error('Data generation error:', error);
       }
     }, interval);
@@ -164,7 +164,7 @@ export class ChaosTestRunner {
         // Count processed messages
         this.messagesReceived = await this.countProcessedMessages();
         
-      } catch (error) {
+      } catch {
         console.error('Monitoring error:', error);
       }
     }, 5000);
@@ -173,29 +173,32 @@ export class ChaosTestRunner {
   private async checkServiceHealth(service: string): Promise<boolean> {
     try {
       switch (service) {
-        case 'plc-emulator':
+        case 'plc-emulator': {
           const plcUrl = process.env.PLC_EMULATOR_URL || 'http://localhost:3000';
           const plcResponse = await fetch(`${plcUrl}/health`);
           return plcResponse.ok;
+        }
           
-        case 'queue-consumer':
+        case 'queue-consumer': {
           const consumerUrl = process.env.QUEUE_CONSUMER_URL || 'http://localhost:8080';
           const consumerResponse = await fetch(`${consumerUrl}/health`);
           return consumerResponse.ok;
+        }
           
         case 'redis':
           await this.redisClient.ping();
           return true;
           
-        case 'influxdb':
+        case 'influxdb': {
           const query = 'buckets() |> limit(n:1)';
           await this.queryApi.collectRows(query);
           return true;
+        }
           
         default:
           return true;
       }
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -212,7 +215,7 @@ export class ChaosTestRunner {
 
       const result = await this.queryApi.collectRows(query);
       return result.length > 0 ? result[0]._value : 0;
-    } catch (error) {
+    } catch {
       console.error('Error counting processed messages:', error);
       return 0;
     }
@@ -238,7 +241,7 @@ export class ChaosTestRunner {
       const recoveryTime = Date.now() - startTime - (scenario.duration * 1000);
       this.recoveryTimes.push(recoveryTime);
       
-    } catch (error) {
+    } catch {
       console.error(`Failed to execute scenario ${scenario.name}:`, error);
     }
   }
@@ -300,11 +303,12 @@ export class ChaosTestRunner {
         // Service should auto-recover
         break;
         
-      case 'network_partition':
+      case 'network_partition': {
         const containerName = `factory-${scenario.target}-test`;
         await this.commandExecutor.connectToNetwork('factory-test-network', containerName);
         console.log(`Network partition recovered for: ${scenario.target}`);
         break;
+      }
         
       case 'resource_exhaustion':
         await this.stopResourceExhaustion(scenario.target);
@@ -321,7 +325,7 @@ export class ChaosTestRunner {
       const stressName = `${resourceType}-stress`;
       await this.commandExecutor.stopDockerContainer(stressName);
       console.log(`Resource exhaustion stopped: ${resourceType}`);
-    } catch (error) {
+    } catch {
       // Container might already be stopped
       console.log(`Container ${resourceType}-stress was already stopped`);
     }
@@ -389,7 +393,7 @@ export class ChaosTestRunner {
       }
       
       return (consistentMessages / result.length) * 100;
-    } catch (error) {
+    } catch {
       console.error('Error calculating data consistency:', error);
       return 0;
     }
@@ -485,7 +489,7 @@ export class ChaosTestRunner {
   generateReport(results: ChaosTestResults[]): string {
     let report = '# Chaos Testing Report\n\n';
     
-    results.forEach((result, index) => {
+    results.forEach((result) => {
       report += `## ${result.testName}\n`;
       report += `- Duration: ${result.duration.toFixed(2)} seconds\n`;
       report += `- Messages Sent: ${result.totalMessages}\n`;

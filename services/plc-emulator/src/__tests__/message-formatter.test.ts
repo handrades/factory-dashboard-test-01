@@ -116,7 +116,7 @@ describe('MessageFormatter', () => {
     });
 
     it('should reject message without timestamp', () => {
-      const invalidMessage = { ...validMessage, timestamp: undefined as any };
+      const invalidMessage = { ...validMessage, timestamp: undefined as unknown };
       const result = formatter.validateMessage(invalidMessage);
       
       expect(result.isValid).toBe(false);
@@ -124,7 +124,7 @@ describe('MessageFormatter', () => {
     });
 
     it('should reject message with invalid message type', () => {
-      const invalidMessage = { ...validMessage, messageType: 'INVALID_TYPE' as any };
+      const invalidMessage = { ...validMessage, messageType: 'INVALID_TYPE' as unknown };
       const result = formatter.validateMessage(invalidMessage);
       
       expect(result.isValid).toBe(false);
@@ -146,7 +146,7 @@ describe('MessageFormatter', () => {
           {
             tagId: 'temperature',
             value: 350,
-            quality: 'INVALID_QUALITY' as any
+            quality: 'INVALID_QUALITY' as unknown
           }
         ]
       };
@@ -191,7 +191,7 @@ describe('MessageFormatter', () => {
     });
 
     it('should handle serialization errors', () => {
-      const circularMessage = { ...testMessage } as any;
+      const circularMessage = { ...testMessage } as unknown;
       circularMessage.circular = circularMessage;
       
       expect(() => formatter.serializeMessage(circularMessage)).toThrow('Message serialization failed');

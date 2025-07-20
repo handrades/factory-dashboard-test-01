@@ -94,7 +94,7 @@ export class XSSProtection {
         removed,
         modified
       };
-    } catch (error) {
+    } catch {
       console.error('HTML sanitization failed:', error);
       // Return empty string as fallback for security
       return {
@@ -181,7 +181,8 @@ export class XSSProtection {
     }
 
     // Remove whitespace and control characters
-    const cleanUrl = url.trim().replace(/[\x00-\x1F\x7F]/g, '');
+    // eslint-disable-next-line no-control-regex
+    const cleanUrl = url.trim().replace(/[\u0000-\u001F\u007F]/g, '');
 
     // Check for dangerous protocols
     const dangerousProtocols = [
@@ -310,7 +311,7 @@ export class XSSProtection {
       return obj.map(item => this.removePrototypePollution(item));
     }
 
-    const cleaned: any = {};
+    const cleaned: unknown = {};
     const dangerousKeys = ['__proto__', 'constructor', 'prototype'];
 
     for (const [key, value] of Object.entries(obj)) {
@@ -353,7 +354,8 @@ export class XSSProtection {
 
   private removeControlCharacters(text: string): string {
     // Remove control characters except tab, newline, and carriage return
-    return text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+    // eslint-disable-next-line no-control-regex
+    return text.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '');
   }
 
   private limitLength(text: string, maxLength: number): string {

@@ -39,14 +39,14 @@ export interface DataAccessEventDetails {
   dataType: string;
   operation: string;
   recordCount?: number;
-  filters?: Record<string, any>;
+  filters?: Record<string, unknown>;
 }
 
 export interface ConfigurationChangeEventDetails {
   userId: string;
   username: string;
   configType: string;
-  changes: Record<string, { old: any; new: any }>;
+  changes: Record<string, { old: unknown; new: unknown }>;
   reason?: string;
 }
 
@@ -55,7 +55,7 @@ export interface SecurityViolationEventDetails {
   description: string;
   riskLevel: SecuritySeverity;
   automaticResponse?: string;
-  additionalContext?: Record<string, any>;
+  additionalContext?: Record<string, unknown>;
 }
 
 export class SecurityLogger {
@@ -213,7 +213,7 @@ export class SecurityLogger {
     action: 'create' | 'refresh' | 'expire' | 'revoke',
     userContext: UserContext,
     ipAddress: string,
-    details: Record<string, any> = {}
+    details: Record<string, unknown> = {}
   ): void {
     const event: SecurityEvent = {
       id: this.generateEventId(),
@@ -446,7 +446,7 @@ export class SecurityLogger {
     console.log(`   Action: ${event.action} on ${event.resource}`);
   }
 
-  private sanitizeDetails(details: any): Record<string, any> {
+  private sanitizeDetails(details: unknown): Record<string, unknown> {
     // Use SecretManager to mask sensitive data in log details
     return secretManager.maskSensitiveData(details);
   }

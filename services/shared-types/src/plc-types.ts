@@ -4,7 +4,7 @@ export interface PLCTag {
   equipmentId: string;
   dataType: 'BOOL' | 'INT' | 'REAL' | 'DINT';
   address: string;
-  value: any;
+  value: unknown;
   timestamp: Date;
   quality: 'GOOD' | 'BAD' | 'UNCERTAIN';
   behavior?: TagBehavior;
@@ -19,9 +19,9 @@ export interface TagBehavior {
     amplitude?: number;
     offset?: number;
     slope?: number;
-    stepValues?: any[];
+    stepValues?: unknown[];
     stepDuration?: number;
-    constantValue?: any;
+    constantValue?: unknown;
   };
 }
 
@@ -43,7 +43,7 @@ export interface EquipmentState {
   description: string;
   tagOverrides: {
     tagId: string;
-    value: any;
+    value: unknown;
   }[];
   transitions: StateTransition[];
 }
@@ -72,7 +72,7 @@ export interface LineConfig {
       id: string;
       name: string;
       dataType: 'BOOL' | 'INT' | 'REAL' | 'DINT';
-      value: any;
+      value: unknown;
       behavior: TagBehavior;
     }[];
   }[];
@@ -87,7 +87,7 @@ export interface PLCMessage {
   lineNumber: number;
   tags: {
     tagId: string;
-    value: any;
+    value: unknown;
     quality: 'GOOD' | 'BAD' | 'UNCERTAIN';
   }[];
   messageType: 'DATA_UPDATE' | 'STATE_CHANGE' | 'ALARM' | 'HEARTBEAT';

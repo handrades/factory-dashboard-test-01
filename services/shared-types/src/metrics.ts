@@ -192,7 +192,7 @@ export class MetricsCollector {
     lines.push('');
     
     // Export counters
-    for (const [key, counter] of this.metrics.counters) {
+    for (const [, counter] of this.metrics.counters) {
       lines.push(`# HELP ${counter.name} Counter metric`);
       lines.push(`# TYPE ${counter.name} counter`);
       const labels = counter.labels ? this.formatLabels(counter.labels) : '';
@@ -201,7 +201,7 @@ export class MetricsCollector {
     }
     
     // Export gauges
-    for (const [key, gauge] of this.metrics.gauges) {
+    for (const [, gauge] of this.metrics.gauges) {
       lines.push(`# HELP ${gauge.name} Gauge metric`);
       lines.push(`# TYPE ${gauge.name} gauge`);
       const labels = gauge.labels ? this.formatLabels(gauge.labels) : '';
@@ -210,7 +210,7 @@ export class MetricsCollector {
     }
     
     // Export histograms
-    for (const [key, histogram] of this.metrics.histograms) {
+    for (const [, histogram] of this.metrics.histograms) {
       lines.push(`# HELP ${histogram.name} Histogram metric`);
       lines.push(`# TYPE ${histogram.name} histogram`);
       const labels = histogram.labels ? this.formatLabels(histogram.labels) : '';
@@ -231,7 +231,7 @@ export class MetricsCollector {
   }
 
   // Export metrics as JSON
-  exportJSONMetrics(): any {
+  exportJSONMetrics(): unknown {
     return {
       service: this.serviceName,
       timestamp: new Date().toISOString(),
@@ -287,7 +287,7 @@ export class MetricsRegistry {
       .join('\n');
   }
 
-  static exportAllMetricsJSON(): any {
+  static exportAllMetricsJSON(): unknown {
     return {
       timestamp: new Date().toISOString(),
       services: this.getAllCollectors().map(collector => collector.exportJSONMetrics())

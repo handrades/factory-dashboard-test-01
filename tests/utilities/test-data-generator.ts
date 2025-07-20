@@ -101,7 +101,7 @@ export class TestDataGenerator {
   }
 
   private generateTagsForEquipment(equipmentId: string, equipmentType: string): unknown[] {
-    const _baseValue = 100;
+    // const _baseValue = 100;
     const variation = this.config.dataVariation / 100;
     
     const generateValue = (base: number) => {

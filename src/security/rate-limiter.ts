@@ -162,7 +162,7 @@ export class RateLimiter {
       securityLogger.logSecurityViolationEvent({
         violationType: 'rate_limit_exceeded',
         description: `Rate limit exceeded for ${configName}`,
-        riskLevel: 'medium' as any,
+        riskLevel: 'medium' as unknown,
         automaticResponse: 'Request blocked',
         additionalContext: {
           configName,
@@ -287,12 +287,12 @@ export class RateLimiter {
    * Create Express middleware for rate limiting
    */
   public createMiddleware(configName: string, options: {
-    keyGenerator?: (req: any) => string;
+    keyGenerator?: (req: unknown) => string;
     skipSuccessfulRequests?: boolean;
     skipFailedRequests?: boolean;
-    onLimitReached?: (req: any, res: any, info: RateLimitInfo) => void;
+    onLimitReached?: (req: unknown, res: unknown, info: RateLimitInfo) => void;
   } = {}) {
-    return (req: any, res: any, next: any) => {
+    return (req: unknown, res: unknown, next: unknown) => {
       const identifier = options.keyGenerator ? 
         options.keyGenerator(req) : 
         req.ip || req.connection.remoteAddress || 'unknown';
@@ -360,7 +360,7 @@ export class RateLimiter {
   } {
     const now = new Date();
     const activeEntries = Array.from(this.limits.entries())
-      .filter(([_, entry]) => now < entry.resetTime);
+      .filter(([, entry]) => now < entry.resetTime);
 
     // Get top limited identifiers
     const identifierCounts: Record<string, number> = {};
@@ -403,7 +403,7 @@ rateLimiter.configure('login', {
   windowMs: 15 * 60 * 1000, // 15 minutes
   maxRequests: 5, // 5 attempts per 15 minutes
   skipSuccessfulRequests: true,
-  onLimitReached: (identifier, info) => {
+  onLimitReached: (identifier) => {
     console.log(`🚨 Login rate limit exceeded for: ${identifier}`);
   }
 });
@@ -411,7 +411,7 @@ rateLimiter.configure('login', {
 rateLimiter.configure('api', {
   windowMs: 15 * 60 * 1000, // 15 minutes
   maxRequests: 100, // 100 requests per 15 minutes
-  onLimitReached: (identifier, info) => {
+  onLimitReached: (identifier) => {
     console.log(`🚨 API rate limit exceeded for: ${identifier}`);
   }
 });
@@ -419,7 +419,7 @@ rateLimiter.configure('api', {
 rateLimiter.configure('password_reset', {
   windowMs: 60 * 60 * 1000, // 1 hour
   maxRequests: 3, // 3 attempts per hour
-  onLimitReached: (identifier, info) => {
+  onLimitReached: (identifier) => {
     console.log(`🚨 Password reset rate limit exceeded for: ${identifier}`);
   }
 });

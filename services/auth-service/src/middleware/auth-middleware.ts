@@ -10,7 +10,7 @@ export interface AuthRequest extends express.Request {
     userId: string;
     username: string;
     roles: string[];
-    permissions: any[];
+    permissions: unknown[];
   };
 }
 
@@ -101,7 +101,7 @@ export class AuthMiddleware {
         };
 
         next();
-      } catch (error: any) {
+      } catch (error: unknown) {
         this.securityLogger.logUnauthorizedAccess(
           req.path,
           req.ip,
@@ -204,7 +204,7 @@ export class AuthMiddleware {
             permissions: payload.permissions
           };
         }
-      } catch (error) {
+      } catch {
         // Ignore token errors for optional auth
       }
 
@@ -260,14 +260,11 @@ export class AuthMiddleware {
 
       // Override res.end to capture response details
       const originalEnd = res.end;
-      res.end = function(chunk?: any, encoding?: any) {
+      res.end = function(chunk?: unknown, encoding?: unknown) {
         const responseTime = Date.now() - startTime;
         
         // Log security events for sensitive operations
         if (req.path.includes('/auth/') || req.path.includes('/users/') || res.statusCode >= 400) {
-          const severity = res.statusCode >= 500 ? 'high' : 
-                          res.statusCode >= 400 ? 'medium' : 'low';
-
           console.log(`API Request: ${req.method} ${req.path} - ${res.statusCode} (${responseTime}ms)`, {
             ...logData,
             statusCode: res.statusCode,
@@ -286,7 +283,7 @@ export class AuthMiddleware {
   sanitizeInput() {
     return (req: express.Request, res: express.Response, next: express.NextFunction) => {
       // Sanitize common injection patterns
-      const sanitize = (obj: any): any => {
+      const sanitize = (obj: unknown): unknown => {
         if (typeof obj === 'string') {
           return obj
             .replace(/<script[^>]*>.*?<\/script>/gi, '')
@@ -300,7 +297,7 @@ export class AuthMiddleware {
         }
         
         if (obj && typeof obj === 'object') {
-          const sanitized: any = {};
+          const sanitized: Record<string, unknown> = {};
           for (const [key, value] of Object.entries(obj)) {
             sanitized[key] = sanitize(value);
           }
@@ -324,7 +321,7 @@ export class AuthMiddleware {
 
   // Error handling middleware
   errorHandler() {
-    return (error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    return (error: unknown, req: express.Request, res: express.Response) => {
       // Log security-related errors
       if (error.name === 'ValidationError' || error.name === 'SecurityError') {
         this.securityLogger.logSuspiciousActivity(

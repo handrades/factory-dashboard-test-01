@@ -28,7 +28,7 @@ export class SecurityLogger {
     // - Integrate with SIEM systems
   }
 
-  logLoginAttempt(username: string, success: boolean, ipAddress: string, userAgent: string, details?: Record<string, any>): void {
+  logLoginAttempt(username: string, success: boolean, ipAddress: string, userAgent: string, details?: Record<string, unknown>): void {
     this.logSecurityEvent({
       eventType: success ? 'LOGIN_SUCCESS' : 'LOGIN_FAILURE',
       username,
@@ -100,7 +100,7 @@ export class SecurityLogger {
     });
   }
 
-  logSuspiciousActivity(description: string, ipAddress: string, userAgent: string, userId?: string, username?: string, details?: Record<string, any>): void {
+  logSuspiciousActivity(description: string, ipAddress: string, userAgent: string, userId?: string, username?: string, details?: Record<string, unknown>): void {
     this.logSecurityEvent({
       eventType: 'SUSPICIOUS_ACTIVITY',
       userId,
@@ -188,7 +188,7 @@ export class SecurityLogger {
     return ip;
   }
 
-  private sanitizeDetails(details: Record<string, any>): Record<string, any> {
+  private sanitizeDetails(details: Record<string, unknown>): Record<string, unknown> {
     const sanitized = { ...details };
     
     // Remove sensitive information from logs

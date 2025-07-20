@@ -4,14 +4,14 @@ import equipmentConfigSchema from '../schemas/equipment-config.schema.json';
 
 export class ConfigValidator {
   private ajv: Ajv;
-  private validateEquipmentConfig: any;
+  private validateEquipmentConfig: unknown;
 
   constructor() {
     this.ajv = new Ajv({ allErrors: true });
     this.validateEquipmentConfig = this.ajv.compile(equipmentConfigSchema);
   }
 
-  validateEquipment(config: any): { isValid: boolean; errors: string[] } {
+  validateEquipment(config: unknown): { isValid: boolean; errors: string[] } {
     const isValid = this.validateEquipmentConfig(config);
     
     if (!isValid) {

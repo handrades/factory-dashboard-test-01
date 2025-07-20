@@ -80,7 +80,7 @@ async function main() {
   
   try {
     await service.start();
-  } catch (error) {
+  } catch {
     console.error('Failed to start PLC Emulator Service:', error);
     process.exit(1);
   }

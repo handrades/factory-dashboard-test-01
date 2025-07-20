@@ -1,7 +1,7 @@
 import { createClient, RedisClientType } from 'redis';
 import { PLCMessage, ConsumerConfig } from '@factory-dashboard/shared-types';
 import { EventEmitter } from 'events';
-import { createLogger } from 'winston';
+import winston, { createLogger } from 'winston';
 
 export interface RedisConsumerConfig {
   host: string;
@@ -38,13 +38,13 @@ export class RedisConsumer extends EventEmitter {
     this.config = config;
     this.logger = createLogger({
       level: 'info',
-      format: require('winston').format.combine(
-        require('winston').format.timestamp(),
-        require('winston').format.json()
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
       ),
       transports: [
-        new (require('winston').transports.Console)(),
-        new (require('winston').transports.File)({ filename: 'queue-consumer.log' })
+        new winston.transports.Console(),
+        new winston.transports.File({ filename: 'queue-consumer.log' })
       ]
     });
 
@@ -82,7 +82,7 @@ export class RedisConsumer extends EventEmitter {
     try {
       await this.client.connect();
       this.logger.info('Successfully connected to Redis');
-    } catch (error) {
+    } catch {
       this.logger.error(`Failed to connect to Redis: ${error}`);
       throw error;
     }
@@ -115,7 +115,7 @@ export class RedisConsumer extends EventEmitter {
       // Start consuming messages
       this.consumeMessages(queueNames, consumerConfig);
       
-    } catch (error) {
+    } catch {
       this.isRunning = false;
       throw error;
     }
@@ -130,7 +130,7 @@ export class RedisConsumer extends EventEmitter {
         { MKSTREAM: true }
       );
       this.logger.info(`Created consumer group ${this.config.consumerGroup} for queue ${queueName}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error.message.includes('BUSYGROUP')) {
         this.logger.debug(`Consumer group ${this.config.consumerGroup} already exists for queue ${queueName}`);
       } else {
@@ -165,14 +165,14 @@ export class RedisConsumer extends EventEmitter {
         // Process pending messages (messages that timed out)
         await this.processPendingMessages(queueNames, consumerConfig);
         
-      } catch (error) {
+      } catch {
         this.logger.error(`Error consuming messages: ${error}`);
         await this.sleep(1000);
       }
     }
   }
 
-  private async processMessages(streamResults: any[], consumerConfig: ConsumerConfig): Promise<void> {
+  private async processMessages(streamResults: unknown[], consumerConfig: ConsumerConfig): Promise<void> {
     for (const streamResult of streamResults) {
       const queueName = streamResult.name;
       const messages = streamResult.messages;
@@ -191,7 +191,7 @@ export class RedisConsumer extends EventEmitter {
   private async processMessage(
     queueName: string,
     messageId: string,
-    messageData: any,
+    messageData: unknown,
     consumerConfig: ConsumerConfig
   ): Promise<void> {
     const startTime = Date.now();
@@ -210,7 +210,7 @@ export class RedisConsumer extends EventEmitter {
       const plcMessage = this.parseMessage(messageData);
       
       // Emit message for processing
-      const processingPromise = new Promise<MessageProcessingResult>((resolve, reject) => {
+      const processingPromise = new Promise<MessageProcessingResult>((resolve) => {
         this.emit('message', plcMessage, (error?: Error) => {
           const processingTime = Date.now() - startTime;
           
@@ -244,7 +244,7 @@ export class RedisConsumer extends EventEmitter {
         this.messagesFailedProcessing++;
       }
 
-    } catch (error) {
+    } catch {
       this.logger.error(`Error processing message ${messageId}: ${error}`);
       await this.handleFailedMessage(queueName, messageId, null, error?.toString());
       this.messagesFailedProcessing++;
@@ -254,7 +254,7 @@ export class RedisConsumer extends EventEmitter {
     }
   }
 
-  private parseMessage(messageData: any): PLCMessage {
+  private parseMessage(messageData: unknown): PLCMessage {
     try {
       const messageJson = messageData.message || messageData;
       const parsedMessage = JSON.parse(messageJson);
@@ -265,7 +265,7 @@ export class RedisConsumer extends EventEmitter {
       }
       
       return parsedMessage;
-    } catch (error) {
+    } catch {
       throw new Error(`Failed to parse message: ${error}`);
     }
   }
@@ -324,7 +324,7 @@ export class RedisConsumer extends EventEmitter {
             }
           }
         }
-      } catch (error) {
+      } catch {
         this.logger.error(`Error processing pending messages for queue ${queueName}: ${error}`);
       }
     }
@@ -347,7 +347,7 @@ export class RedisConsumer extends EventEmitter {
           }
         }
       }
-    } catch (error) {
+    } catch {
       this.logger.error(`Error reclaiming message ${messageId}: ${error}`);
     }
   }

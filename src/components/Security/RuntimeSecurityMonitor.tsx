@@ -9,7 +9,7 @@ interface SecurityAlert {
   message: string;
   timestamp: string;
   source: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 interface SystemHealth {

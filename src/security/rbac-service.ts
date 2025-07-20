@@ -5,8 +5,6 @@
 
 import { 
   UserContext, 
-  Role, 
-  Permission as PermissionType,
   UserRole,
   Permission as UserPermission,
   AuthErrorCode
@@ -132,7 +130,7 @@ export class RBACService {
       this.logAuthorizationEvent(userContext, resource, action, applicableRule.requiredPermissions.join(', '), true, ipAddress);
       return result;
 
-    } catch (error) {
+    } catch {
       console.error('Permission check failed:', error);
       
       const result: AccessControlResult = {
@@ -216,7 +214,7 @@ export class RBACService {
       customCheck?: (userContext: UserContext) => boolean;
     } = {}
   ) {
-    return (req: any, res: any, next: any) => {
+    return (req: unknown, res: unknown, next: unknown) => {
       const userContext = req.userContext as UserContext;
       const ipAddress = req.ip || req.connection.remoteAddress;
 
@@ -533,7 +531,7 @@ export class RBACService {
     action: string,
     permission: string,
     granted: boolean,
-    ipAddress?: string
+    /* _ipAddress?: string */
   ): void {
     securityLogger.logAuthorizationEvent({
       userId: userContext.id,
