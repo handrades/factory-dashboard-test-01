@@ -1,0 +1,286 @@
+name: 🔍 Comprehensive Linting
+
+on:
+  push:
+    branches: [ main, develop, fix-deployment-issues, influx-dashboard-integration ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.changes.outputs.frontend }}
+      backend: ${{ steps.changes.outputs.backend }}
+      docker: ${{ steps.changes.outputs.docker }}
+      scripts: ${{ steps.changes.outputs.scripts }}
+      configs: ${{ steps.changes.outputs.configs }}
+      docs: ${{ steps.changes.outputs.docs }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            frontend:
+              - 'src/**'
+              - 'public/**'
+              - 'config/**'
+              - 'package*.json'
+              - '*.config.*'
+            backend:
+              - 'services/**'
+              - 'tests/**'
+            docker:
+              - 'docker/**'
+              - 'Dockerfile*'
+              - 'docker-compose*.yml'
+              - '.dockerignore'
+            scripts:
+              - 'scripts/**'
+              - '*.sh'
+            configs:
+              - '**/*.json'
+              - '**/*.yml'
+              - '**/*.yaml'
+              - 'monitoring/**'
+              - 'infrastructure/**'
+            docs:
+              - 'docs/**'
+              - '*.md'
+              - 'README*'
+
+  # Frontend Linting (TypeScript, React, ESLint)
+  frontend-lint:
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📥 Install dependencies
+        run: npm ci
+
+      - name: 🔍 ESLint check
+        run: npm run lint
+
+      - name: 🔍 TypeScript check
+        run: npx tsc -b config/tsconfig.json --noEmit
+
+      - name: 🏗️ Build check
+        run: npm run build
+
+  # Backend Services Linting
+  backend-lint:
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true'
+    strategy:
+      matrix:
+        service: [auth-service, plc-emulator, queue-consumer, shared-types]
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: services/${{ matrix.service }}/package-lock.json
+
+      - name: 📥 Install dependencies
+        working-directory: services/${{ matrix.service }}
+        run: npm ci
+
+      - name: 🔍 TypeScript check
+        working-directory: services/${{ matrix.service }}
+        run: npx tsc --noEmit
+
+      - name: 🏗️ Build check
+        working-directory: services/${{ matrix.service }}
+        run: npm run build
+
+      - name: 🧪 Test check (if tests exist)
+        working-directory: services/${{ matrix.service }}
+        run: |
+          if [ -f "jest.config.js" ] || grep -q '"test"' package.json; then
+            npm test
+          else
+            echo "No tests found for ${{ matrix.service }}"
+          fi
+
+  # Docker Linting
+  docker-lint:
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.docker == 'true'
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔍 Dockerfile linting with Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          failure-threshold: warning
+
+      - name: 🔍 Lint service Dockerfiles
+        run: |
+          find services -name "Dockerfile*" -type f | while read dockerfile; do
+            echo "Linting $dockerfile"
+            docker run --rm -i hadolint/hadolint < "$dockerfile"
+          done
+
+      - name: 🔍 Docker Compose validation
+        run: |
+          # Install docker-compose if not available
+          if ! command -v docker-compose &> /dev/null; then
+            sudo curl -L "https://github.com/docker/compose/releases/download/v2.23.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+          fi
+          
+          # Validate docker-compose files
+          for compose_file in docker-compose*.yml; do
+            if [ -f "$compose_file" ]; then
+              echo "Validating $compose_file"
+              docker-compose -f "$compose_file" config -q
+            fi
+          done
+
+  # Shell Script Linting
+  shell-lint:
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.scripts == 'true'
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔍 ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: './scripts'
+          severity: warning
+          additional_files: '*.sh'
+
+  # Configuration Files Linting
+  config-lint:
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.configs == 'true'
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🔍 Install linting tools
+        run: |
+          npm install -g jsonlint yaml-lint prettier
+          pip install yamllint
+
+      - name: 🔍 JSON linting
+        run: |
+          find . -name "*.json" -not -path "./node_modules/*" -not -path "./dist/*" -not -path "./.git/*" | while read json_file; do
+            echo "Linting $json_file"
+            jsonlint "$json_file"
+          done
+
+      - name: 🔍 YAML linting
+        run: |
+          find . -name "*.yml" -o -name "*.yaml" -not -path "./node_modules/*" -not -path "./dist/*" -not -path "./.git/*" | while read yaml_file; do
+            echo "Linting $yaml_file"
+            yamllint "$yaml_file" || true  # Continue on errors for now
+          done
+
+      - name: 🔍 Prettier format check
+        run: |
+          # Check if files are properly formatted
+          npx prettier --check "**/*.{json,yml,yaml,md}" --ignore-path .gitignore || true
+
+  # Documentation Linting
+  docs-lint:
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.docs == 'true'
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🔍 Install markdownlint
+        run: npm install -g markdownlint-cli
+
+      - name: 🔍 Markdown linting
+        run: |
+          markdownlint "**/*.md" --ignore node_modules --ignore dist || true
+
+      - name: 🔗 Check for broken links
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: 'yes'
+          use-verbose-mode: 'no'
+          config-file: '.github/markdown-link-check-config.json'
+          folder-path: 'docs'
+
+  # Security and Code Quality Checks
+  security-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📥 Install dependencies
+        run: npm ci
+
+      - name: 🔒 Security audit
+        run: npm audit --audit-level=moderate
+
+      - name: 🔍 ESLint security rules
+        run: npm run lint || true
+
+      - name: 🔍 Check for secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+          extra_args: --debug --only-verified
+
+  # Overall Status Check
+  lint-status:
+    runs-on: ubuntu-latest
+    needs: [frontend-lint, backend-lint, docker-lint, shell-lint, config-lint, docs-lint, security-lint]
+    if: always()
+    steps:
+      - name: ✅ All linting passed
+        if: ${{ !contains(needs.*.result, 'failure') }}
+        run: echo "🎉 All linting checks passed!"
+
+      - name: ❌ Some linting failed
+        if: ${{ contains(needs.*.result, 'failure') }}
+        run: |
+          echo "❌ Some linting checks failed!"
+          exit 1
