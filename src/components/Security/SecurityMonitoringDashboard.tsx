@@ -120,15 +120,6 @@ export const SecurityMonitoringDashboard: React.FC = () => {
     }, 1000);
   }, []);
 
-  // const getSeverityColor = (severity: string) => {
-  //   switch (severity) {
-  //     case 'critical': return '#ff4757';
-  //     case 'high': return '#ff6b6b';
-  //     case 'medium': return '#ffa726';
-  //     case 'low': return '#66bb6a';
-  //     default: return '#9e9e9e';
-  //   }
-  // };
 
   const getTypeIcon = (type: string) => {
     switch (type) {

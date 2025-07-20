@@ -3,12 +3,10 @@
  * Provides authentication state and methods throughout the React application
  */
 
-import { useReducer, useEffect } from 'react';
+import { createContext, useContext, useReducer, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { UserContext, LoginCredentials, AuthResult } from '../types/auth-types';
 import { AuthErrorCode } from '../types/auth-types';
-import { simulateLogin, simulateLogout, simulateTokenRefresh } from './auth-simulation';
-import { AuthContext, type AuthContextType } from './auth-context';
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -18,6 +16,17 @@ interface AuthState {
   loading: boolean;
   error: string | null;
   sessionExpiry: Date | null;
+}
+
+interface AuthContextType extends AuthState {
+  login: (credentials: LoginCredentials) => Promise<AuthResult>;
+  logout: () => Promise<void>;
+  refreshAuth: () => Promise<boolean>;
+  clearError: () => void;
+  hasPermission: (resource: string, action?: string) => boolean;
+  hasRole: (role: string) => boolean;
+  hasAnyRole: (roles: string[]) => boolean;
+  isTokenExpired: () => boolean;
 }
 
 type AuthAction =
@@ -111,7 +120,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
   }
 }
 
-
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -169,7 +178,7 @@ function AuthProvider({ children }: AuthProviderProps) {
     };
 
     initializeAuth();
-  }, [refreshAuth]);
+  }, []);
 
   // Auto-refresh token before expiry
   useEffect(() => {
@@ -186,7 +195,7 @@ function AuthProvider({ children }: AuthProviderProps) {
     }, refreshTime);
 
     return () => clearTimeout(refreshTimer);
-  }, [state.sessionExpiry, state.isAuthenticated, refreshAuth, logout]);
+  }, [state.sessionExpiry, state.isAuthenticated]);
 
   const login = async (credentials: LoginCredentials): Promise<AuthResult> => {
     dispatch({ type: 'LOGIN_START' });
@@ -333,4 +342,100 @@ function AuthProvider({ children }: AuthProviderProps) {
   );
 }
 
-export { AuthProvider };
+export function useAuth(): AuthContextType {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
+
+// Simulation functions (replace with actual API calls)
+async function simulateLogin(credentials: LoginCredentials): Promise<AuthResult> {
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  // Simple validation for demo purposes
+  if (credentials.username === 'admin' && credentials.password === 'admin123') {
+    const user: UserContext = {
+      id: 'user_admin_demo',
+      username: 'admin',
+      email: 'admin@factory-dashboard.local',
+      roles: ['admin'],
+      permissions: [
+        'dashboard:view',
+        'dashboard:manage',
+        'equipment:view',
+        'equipment:control',
+        'equipment:configure',
+        'data:view',
+        'data:export',
+        'data:delete',
+        'users:view',
+        'users:manage',
+        'users:delete',
+        'system:view',
+        'system:configure',
+        'security:manage',
+        'logs:view'
+      ],
+      sessionId: 'session_' + Date.now()
+    };
+
+    return {
+      success: true,
+      user,
+      token: 'demo_token_' + Date.now(),
+      refreshToken: 'demo_refresh_' + Date.now(),
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000) // 15 minutes
+    };
+  } else if (credentials.username === 'operator' && credentials.password === 'operator123') {
+    const user: UserContext = {
+      id: 'user_operator_demo',
+      username: 'operator',
+      email: 'operator@factory-dashboard.local',
+      roles: ['operator'],
+      permissions: [
+        'dashboard:view',
+        'equipment:view',
+        'equipment:control',
+        'data:view',
+        'data:export',
+        'system:view'
+      ],
+      sessionId: 'session_' + Date.now()
+    };
+
+    return {
+      success: true,
+      user,
+      token: 'demo_token_' + Date.now(),
+      refreshToken: 'demo_refresh_' + Date.now(),
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000) // 15 minutes
+    };
+  } else {
+    return {
+      success: false,
+      error: 'Invalid username or password',
+      errorCode: AuthErrorCode.INVALID_CREDENTIALS
+    };
+  }
+}
+
+async function simulateLogout(token: string): Promise<void> {
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  console.log('User logged out, token invalidated:', token.substring(0, 10) + '...');
+}
+
+async function simulateTokenRefresh(_refreshToken: string): Promise<AuthResult> {
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  // For demo purposes, always succeed
+  return {
+    success: true,
+    token: 'refreshed_token_' + Date.now(),
+    expiresAt: new Date(Date.now() + 15 * 60 * 1000) // 15 minutes
+  };
+}

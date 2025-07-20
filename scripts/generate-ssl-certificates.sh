@@ -6,7 +6,6 @@
 set -euo pipefail
 
 # Colors for output
-RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
@@ -24,34 +23,34 @@ EMAIL="admin@factory-dashboard.local"
 
 # Function to print colored output
 print_status() {
-    local color=$1
-    local message=$2
+    local color="$1"
+    local message="$2"
     echo -e "${color}${message}${NC}"
 }
 
-print_status $BLUE "🔐 Factory Dashboard - SSL Certificate Generator"
-print_status $BLUE "==============================================="
+print_status "$BLUE" "🔐 Factory Dashboard - SSL Certificate Generator"
+print_status "$BLUE" "==============================================="
 
 # Create SSL directory
 mkdir -p "$CERT_DIR"
 
-print_status $GREEN "📁 Created SSL directory: $CERT_DIR"
+print_status "$GREEN" "📁 Created SSL directory: $CERT_DIR"
 
 # Check if certificates already exist
 if [ -f "$CERT_DIR/server.crt" ] && [ -f "$CERT_DIR/server.key" ]; then
-    print_status $YELLOW "⚠️  SSL certificates already exist!"
+    print_status "$YELLOW" "⚠️  SSL certificates already exist!"
     read -p "Do you want to regenerate them? (y/N): " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        print_status $BLUE "ℹ️  Using existing certificates"
+        print_status "$BLUE" "ℹ️  Using existing certificates"
         exit 0
     fi
 fi
 
-print_status $GREEN "🔑 Generating SSL certificates..."
+print_status "$GREEN" "🔑 Generating SSL certificates..."
 
 # Generate private key
-print_status $BLUE "1. Generating private key..."
+print_status "$BLUE" "1. Generating private key..."
 openssl genrsa -out "$CERT_DIR/server.key" 2048
 
 # Set secure permissions on private key
@@ -89,22 +88,22 @@ IP.2 = ::1
 EOF
 
 # Generate certificate signing request
-print_status $BLUE "2. Generating certificate signing request..."
+print_status "$BLUE" "2. Generating certificate signing request..."
 openssl req -new -key "$CERT_DIR/server.key" -out "$CERT_DIR/server.csr" -config "$CERT_DIR/server.conf"
 
 # Generate self-signed certificate
-print_status $BLUE "3. Generating self-signed certificate..."
+print_status "$BLUE" "3. Generating self-signed certificate..."
 openssl x509 -req -in "$CERT_DIR/server.csr" -signkey "$CERT_DIR/server.key" -out "$CERT_DIR/server.crt" -days 365 -extensions v3_req -extfile "$CERT_DIR/server.conf"
 
 # Generate certificate chain (for development, just copy the cert)
 cp "$CERT_DIR/server.crt" "$CERT_DIR/server-chain.crt"
 
 # Generate DH parameters for enhanced security
-print_status $BLUE "4. Generating Diffie-Hellman parameters..."
+print_status "$BLUE" "4. Generating Diffie-Hellman parameters..."
 openssl dhparam -out "$CERT_DIR/dhparam.pem" 2048
 
 # Create certificate bundle
-print_status $BLUE "5. Creating certificate bundle..."
+print_status "$BLUE" "5. Creating certificate bundle..."
 cat "$CERT_DIR/server.crt" "$CERT_DIR/server.key" > "$CERT_DIR/server-bundle.pem"
 
 # Set appropriate permissions
@@ -116,13 +115,13 @@ chmod 600 "$CERT_DIR/server-bundle.pem"
 chmod 644 "$CERT_DIR/server.csr"
 chmod 644 "$CERT_DIR/server.conf"
 
-print_status $GREEN "✅ SSL certificates generated successfully!"
+print_status "$GREEN" "✅ SSL certificates generated successfully!"
 
 # Display certificate information
-print_status $YELLOW "📋 Certificate Information:"
+print_status "$YELLOW" "📋 Certificate Information:"
 openssl x509 -in "$CERT_DIR/server.crt" -text -noout | grep -E "(Subject:|Issuer:|Not Before:|Not After:|DNS:|IP Address:)"
 
-print_status $BLUE "📁 Generated Files:"
+print_status "$BLUE" "📁 Generated Files:"
 echo "   - $CERT_DIR/server.key (Private Key)"
 echo "   - $CERT_DIR/server.crt (Certificate)"
 echo "   - $CERT_DIR/server-chain.crt (Certificate Chain)"
@@ -130,18 +129,18 @@ echo "   - $CERT_DIR/server-bundle.pem (Certificate Bundle)"
 echo "   - $CERT_DIR/dhparam.pem (DH Parameters)"
 echo "   - $CERT_DIR/server.csr (Certificate Signing Request)"
 
-print_status $YELLOW "⚠️  Development Certificate Notice:"
+print_status "$YELLOW" "⚠️  Development Certificate Notice:"
 echo "   - This is a self-signed certificate for development use only"
 echo "   - Browsers will show security warnings for self-signed certificates"
 echo "   - For production, use certificates from a trusted Certificate Authority"
 
-print_status $BLUE "🔒 Security Recommendations:"
+print_status "$BLUE" "🔒 Security Recommendations:"
 echo "   - Keep private keys secure and never commit them to version control"
 echo "   - Use strong cipher suites in your web server configuration"
 echo "   - Enable HTTP Strict Transport Security (HSTS)"
 echo "   - Consider using Certificate Transparency monitoring"
 
-print_status $GREEN "🚀 Next Steps:"
+print_status "$GREEN" "🚀 Next Steps:"
 echo "   1. Update your web server configuration to use these certificates"
 echo "   2. Test HTTPS connectivity"
 echo "   3. Configure automatic certificate renewal for production"
@@ -209,5 +208,5 @@ EOF
 
 chmod +x "$CERT_DIR/verify-certificate.sh"
 
-print_status $GREEN "🎉 SSL certificate generation complete!"
-print_status $BLUE "💡 Run '$CERT_DIR/verify-certificate.sh' to verify your certificates anytime"
+print_status "$GREEN" "🎉 SSL certificate generation complete!"
+print_status "$BLUE" "💡 Run '$CERT_DIR/verify-certificate.sh' to verify your certificates anytime"

@@ -57,7 +57,7 @@ export class SecretManager {
   /**
    * Get a secret value by key
    */
-  public async getSecret(key: string /*, _environment?: string */): Promise<string> {
+  public async getSecret(key: string, _environment?: string): Promise<string> {
     if (!this.initialized) {
       await this.initialize();
     }

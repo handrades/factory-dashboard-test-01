@@ -4,9 +4,6 @@
  */
 
 import { spawn } from 'child_process';
-// import { exec, promisify } from 'child_process'; // Reserved for future use
-
-// const execAsync = promisify(exec); // Reserved for future use
 
 export interface CommandResult {
   success: boolean;

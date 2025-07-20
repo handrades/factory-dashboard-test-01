@@ -102,11 +102,13 @@ export class JWTManager {
       aud: audience
     };
 
-    return sign(payload, this.jwtSecret, {
-      expiresIn: expiresIn as string,
-      issuer,
-      audience
-    });
+    const signOptions: any = {
+      expiresIn: expiresIn,
+      issuer: issuer,
+      audience: audience
+    };
+    
+    return sign(payload, this.jwtSecret, signOptions);
   }
 
   /**
@@ -122,11 +124,13 @@ export class JWTManager {
       iat: Math.floor(Date.now() / 1000)
     };
 
-    return sign(payload, this.refreshSecret, {
-      expiresIn: this.refreshExpiration as string,
+    const signOptions: any = {
+      expiresIn: this.refreshExpiration,
       issuer: this.issuer,
       audience: this.audience
-    });
+    };
+    
+    return sign(payload, this.refreshSecret, signOptions);
   }
 
   /**

@@ -3,7 +3,8 @@
  * Handles structured logging of security events and incidents
  */
 
-import { SecurityEvent, SecurityEventType, SecuritySeverity, UserContext } from '../types/auth-types';
+import type { SecurityEvent, UserContext } from '../types/auth-types';
+import { SecurityEventType, SecuritySeverity } from '../types/auth-types';
 import { secretManager } from './SecretManager';
 
 export interface SecurityLoggerConfig {

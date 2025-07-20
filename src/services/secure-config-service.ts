@@ -4,7 +4,7 @@
  */
 
 import { secretManager } from '../security/SecretManager';
-import { InfluxDBServiceConfig } from './influxdb-service';
+import type { InfluxDBServiceConfig } from './influxdb-service';
 
 export interface RedisConfig {
   host: string;

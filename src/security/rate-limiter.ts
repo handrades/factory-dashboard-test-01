@@ -3,7 +3,7 @@
  * Provides rate limiting functionality for API endpoints and user actions
  */
 
-import { RateLimitInfo } from '../types/auth-types';
+import type { RateLimitInfo } from '../types/auth-types';
 import { securityLogger } from './security-logger';
 
 export interface RateLimitConfig {
@@ -403,7 +403,7 @@ rateLimiter.configure('login', {
   windowMs: 15 * 60 * 1000, // 15 minutes
   maxRequests: 5, // 5 attempts per 15 minutes
   skipSuccessfulRequests: true,
-  onLimitReached: (identifier) => {
+  onLimitReached: (identifier, _info) => {
     console.log(`🚨 Login rate limit exceeded for: ${identifier}`);
   }
 });
@@ -411,7 +411,7 @@ rateLimiter.configure('login', {
 rateLimiter.configure('api', {
   windowMs: 15 * 60 * 1000, // 15 minutes
   maxRequests: 100, // 100 requests per 15 minutes
-  onLimitReached: (identifier) => {
+  onLimitReached: (identifier, _info) => {
     console.log(`🚨 API rate limit exceeded for: ${identifier}`);
   }
 });
@@ -419,7 +419,7 @@ rateLimiter.configure('api', {
 rateLimiter.configure('password_reset', {
   windowMs: 60 * 60 * 1000, // 1 hour
   maxRequests: 3, // 3 attempts per hour
-  onLimitReached: (identifier) => {
+  onLimitReached: (identifier, _info) => {
     console.log(`🚨 Password reset rate limit exceeded for: ${identifier}`);
   }
 });

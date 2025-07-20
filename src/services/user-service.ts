@@ -363,7 +363,7 @@ export class UserService {
    */
   public async refreshToken(
     refreshToken: string,
-    /* _ipAddress: string */
+    _ipAddress: string
   ): Promise<AuthResult> {
     try {
       // Validate refresh token
