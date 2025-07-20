@@ -167,8 +167,8 @@ export const SecurityMonitoringDashboard: React.FC = () => {
 
   return (
     <ProtectedRoute
-      requiredPermission={{ resource: 'security', action: 'monitor' }}
-      showLoginModal={false}
+      requiredPermissions={['security:monitor']}
+      showLoginForm={false}
       fallback={
         <div className="security-access-denied">
           <h2>🔒 Security Monitoring Access Denied</h2>

@@ -3,13 +3,15 @@
  * Handles user registration, authentication, and profile management
  */
 
-import { 
+import type { 
   User, 
   UserContext, 
   LoginCredentials, 
   AuthResult, 
   UserRegistrationRequest,
-  PasswordChangeRequest,
+  PasswordChangeRequest
+} from '../types/auth-types';
+import { 
   AuthErrorCode,
   UserRole,
   Permission as UserPermission
@@ -666,10 +668,11 @@ export class UserService {
       this.storage.usersByUsername.set(adminUser.username.toLowerCase(), adminUser.id);
       this.storage.usersByEmail.set(adminUser.email.toLowerCase(), adminUser.id);
 
-      console.log('🔐 Default admin user created');
-      console.log(`   Username: admin`);
-      console.log(`   Password: ${adminPassword}`);
-      console.log('   ⚠️  Please change this password after first login!');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔐 Default admin user created');
+        console.log('   Username: admin');
+        console.log('   ⚠️  Password has been securely stored. Use secure credential delivery!');
+      }
     }
   }
 

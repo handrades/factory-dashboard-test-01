@@ -3,8 +3,10 @@
  * Provides authentication state and methods throughout the React application
  */
 
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import { UserContext, LoginCredentials, AuthResult, AuthErrorCode } from '../types/auth-types';
+import { createContext, useContext, useReducer, useEffect } from 'react';
+import type { ReactNode } from 'react';
+import type { UserContext, LoginCredentials, AuthResult } from '../types/auth-types';
+import { AuthErrorCode } from '../types/auth-types';
 
 interface AuthState {
   isAuthenticated: boolean;

@@ -87,53 +87,59 @@ export interface UserRegistrationRequest {
   confirmPassword: string;
 }
 
-export enum AuthErrorCode {
-  INVALID_CREDENTIALS = 'INVALID_CREDENTIALS',
-  ACCOUNT_LOCKED = 'ACCOUNT_LOCKED',
-  ACCOUNT_DISABLED = 'ACCOUNT_DISABLED',
-  TOKEN_EXPIRED = 'TOKEN_EXPIRED',
-  TOKEN_INVALID = 'TOKEN_INVALID',
-  INSUFFICIENT_PERMISSIONS = 'INSUFFICIENT_PERMISSIONS',
-  PASSWORD_TOO_WEAK = 'PASSWORD_TOO_WEAK',
-  USERNAME_TAKEN = 'USERNAME_TAKEN',
-  EMAIL_TAKEN = 'EMAIL_TAKEN',
-  RATE_LIMITED = 'RATE_LIMITED',
-  SESSION_EXPIRED = 'SESSION_EXPIRED'
-}
+export const AuthErrorCode = {
+  INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
+  ACCOUNT_LOCKED: 'ACCOUNT_LOCKED',
+  ACCOUNT_DISABLED: 'ACCOUNT_DISABLED',
+  TOKEN_EXPIRED: 'TOKEN_EXPIRED',
+  TOKEN_INVALID: 'TOKEN_INVALID',
+  INSUFFICIENT_PERMISSIONS: 'INSUFFICIENT_PERMISSIONS',
+  PASSWORD_TOO_WEAK: 'PASSWORD_TOO_WEAK',
+  USERNAME_TAKEN: 'USERNAME_TAKEN',
+  EMAIL_TAKEN: 'EMAIL_TAKEN',
+  RATE_LIMITED: 'RATE_LIMITED',
+  SESSION_EXPIRED: 'SESSION_EXPIRED'
+} as const;
 
-export enum UserRole {
-  ADMIN = 'admin',
-  OPERATOR = 'operator',
-  VIEWER = 'viewer',
-  MAINTENANCE = 'maintenance'
-}
+export type AuthErrorCode = typeof AuthErrorCode[keyof typeof AuthErrorCode];
 
-export enum Permission {
+export const UserRole = {
+  ADMIN: 'admin',
+  OPERATOR: 'operator',
+  VIEWER: 'viewer',
+  MAINTENANCE: 'maintenance'
+} as const;
+
+export type UserRole = typeof UserRole[keyof typeof UserRole];
+
+export const Permission = {
   // Dashboard permissions
-  VIEW_DASHBOARD = 'dashboard:view',
-  MANAGE_DASHBOARD = 'dashboard:manage',
+  VIEW_DASHBOARD: 'dashboard:view',
+  MANAGE_DASHBOARD: 'dashboard:manage',
   
   // Equipment permissions
-  VIEW_EQUIPMENT = 'equipment:view',
-  CONTROL_EQUIPMENT = 'equipment:control',
-  CONFIGURE_EQUIPMENT = 'equipment:configure',
+  VIEW_EQUIPMENT: 'equipment:view',
+  CONTROL_EQUIPMENT: 'equipment:control',
+  CONFIGURE_EQUIPMENT: 'equipment:configure',
   
   // Data permissions
-  VIEW_DATA = 'data:view',
-  EXPORT_DATA = 'data:export',
-  DELETE_DATA = 'data:delete',
+  VIEW_DATA: 'data:view',
+  EXPORT_DATA: 'data:export',
+  DELETE_DATA: 'data:delete',
   
   // User management permissions
-  VIEW_USERS = 'users:view',
-  MANAGE_USERS = 'users:manage',
-  DELETE_USERS = 'users:delete',
+  VIEW_USERS: 'users:view',
+  MANAGE_USERS: 'users:manage',
+  DELETE_USERS: 'users:delete',
   
   // System permissions
-  VIEW_SYSTEM = 'system:view',
-  CONFIGURE_SYSTEM = 'system:configure',
-  MANAGE_SECURITY = 'security:manage',
-  VIEW_LOGS = 'logs:view'
-}
+  VIEW_SYSTEM: 'system:view',
+  CONFIGURE_SYSTEM: 'system:configure',
+  MANAGE_SECURITY: 'security:manage',
+  VIEW_LOGS: 'logs:view'
+} as const;
+
+export type Permission = typeof Permission[keyof typeof Permission];
 
 export interface SecurityEvent {
   id: string;
@@ -151,21 +157,25 @@ export interface SecurityEvent {
   sessionId?: string;
 }
 
-export enum SecurityEventType {
-  AUTHENTICATION = 'authentication',
-  AUTHORIZATION = 'authorization',
-  DATA_ACCESS = 'data_access',
-  CONFIGURATION_CHANGE = 'configuration_change',
-  SECURITY_VIOLATION = 'security_violation',
-  SESSION_MANAGEMENT = 'session_management'
-}
+export const SecurityEventType = {
+  AUTHENTICATION: 'authentication',
+  AUTHORIZATION: 'authorization',
+  DATA_ACCESS: 'data_access',
+  CONFIGURATION_CHANGE: 'configuration_change',
+  SECURITY_VIOLATION: 'security_violation',
+  SESSION_MANAGEMENT: 'session_management'
+} as const;
 
-export enum SecuritySeverity {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
-  CRITICAL = 'critical'
-}
+export type SecurityEventType = typeof SecurityEventType[keyof typeof SecurityEventType];
+
+export const SecuritySeverity = {
+  LOW: 'low',
+  MEDIUM: 'medium',
+  HIGH: 'high',
+  CRITICAL: 'critical'
+} as const;
+
+export type SecuritySeverity = typeof SecuritySeverity[keyof typeof SecuritySeverity];
 
 export interface RateLimitInfo {
   windowStart: Date;

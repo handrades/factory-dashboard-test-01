@@ -109,7 +109,7 @@ const Dashboard: React.FC = () => {
       {/* Authentication Modal */}
       {showLogin && (
         <LoginForm 
-          onClose={() => setShowLogin(false)}
+          onSuccess={() => setShowLogin(false)}
         />
       )}
       

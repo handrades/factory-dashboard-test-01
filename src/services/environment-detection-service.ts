@@ -20,10 +20,10 @@ export class EnvironmentDetectionService {
   private constructor() {}
 
   static getInstance(): EnvironmentDetectionService {
-    if (!this.instance) {
-      this.instance = new EnvironmentDetectionService();
+    if (!EnvironmentDetectionService.instance) {
+      EnvironmentDetectionService.instance = new EnvironmentDetectionService();
     }
-    return this.instance;
+    return EnvironmentDetectionService.instance;
   }
 
   detectEnvironment(): EnvironmentConfig {
@@ -188,9 +188,9 @@ export class EnvironmentDetectionService {
 
   // For testing - reset the singleton
   static resetInstance(): void {
-    if (this.instance) {
-      this.instance.config = null;
+    if (EnvironmentDetectionService.instance) {
+      EnvironmentDetectionService.instance.config = null;
     }
-    this.instance = null as any;
+    EnvironmentDetectionService.instance = null as any;
   }
 }

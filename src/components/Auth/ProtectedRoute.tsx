@@ -3,7 +3,7 @@
  * Handles route protection based on authentication and authorization
  */
 
-import React, { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { LoginForm } from './LoginForm';
 import { UserRole } from '../../types/auth-types';

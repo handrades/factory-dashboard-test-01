@@ -5,7 +5,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { LoginCredentials, AuthErrorCode } from '../../types/auth-types';
+import type { LoginCredentials } from '../../types/auth-types';
+import { AuthErrorCode } from '../../types/auth-types';
 import './LoginForm.css';
 
 interface LoginFormProps {

@@ -3,7 +3,7 @@
  * Displays user information and authentication controls
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import './UserMenu.css';
 
