@@ -45,23 +45,82 @@ const config: QueueConsumerServiceConfig = {
       'assembly': 'assembly_metrics'
     },
     tagRules: [
+      // Temperature tags (oven equipment)
       {
         tagId: 'temperature',
         measurement: 'temperature',
         field: 'value',
         validate: (value) => typeof value === 'number' && value >= -50 && value <= 1000
       },
+      // Heating status tags (oven equipment)
+      {
+        tagId: 'heating_status',
+        measurement: 'heating_status',
+        field: 'enabled',
+        transform: (value) => Boolean(value)
+      },
+      // Door status tags (oven equipment)
+      {
+        tagId: 'door_status',
+        measurement: 'door_status',
+        field: 'open',
+        transform: (value) => Boolean(value)
+      },
+      // Speed tags (conveyor equipment)
+      {
+        tagId: 'speed',
+        measurement: 'conveyor_speed',
+        field: 'value',
+        validate: (value) => typeof value === 'number' && value >= 0 && value <= 100
+      },
+      // Motor status tags (conveyor equipment)
+      {
+        tagId: 'motor_status',
+        measurement: 'motor_status',
+        field: 'running',
+        transform: (value) => Boolean(value)
+      },
+      // Belt tension tags (conveyor equipment)
+      {
+        tagId: 'belt_tension',
+        measurement: 'belt_tension',
+        field: 'value',
+        validate: (value) => typeof value === 'number' && value >= 0 && value <= 200
+      },
+      // Pressure tags (press equipment)
       {
         tagId: 'pressure',
-        measurement: 'pressure',
+        measurement: 'hydraulic_pressure',
         field: 'value',
         validate: (value) => typeof value === 'number' && value >= 0 && value <= 1000
       },
+      // Cycle count tags (press equipment)
       {
-        tagId: 'speed',
-        measurement: 'speed',
+        tagId: 'cycle_count',
+        measurement: 'cycle_count',
         field: 'value',
-        validate: (value) => typeof value === 'number' && value >= 0 && value <= 100
+        validate: (value) => typeof value === 'number' && value >= 0
+      },
+      // Position tags (press equipment)
+      {
+        tagId: 'position',
+        measurement: 'press_position',
+        field: 'value',
+        validate: (value) => typeof value === 'number' && value >= 0 && value <= 200
+      },
+      // Station status tags (assembly equipment)
+      {
+        tagId: /station\d+_status/,
+        measurement: 'station_status',
+        field: 'active',
+        transform: (value) => Boolean(value)
+      },
+      // Cycle time tags (assembly equipment)
+      {
+        tagId: 'cycle_time',
+        measurement: 'cycle_time',
+        field: 'value',
+        validate: (value) => typeof value === 'number' && value >= 0 && value <= 300
       }
     ],
     includeQualityMetrics: process.env.INCLUDE_QUALITY_METRICS !== 'false',

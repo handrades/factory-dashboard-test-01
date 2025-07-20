@@ -1,0 +1,19 @@
+# Exclude CommonJS files that contain Node.js require() statements
+**/*.cjs
+
+# Standard Docker ignores
+node_modules
+npm-debug.log
+Dockerfile
+.dockerignore
+.git
+.gitignore
+README.md
+.env
+.nyc_output
+coverage
+.vscode
+.idea
+dist
+*.log
+.DS_Store

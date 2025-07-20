@@ -1,0 +1,438 @@
+.runtime-security-monitor {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.runtime-monitor-container {
+  padding: 1rem;
+}
+
+.access-denied {
+  text-align: center;
+  padding: 2rem;
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  border-radius: 12px;
+  color: #ff6b6b;
+}
+
+.access-denied h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
+}
+
+.access-denied p {
+  margin: 0;
+  opacity: 0.8;
+}
+
+.monitor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header-info h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.monitoring-status {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.9rem;
+}
+
+.status-indicator {
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.status-indicator.active {
+  background: rgba(102, 187, 106, 0.2);
+  color: #66bb6a;
+  border: 1px solid rgba(102, 187, 106, 0.3);
+}
+
+.status-indicator.inactive {
+  background: rgba(255, 107, 107, 0.2);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+.last-update {
+  opacity: 0.6;
+  font-size: 0.8rem;
+}
+
+.threat-level {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.threat-label {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.threat-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid currentColor;
+}
+
+.monitor-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+/* Health Section */
+.health-section h3,
+.alerts-section h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #00d4ff;
+}
+
+.health-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.health-metric {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.metric-name {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.metric-value {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.metric-bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.metric-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.connection-info {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.connection-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.stat-icon {
+  font-size: 1.2rem;
+}
+
+.stat-label {
+  flex: 1;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.stat-value {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #00d4ff;
+}
+
+/* Alerts Section */
+.alerts-list {
+  max-height: 400px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.alerts-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.alerts-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.alerts-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.no-alerts {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  opacity: 0.6;
+}
+
+.no-alerts-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.alert-item {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1rem;
+  transition: all 0.2s ease;
+}
+
+.alert-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.alert-item.critical {
+  border-left: 3px solid #ff4757;
+  background: rgba(255, 71, 87, 0.05);
+}
+
+.alert-item.warning {
+  border-left: 3px solid #ffa726;
+  background: rgba(255, 167, 38, 0.05);
+}
+
+.alert-item.info {
+  border-left: 3px solid #42a5f5;
+  background: rgba(66, 165, 245, 0.05);
+}
+
+.alert-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.alert-type {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.type-icon,
+.severity-icon {
+  font-size: 1rem;
+}
+
+.alert-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.alert-source {
+  font-weight: 500;
+}
+
+.alert-time {
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.alert-content {
+  font-size: 0.9rem;
+}
+
+.alert-message {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.alert-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.detail-item {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-family: 'Monaco', 'Menlo', monospace;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .monitor-content {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .runtime-security-monitor {
+    padding: 1rem;
+    margin: 0.5rem 0;
+  }
+  
+  .monitor-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .monitoring-status {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .health-metrics {
+    gap: 0.75rem;
+  }
+  
+  .health-metric {
+    padding: 0.75rem;
+  }
+  
+  .alert-header {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+  
+  .alert-meta {
+    align-self: flex-end;
+  }
+}
+
+@media (max-width: 480px) {
+  .runtime-security-monitor {
+    padding: 0.75rem;
+  }
+  
+  .monitor-header h2 {
+    font-size: 1.2rem;
+  }
+  
+  .metric-header {
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: flex-start;
+  }
+  
+  .connection-stat {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+  
+  .alert-details {
+    gap: 0.25rem;
+  }
+  
+  .detail-item {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.4rem;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .runtime-security-monitor,
+  .health-metric,
+  .connection-info,
+  .alert-item {
+    border-width: 2px;
+  }
+  
+  .status-indicator,
+  .threat-badge {
+    border-width: 2px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .metric-fill {
+    transition: none;
+  }
+  
+  .alert-item {
+    transition: none;
+  }
+  
+  .alert-item:hover {
+    transform: none;
+  }
+}
+
+/* Dark mode adjustments (already dark theme) */
+@media (prefers-color-scheme: light) {
+  .runtime-security-monitor {
+    background: rgba(0, 0, 0, 0.05);
+    color: #333;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  
+  .health-metric,
+  .connection-info,
+  .alert-item {
+    background: rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+  
+  .metric-bar {
+    background: rgba(0, 0, 0, 0.1);
+  }
+}

@@ -2,10 +2,7 @@ import { createClient } from 'redis';
 import { InfluxDB } from '@influxdata/influxdb-client';
 import { PLCMessage } from '@factory-dashboard/shared-types';
 import { v4 as uuidv4 } from 'uuid';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
+const SafeCommandExecutor = require('../../src/security/SafeCommandExecutor.cjs');
 
 interface ChaosTestConfig {
   testDuration: number; // seconds
@@ -43,8 +40,10 @@ export class ChaosTestRunner {
   private messagesReceived: number = 0;
   private serviceFaults: { [service: string]: number } = {};
   private recoveryTimes: number[] = [];
+  private commandExecutor: any;
 
   constructor() {
+    this.commandExecutor = new SafeCommandExecutor();
     this.redisClient = createClient({
       socket: {
         host: process.env.REDIS_HOST || 'localhost',
@@ -269,31 +268,19 @@ export class ChaosTestRunner {
 
   private async restartService(serviceName: string): Promise<void> {
     const containerName = `factory-${serviceName}-test`;
-    await execAsync(`docker restart ${containerName}`);
+    await this.commandExecutor.restartDockerContainer(containerName);
     console.log(`Restarted service: ${serviceName}`);
   }
 
   private async createNetworkPartition(serviceName: string): Promise<void> {
     const containerName = `factory-${serviceName}-test`;
-    await execAsync(`docker network disconnect factory-test-network ${containerName}`);
+    await this.commandExecutor.disconnectFromNetwork('factory-test-network', containerName);
     console.log(`Network partition created for: ${serviceName}`);
   }
 
   private async exhaustResources(resourceType: string): Promise<void> {
-    switch (resourceType) {
-      case 'cpu':
-        // Simulate CPU exhaustion
-        await execAsync('docker run --rm --name cpu-stress -d stress:latest stress --cpu 4');
-        break;
-      case 'memory':
-        // Simulate memory exhaustion
-        await execAsync('docker run --rm --name memory-stress -d stress:latest stress --vm 1 --vm-bytes 1G');
-        break;
-      case 'disk':
-        // Simulate disk exhaustion
-        await execAsync('docker run --rm --name disk-stress -d stress:latest stress --io 4');
-        break;
-    }
+    const stressName = `${resourceType}-stress`;
+    await this.commandExecutor.runStressContainer(resourceType, stressName);
     console.log(`Resource exhaustion initiated: ${resourceType}`);
   }
 
@@ -315,7 +302,7 @@ export class ChaosTestRunner {
         
       case 'network_partition':
         const containerName = `factory-${scenario.target}-test`;
-        await execAsync(`docker network connect factory-test-network ${containerName}`);
+        await this.commandExecutor.connectToNetwork('factory-test-network', containerName);
         console.log(`Network partition recovered for: ${scenario.target}`);
         break;
         
@@ -331,20 +318,12 @@ export class ChaosTestRunner {
 
   private async stopResourceExhaustion(resourceType: string): Promise<void> {
     try {
-      switch (resourceType) {
-        case 'cpu':
-          await execAsync('docker stop cpu-stress');
-          break;
-        case 'memory':
-          await execAsync('docker stop memory-stress');
-          break;
-        case 'disk':
-          await execAsync('docker stop disk-stress');
-          break;
-      }
+      const stressName = `${resourceType}-stress`;
+      await this.commandExecutor.stopDockerContainer(stressName);
       console.log(`Resource exhaustion stopped: ${resourceType}`);
     } catch (error) {
       // Container might already be stopped
+      console.log(`Container ${resourceType}-stress was already stopped`);
     }
   }
 

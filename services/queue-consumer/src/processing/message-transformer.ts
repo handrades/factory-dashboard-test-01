@@ -2,7 +2,7 @@ import { PLCMessage, DataPoint } from '@factory-dashboard/shared-types';
 import { createLogger } from 'winston';
 
 export interface TransformationRule {
-  tagId: string;
+  tagId: string | RegExp;
   measurement: string;
   field: string;
   tags?: Record<string, string>;
@@ -85,7 +85,24 @@ export class MessageTransformer {
     const dataPoints: DataPoint[] = [];
     
     // Find transformation rule for this tag
-    const rule = this.config.tagRules.find(r => r.tagId === tag.tagId);
+    const rule = this.config.tagRules.find(r => {
+      if (typeof r.tagId === 'string') {
+        return r.tagId === tag.tagId;
+      } else if (r.tagId instanceof RegExp) {
+        return r.tagId.test(tag.tagId);
+      }
+      return false;
+    });
+    
+    // Debug logging
+    if (process.env.NODE_ENV === 'development' || process.env.LOG_TRANSFORMATIONS === 'true') {
+      this.logger.info(`Tag transformation for ${tag.tagId}`, {
+        tagId: tag.tagId,
+        ruleFound: !!rule,
+        ruleMeasurement: rule?.measurement,
+        ruleField: rule?.field
+      });
+    }
     
     // Apply validation if specified
     if (rule?.validate && !rule.validate(tag.value)) {
