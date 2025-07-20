@@ -110,7 +110,7 @@ export class SecretManager {
         if (!value) {
           missingSecrets.push(secretKey);
         }
-      } catch (error) {
+      } catch {
         missingSecrets.push(secretKey);
       }
     }
@@ -126,7 +126,7 @@ export class SecretManager {
   /**
    * Mask sensitive data in logs and error messages
    */
-  public maskSensitiveData(data: any): any {
+  public maskSensitiveData(data: unknown): unknown {
     if (typeof data === 'string') {
       return this.maskString(data);
     }
@@ -136,7 +136,7 @@ export class SecretManager {
     }
 
     if (typeof data === 'object' && data !== null) {
-      const masked: any = {};
+      const masked: Record<string, unknown> = {};
       for (const [key, value] of Object.entries(data)) {
         if (this.isSensitiveKey(key)) {
           masked[key] = this.maskString(String(value));
@@ -169,8 +169,8 @@ export class SecretManager {
     loadedSecrets: string[];
   } {
     const requiredSecrets = Object.entries(this.configuration.secrets)
-      .filter(([_, config]) => config.required)
-      .map(([key, _]) => key);
+      .filter(([, config]) => config.required)
+      .map(([key]) => key);
 
     const loadedSecrets = Array.from(this.secrets.keys());
 
@@ -332,8 +332,8 @@ export class SecretManager {
 
   private async validateRequiredSecrets(): Promise<void> {
     const requiredSecrets = Object.entries(this.configuration.secrets)
-      .filter(([_, config]) => config.required)
-      .map(([key, _]) => key);
+      .filter(([, config]) => config.required)
+      .map(([key]) => key);
 
     const missingSecrets: string[] = [];
 

@@ -11,9 +11,9 @@ interface TestDataConfig {
 }
 
 export class TestDataGenerator {
-  private redisClient: any;
+  private redisClient: unknown;
   private influxDB: InfluxDB;
-  private writeApi: any;
+  private writeApi: unknown;
   private config: TestDataConfig;
 
   constructor(config: TestDataConfig) {
@@ -100,8 +100,8 @@ export class TestDataGenerator {
     return types[index];
   }
 
-  private generateTagsForEquipment(equipmentId: string, equipmentType: string): any[] {
-    const baseValue = 100;
+  private generateTagsForEquipment(equipmentId: string, equipmentType: string): unknown[] {
+    const _baseValue = 100;
     const variation = this.config.dataVariation / 100;
     
     const generateValue = (base: number) => {
@@ -347,11 +347,12 @@ if (require.main === module) {
         case 'cleanup':
           await generator.cleanupTestData();
           break;
-        case 'performance':
+        case 'performance': {
           const msgPerSec = parseInt(process.argv[3] || '100', 10);
           const duration = parseInt(process.argv[4] || '60', 10);
           await generator.generatePerformanceTestData(msgPerSec, duration);
           break;
+        }
         case 'anomaly':
           await generator.generateAnomalyData();
           break;

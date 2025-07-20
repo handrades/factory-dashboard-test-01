@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "puppeteer": {
+      "command": "uvx",
+      "args": ["mcp-server-puppeteer"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": ["puppeteer_navigate", "puppeteer_screenshot", "puppeteer_console_logs", "puppeteer_evaluate"]
+    }
+  }
+}

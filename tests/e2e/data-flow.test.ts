@@ -4,9 +4,9 @@ import { PLCMessage } from '@factory-dashboard/shared-types';
 import { v4 as uuidv4 } from 'uuid';
 
 describe('End-to-End Data Flow Tests', () => {
-  let redisClient: any;
+  let redisClient: unknown;
   let influxDB: InfluxDB;
-  let queryApi: any;
+  let queryApi: unknown;
 
   const testTimeout = 30000;
 

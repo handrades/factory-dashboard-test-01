@@ -36,9 +36,9 @@ interface PerformanceMetrics {
 }
 
 export class SystemIntegrationTester {
-  private redisClient: any;
+  private redisClient: unknown;
   private influxDB: InfluxDB;
-  private queryApi: any;
+  private queryApi: unknown;
   private dataGenerator: TestDataGenerator;
   private testStartTime: number = 0;
   private messagesSent: number = 0;
@@ -296,7 +296,7 @@ export class SystemIntegrationTester {
     
     console.log(`Running high-frequency test: ${highFreqRate} msg/s for ${highFreqDuration}s`);
     
-    const startTime = Date.now();
+    const _startTime = Date.now();
     const processingTimes: number[] = [];
     
     for (let i = 0; i < highFreqDuration * highFreqRate; i++) {
@@ -613,15 +613,17 @@ if (require.main === module) {
     const testType = process.argv[2] || 'full';
     
     switch (testType) {
-      case 'full':
+      case 'full': {
         const fullResults = await tester.runFullSystemIntegrationTest();
         console.log('\n' + tester.generateSystemReport(fullResults));
         break;
+      }
         
-      case 'realtime':
+      case 'realtime': {
         const realtimeResults = await tester.runRealTimeDataValidation();
         console.log('\n' + tester.generateSystemReport(realtimeResults));
         break;
+      }
         
       default:
         console.log('Usage: node system-integration-test.js [full|realtime]');

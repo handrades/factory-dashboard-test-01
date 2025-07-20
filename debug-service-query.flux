@@ -1,0 +1,6 @@
+from(bucket: "factory-data")
+  |> range(start: -1h)
+  |> filter(fn: (r) => r.equipment_id == "oven6")
+  |> group(columns: ["equipment_id", "_measurement", "_field"])
+  |> last()
+  |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")

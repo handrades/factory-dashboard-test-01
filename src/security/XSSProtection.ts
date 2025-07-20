@@ -62,7 +62,7 @@ export class XSSProtection {
     
     try {
       // Configure DOMPurify
-      const purifyConfig: any = {
+      const purifyConfig: Record<string, unknown> = {
         ALLOWED_TAGS: mergedConfig.allowedTags,
         ALLOWED_ATTR: mergedConfig.allowedAttributes,
         ALLOWED_URI_REGEXP: new RegExp(
@@ -120,7 +120,7 @@ export class XSSProtection {
       '=': '&#x3D;'
     };
 
-    return text.replace(/[&<>"'`=\/]/g, (char) => entityMap[char]);
+    return text.replace(/[&<>"'`=/]/g, (char) => entityMap[char]);
   }
 
   /**
@@ -289,11 +289,11 @@ export class XSSProtection {
   /**
    * Validate JSON input to prevent prototype pollution
    */
-  public sanitizeJSON(jsonString: string): any {
+  public sanitizeJSON(jsonString: string): unknown {
     try {
       const parsed = JSON.parse(jsonString);
       return this.removePrototypePollution(parsed);
-    } catch (error) {
+    } catch {
       throw new Error('Invalid JSON input');
     }
   }
@@ -301,7 +301,7 @@ export class XSSProtection {
   /**
    * Remove potential prototype pollution from object
    */
-  public removePrototypePollution(obj: any): any {
+  public removePrototypePollution(obj: unknown): unknown {
     if (obj === null || typeof obj !== 'object') {
       return obj;
     }

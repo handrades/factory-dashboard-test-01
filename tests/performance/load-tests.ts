@@ -25,9 +25,9 @@ interface LoadTestResults {
 }
 
 export class LoadTestRunner {
-  private redisClient: any;
+  private redisClient: unknown;
   private influxDB: InfluxDB;
-  private queryApi: any;
+  private queryApi: unknown;
   private results: LoadTestResults = {
     totalMessages: 0,
     messagesPerSecond: 0,
@@ -360,7 +360,7 @@ if (require.main === module) {
     const testType = process.argv[2] || 'load';
     
     switch (testType) {
-      case 'load':
+      case 'load': {
         const config: LoadTestConfig = {
           messagesPerSecond: parseInt(process.argv[3] || '100', 10),
           durationSeconds: parseInt(process.argv[4] || '60', 10),
@@ -371,21 +371,24 @@ if (require.main === module) {
         const result = await runner.runLoadTest(config);
         console.log('\n' + runner.generateReport(result));
         break;
+      }
         
-      case 'throughput':
+      case 'throughput': {
         const maxRate = parseInt(process.argv[3] || '1000', 10);
         const stepSize = parseInt(process.argv[4] || '100', 10);
         
         const throughputResults = await runner.runThroughputTest(maxRate, stepSize);
         console.log('\n' + runner.generateReport(throughputResults));
         break;
+      }
         
-      case 'stress':
+      case 'stress': {
         const duration = parseInt(process.argv[3] || '300', 10);
         
         const stressResult = await runner.runStressTest(duration);
         console.log('\n' + runner.generateReport(stressResult));
         break;
+      }
         
       default:
         console.log('Usage: node load-tests.js [load|throughput|stress] [parameters...]');
