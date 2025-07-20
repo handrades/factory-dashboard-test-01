@@ -295,13 +295,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     
     // If only resource is provided, check if user has any permission for that resource
     if (!action) {
-      return state.user.permissions.some(p => p.resource === resource);
+      return state.user.permissions.some(p => p.startsWith(`${resource}:`));
     }
     
     // Check if user has specific resource:action permission
-    return state.user.permissions.some(p => 
-      p.resource === resource && p.actions.includes(action)
-    );
+    const permissionString = `${resource}:${action}`;
+    return state.user.permissions.includes(permissionString);
   };
 
   const hasRole = (role: string): boolean => {
@@ -429,7 +428,7 @@ async function simulateLogout(token: string): Promise<void> {
   console.log('User logged out, token invalidated:', token.substring(0, 10) + '...');
 }
 
-async function simulateTokenRefresh(refreshToken: string): Promise<AuthResult> {
+async function simulateTokenRefresh(_refreshToken: string): Promise<AuthResult> {
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 500));
 

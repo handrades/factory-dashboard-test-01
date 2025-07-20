@@ -5,7 +5,7 @@
 
 import { sign, verify, JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 import { randomBytes } from 'crypto';
-import type { UserContext, AuthToken } from '../types/auth-types';
+import type { UserContext } from '../types/auth-types';
 import { AuthErrorCode } from '../types/auth-types';
 import { secretManager } from './SecretManager';
 
@@ -99,7 +99,7 @@ export class JWTManager {
     };
 
     return sign(payload, this.jwtSecret, {
-      expiresIn,
+      expiresIn: expiresIn as string,
       issuer,
       audience
     });
