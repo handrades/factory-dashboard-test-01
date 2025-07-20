@@ -20,13 +20,13 @@ export interface User {
 export interface Role {
   id: string;
   name: string;
-  permissions: Permission[];
+  permissions: PermissionInterface[];
   description: string;
   isSystemRole: boolean;
   createdAt: Date;
 }
 
-export interface Permission {
+export interface PermissionInterface {
   id: string;
   resource: string;
   actions: string[];

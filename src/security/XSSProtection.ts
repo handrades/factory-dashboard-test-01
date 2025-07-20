@@ -75,7 +75,8 @@ export class XSSProtection {
       };
 
       // Sanitize the HTML
-      const sanitized = DOMPurify.sanitize(html, purifyConfig);
+      const sanitizedTrustedHTML = DOMPurify.sanitize(html, purifyConfig);
+      const sanitized = String(sanitizedTrustedHTML);
       
       // Detect what was removed/modified
       const removed = this.detectRemovedContent(html, sanitized);

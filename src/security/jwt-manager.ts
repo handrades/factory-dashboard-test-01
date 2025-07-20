@@ -5,7 +5,7 @@
 
 import { sign, verify, JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 import { randomBytes } from 'crypto';
-import type { UserContext, AuthToken } from '../types/auth-types';
+import type { UserContext } from '../types/auth-types';
 import { AuthErrorCode } from '../types/auth-types';
 import { secretManager } from './SecretManager';
 
@@ -81,6 +81,10 @@ export class JWTManager {
     userContext: UserContext,
     options: TokenGenerationOptions = {}
   ): string {
+    if (!this.jwtSecret) {
+      throw new Error('JWT Manager not initialized. Call initialize() first.');
+    }
+    
     const {
       expiresIn = options.rememberMe ? this.rememberMeExpiration : this.defaultExpiration,
       audience = this.audience,
@@ -99,7 +103,7 @@ export class JWTManager {
     };
 
     return sign(payload, this.jwtSecret, {
-      expiresIn,
+      expiresIn: expiresIn as string,
       issuer,
       audience
     });
@@ -109,6 +113,9 @@ export class JWTManager {
    * Generate refresh token
    */
   public generateRefreshToken(): string {
+    if (!this.refreshSecret) {
+      throw new Error('JWT Manager not initialized. Call initialize() first.');
+    }
     const payload = {
       tokenId: randomBytes(16).toString('hex'),
       type: 'refresh',
@@ -116,7 +123,7 @@ export class JWTManager {
     };
 
     return sign(payload, this.refreshSecret, {
-      expiresIn: this.refreshExpiration,
+      expiresIn: this.refreshExpiration as string,
       issuer: this.issuer,
       audience: this.audience
     });
