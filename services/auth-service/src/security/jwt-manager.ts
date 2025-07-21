@@ -116,7 +116,7 @@ export class JWTManager {
         throw new Error('Invalid token structure');
       }
       return new Date(decoded.exp * 1000);
-    } catch (error) {
+    } catch {
       throw new Error('Failed to extract token expiry');
     }
   }
@@ -125,7 +125,7 @@ export class JWTManager {
     try {
       const expiry = this.getTokenExpiry(token);
       return expiry < new Date();
-    } catch (error) {
+    } catch {
       return true;
     }
   }
