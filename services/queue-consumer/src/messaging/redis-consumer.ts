@@ -67,7 +67,7 @@ export class RedisConsumer extends EventEmitter {
       this.emit('connected');
     });
 
-    this.client.on('error', (error) => {
+    this.client.on('error', (error: Error) => {
       this.logger.error(`Redis consumer error: ${error}`);
       this.emit('error', error);
     });
@@ -82,7 +82,7 @@ export class RedisConsumer extends EventEmitter {
     try {
       await this.client.connect();
       this.logger.info('Successfully connected to Redis');
-    } catch {
+    } catch (error) {
       this.logger.error(`Failed to connect to Redis: ${error}`);
       throw error;
     }
@@ -115,7 +115,7 @@ export class RedisConsumer extends EventEmitter {
       // Start consuming messages
       this.consumeMessages(queueNames, consumerConfig);
       
-    } catch {
+    } catch (error) {
       this.isRunning = false;
       throw error;
     }
@@ -131,7 +131,7 @@ export class RedisConsumer extends EventEmitter {
       );
       this.logger.info(`Created consumer group ${this.config.consumerGroup} for queue ${queueName}`);
     } catch (error: unknown) {
-      if (error.message.includes('BUSYGROUP')) {
+      if ((error as Error)?.message?.includes('BUSYGROUP')) {
         this.logger.debug(`Consumer group ${this.config.consumerGroup} already exists for queue ${queueName}`);
       } else {
         throw error;
@@ -165,14 +165,14 @@ export class RedisConsumer extends EventEmitter {
         // Process pending messages (messages that timed out)
         await this.processPendingMessages(queueNames, consumerConfig);
         
-      } catch {
+      } catch (error) {
         this.logger.error(`Error consuming messages: ${error}`);
         await this.sleep(1000);
       }
     }
   }
 
-  private async processMessages(streamResults: unknown[], consumerConfig: ConsumerConfig): Promise<void> {
+  private async processMessages(streamResults: Array<{ name: string; messages: Array<{ id: string; message: Record<string, unknown> }> }>, consumerConfig: ConsumerConfig): Promise<void> {
     for (const streamResult of streamResults) {
       const queueName = streamResult.name;
       const messages = streamResult.messages;
@@ -191,7 +191,7 @@ export class RedisConsumer extends EventEmitter {
   private async processMessage(
     queueName: string,
     messageId: string,
-    messageData: unknown,
+    messageData: Record<string, unknown>,
     consumerConfig: ConsumerConfig
   ): Promise<void> {
     const startTime = Date.now();
@@ -244,7 +244,7 @@ export class RedisConsumer extends EventEmitter {
         this.messagesFailedProcessing++;
       }
 
-    } catch {
+    } catch (error) {
       this.logger.error(`Error processing message ${messageId}: ${error}`);
       await this.handleFailedMessage(queueName, messageId, null, error?.toString());
       this.messagesFailedProcessing++;
@@ -254,10 +254,10 @@ export class RedisConsumer extends EventEmitter {
     }
   }
 
-  private parseMessage(messageData: unknown): PLCMessage {
+  private parseMessage(messageData: Record<string, unknown>): PLCMessage {
     try {
       const messageJson = messageData.message || messageData;
-      const parsedMessage = JSON.parse(messageJson);
+      const parsedMessage = JSON.parse(messageJson as string);
       
       // Convert timestamp string back to Date
       if (typeof parsedMessage.timestamp === 'string') {
@@ -265,7 +265,7 @@ export class RedisConsumer extends EventEmitter {
       }
       
       return parsedMessage;
-    } catch {
+    } catch (error) {
       throw new Error(`Failed to parse message: ${error}`);
     }
   }
@@ -324,7 +324,7 @@ export class RedisConsumer extends EventEmitter {
             }
           }
         }
-      } catch {
+      } catch (error) {
         this.logger.error(`Error processing pending messages for queue ${queueName}: ${error}`);
       }
     }
@@ -347,7 +347,7 @@ export class RedisConsumer extends EventEmitter {
           }
         }
       }
-    } catch {
+    } catch (error) {
       this.logger.error(`Error reclaiming message ${messageId}: ${error}`);
     }
   }

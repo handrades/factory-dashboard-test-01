@@ -1,6 +1,7 @@
 import { QueueConsumerService, QueueConsumerServiceConfig } from './service/queue-consumer-service';
 import { DynamicQueueDiscovery } from './config/dynamic-queue-discovery';
 import { resolve } from 'path';
+import type { Request, Response } from 'express';
 
 // Load configuration from environment variables or use defaults
 const config: QueueConsumerServiceConfig = {
@@ -169,7 +170,7 @@ async function main() {
 
     // Update config with discovered queue names
     config.queueNames = queueNames;
-  } catch {
+  } catch (error) {
     console.error('Failed to discover queue names:', error);
     console.log('Falling back to environment variable QUEUE_NAMES or default queues');
     config.queueNames = (process.env.QUEUE_NAMES || 'plc_data_oven1,plc_data_conveyor1,plc_data_press1,plc_data_assembly1').split(',');
@@ -259,19 +260,19 @@ async function main() {
   
   // Health check endpoint (if running in Docker or with health checks)
   if (process.env.ENABLE_HEALTH_ENDPOINT === 'true') {
-    const express = await import('express');
+    const { default: express } = await import('express');
     const app = express();
     
-    app.get('/health', async (req: unknown, res: unknown) => {
+    app.get('/health', async (req: Request, res: Response) => {
       try {
         const healthCheck = await service.performHealthCheck();
         res.status(healthCheck.healthy ? 200 : 503).json(healthCheck);
       } catch (error: unknown) {
-        res.status(500).json({ healthy: false, error: error.message });
+        res.status(500).json({ healthy: false, error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
     
-    app.get('/metrics', (req: unknown, res: unknown) => {
+    app.get('/metrics', (req: Request, res: Response) => {
       const stats = service.getDetailedStats();
       res.json(stats);
     });
@@ -284,7 +285,7 @@ async function main() {
   
   try {
     await service.start();
-  } catch {
+  } catch (error) {
     console.error('Failed to start Queue Consumer Service:', error);
     process.exit(1);
   }

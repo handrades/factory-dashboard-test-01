@@ -61,7 +61,7 @@ export class EquipmentSimulator extends EventEmitter {
         ...tag,
         value,
         timestamp: new Date(),
-        quality: this.getTagQuality(tag)
+        quality: this.getTagQuality()
       };
 
       generatedTags.push(generatedTag);
@@ -70,7 +70,7 @@ export class EquipmentSimulator extends EventEmitter {
     return generatedTags;
   }
 
-  private getTagQuality(/* _tag: PLCTag */): 'GOOD' | 'BAD' | 'UNCERTAIN' {
+  private getTagQuality(): 'GOOD' | 'BAD' | 'UNCERTAIN' {
     // Simulate occasional quality issues
     const random = Math.random();
     if (random < 0.001) return 'BAD';

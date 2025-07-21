@@ -74,14 +74,14 @@ export class MessageTransformer {
       this.transformationStats.dataPointsCreated += dataPoints.length;
       
       return dataPoints;
-    } catch {
+    } catch (error) {
       this.transformationStats.transformationErrors++;
       this.logger.error(`Error transforming message ${message.id}: ${error}`);
       throw error;
     }
   }
 
-  private async transformTag(message: PLCMessage, tag: unknown): Promise<DataPoint[]> {
+  private async transformTag(message: PLCMessage, tag: { tagId: string; value: unknown; quality: string }): Promise<DataPoint[]> {
     const dataPoints: DataPoint[] = [];
     
     // Find transformation rule for this tag
@@ -115,7 +115,7 @@ export class MessageTransformer {
     if (rule?.transform) {
       try {
         transformedValue = rule.transform(tag.value);
-      } catch {
+      } catch (error) {
         this.logger.error(`Error transforming tag ${tag.tagId}: ${error}`);
         return dataPoints;
       }
@@ -152,7 +152,7 @@ export class MessageTransformer {
       const additionalPoints = this.createDataPointsFromObject(
         measurement,
         baseTags,
-        transformedValue,
+        transformedValue as Record<string, unknown>,
         message.timestamp
       );
       dataPoints.push(...additionalPoints);
@@ -164,7 +164,7 @@ export class MessageTransformer {
   private createDataPointsFromObject(
     measurement: string,
     baseTags: Record<string, string>,
-    obj: unknown,
+    obj: Record<string, unknown>,
     timestamp: Date,
     prefix: string = ''
   ): DataPoint[] {
@@ -178,7 +178,7 @@ export class MessageTransformer {
         const nestedPoints = this.createDataPointsFromObject(
           measurement,
           baseTags,
-          value,
+          value as Record<string, unknown>,
           timestamp,
           fieldName
         );
@@ -201,9 +201,9 @@ export class MessageTransformer {
   }
 
   private createQualityDataPoint(message: PLCMessage): DataPoint | null {
-    const goodQualityCount = message.tags.filter(t => t.quality === 'GOOD').length;
-    const badQualityCount = message.tags.filter(t => t.quality === 'BAD').length;
-    const uncertainQualityCount = message.tags.filter(t => t.quality === 'UNCERTAIN').length;
+    const goodQualityCount = message.tags.filter((t: PLCMessage['tags'][0]) => t.quality === 'GOOD').length;
+    const badQualityCount = message.tags.filter((t: PLCMessage['tags'][0]) => t.quality === 'BAD').length;
+    const uncertainQualityCount = message.tags.filter((t: PLCMessage['tags'][0]) => t.quality === 'UNCERTAIN').length;
     
     return {
       measurement: 'message_quality',
