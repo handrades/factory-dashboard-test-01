@@ -39,19 +39,20 @@ export class AuthMiddleware {
       keyGenerator: (req) => {
         return (req.ip || '0.0.0.0') + ':' + (req.body?.username || 'unknown');
       },
-      skip: (req) => {
-        // Log rate limit attempts for monitoring
-        if (req.rateLimit && req.rateLimit.remaining === 0) {
-          this.securityLogger.logSuspiciousActivity(
-            'Rate limit exceeded for authentication',
-            req.ip || '',
-            req.get('User-Agent') || 'unknown',
-            undefined,
-            req.body?.username,
-            { endpoint: req.path, windowMs: 15 * 60 * 1000, maxAttempts: 5 }
-          );
-        }
-        return false; // Don't skip any requests
+      // Note: Rate limit logging moved to error handling
+      handler: (req, res) => {
+        this.securityLogger.logSuspiciousActivity(
+          'Rate limit exceeded for authentication',
+          req.ip || '',
+          req.get('User-Agent') || 'unknown',
+          undefined,
+          req.body?.username,
+          { endpoint: req.path, windowMs: 15 * 60 * 1000, maxAttempts: 5 }
+        );
+        res.status(429).json({
+          error: 'Too many authentication attempts',
+          retryAfter: '15 minutes'
+        });
       }
     });
   }
@@ -108,7 +109,7 @@ export class AuthMiddleware {
       } catch (error: unknown) {
         this.securityLogger.logUnauthorizedAccess(
           req.path,
-          req.ip,
+          req.ip || '',
           req.get('User-Agent') || 'unknown'
         );
 

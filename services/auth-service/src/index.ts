@@ -12,8 +12,8 @@ import { AuthConfig } from './types/auth-types.js';
 
 class AuthService {
   private app: express.Application;
-  private authController: AuthController;
-  private authMiddleware: AuthMiddleware;
+  private authController!: AuthController;
+  private authMiddleware!: AuthMiddleware;
 
   constructor() {
     this.app = express();

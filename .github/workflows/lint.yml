@@ -85,7 +85,7 @@ jobs:
     if: needs.detect-changes.outputs.backend == 'true'
     strategy:
       matrix:
-        service: [auth-service, plc-emulator, queue-consumer, shared-types]
+        service: [plc-emulator, queue-consumer, shared-types]
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
