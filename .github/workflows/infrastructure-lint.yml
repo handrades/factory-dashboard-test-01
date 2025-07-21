@@ -299,7 +299,7 @@ jobs:
                 service_name=$(basename "$service_dir")
                 echo "Building $service_name"
                 # Use services/ as context for services that depend on shared-types
-                if [ "$service_name" = "plc-emulator" ] || [ "$service_name" = "queue-consumer" ]; then
+                if [ "$service_name" = "plc-emulator" ] || [ "$service_name" = "queue-consumer" ] || [ "$service_name" = "auth-service" ]; then
                   docker build -f "$dockerfile" -t "factory-$service_name:test" services/
                 else
                   docker build -t "factory-$service_name:test" "$service_dir"

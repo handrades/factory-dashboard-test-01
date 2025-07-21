@@ -137,7 +137,7 @@ export class AuthMiddleware {
       if (!hasRequiredRole) {
         this.securityLogger.logUnauthorizedAccess(
           req.path,
-          req.ip,
+          req.ip || 'unknown',
           req.get('User-Agent') || 'unknown',
           req.user.userId,
           req.user.username
@@ -166,7 +166,7 @@ export class AuthMiddleware {
       if (!hasPermission) {
         this.securityLogger.logUnauthorizedAccess(
           req.path,
-          req.ip,
+          req.ip || 'unknown',
           req.get('User-Agent') || 'unknown',
           req.user.userId,
           req.user.username
@@ -263,9 +263,8 @@ export class AuthMiddleware {
         timestamp: new Date().toISOString()
       };
 
-      // Override res.end to capture response details
-      const originalEnd = res.end;
-      res.end = function(chunk?: unknown, encoding?: unknown) {
+      // Log response after processing
+      res.on('finish', () => {
         const responseTime = Date.now() - startTime;
         
         // Log security events for sensitive operations
@@ -276,9 +275,7 @@ export class AuthMiddleware {
             responseTime
           });
         }
-
-        originalEnd.call(this, chunk, encoding);
-      };
+      });
 
       next();
     };
@@ -317,7 +314,7 @@ export class AuthMiddleware {
       }
       
       if (req.query) {
-        req.query = sanitize(req.query);
+        req.query = sanitize(req.query) as typeof req.query;
       }
 
       next();
@@ -328,34 +325,41 @@ export class AuthMiddleware {
   errorHandler() {
     return (error: unknown, req: express.Request, res: express.Response) => {
       // Log security-related errors
-      if (error.name === 'ValidationError' || error.name === 'SecurityError') {
-        this.securityLogger.logSuspiciousActivity(
-          error.message,
-          req.ip,
-          req.get('User-Agent') || 'unknown',
-          undefined,
-          undefined,
-          { error: error.name, path: req.path }
-        );
+      if (error && typeof error === 'object' && 'name' in error && 'message' in error) {
+        const err = error as { name: string; message: string };
+        if (err.name === 'ValidationError' || err.name === 'SecurityError') {
+          this.securityLogger.logSuspiciousActivity(
+            err.message,
+            req.ip || 'unknown',
+            req.get('User-Agent') || 'unknown',
+            undefined,
+            undefined,
+            { error: err.name, path: req.path }
+          );
+        }
       }
 
       // Don't expose sensitive error details
       const isDevelopment = process.env.NODE_ENV === 'development';
       
-      if (error.statusCode) {
-        return res.status(error.statusCode).json({
-          error: error.message,
-          ...(isDevelopment && { stack: error.stack })
+      if (error && typeof error === 'object' && 'statusCode' in error) {
+        const err = error as { statusCode: number; message: string; stack?: string };
+        return res.status(err.statusCode).json({
+          error: err.message,
+          ...(isDevelopment && { stack: err.stack })
         });
       }
 
       console.error('Unhandled error:', error);
       
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      
       res.status(500).json({
         error: 'Internal server error',
         ...(isDevelopment && { 
-          message: error.message,
-          stack: error.stack 
+          message: errorMessage,
+          stack: errorStack 
         })
       });
     };

@@ -19,6 +19,8 @@ describe('LineConfigLoader', () => {
       site: 'mexico',
       type: 'mudguard',
       line: 1,
+      status: 'running',
+      efficiency: 85.5,
       equipment: [
         {
           id: 'oven1',
@@ -75,6 +77,8 @@ describe('LineConfigLoader', () => {
       site: 'usa',
       type: 'esm',
       line: 2,
+      status: 'stopped',
+      efficiency: 92.3,
       equipment: [
         {
           id: 'press1',
@@ -245,6 +249,8 @@ describe('LineConfigLoader', () => {
             site: 'china',
             type: 'fleece',
             line: 3,
+            status: 'running',
+            efficiency: 88.7,
             equipment: [
               {
                 id: 'assembly1',

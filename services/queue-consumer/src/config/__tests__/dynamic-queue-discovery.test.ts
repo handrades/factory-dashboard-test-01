@@ -19,6 +19,8 @@ describe('DynamicQueueDiscovery', () => {
       site: 'mexico',
       type: 'mudguard',
       line: 1,
+      status: 'running',
+      efficiency: 85.5,
       equipment: [
         {
           id: 'oven1',
@@ -65,6 +67,8 @@ describe('DynamicQueueDiscovery', () => {
       site: 'usa',
       type: 'esm',
       line: 2,
+      status: 'running',
+      efficiency: 92.3,
       equipment: [
         {
           id: 'press1',
@@ -93,6 +97,8 @@ describe('DynamicQueueDiscovery', () => {
       site: 'china',
       type: 'fleece',
       line: 3,
+      status: 'running',
+      efficiency: 78.9,
       equipment: [
         {
           id: 'assembly1',
@@ -106,8 +112,8 @@ describe('DynamicQueueDiscovery', () => {
               dataType: 'REAL',
               value: 45,
               behavior: {
-                type: 'normal',
-                parameters: { mean: 45, stddev: 5 }
+                type: 'random',
+                parameters: { min: 40, max: 50 }
               }
             }
           ]
@@ -124,8 +130,8 @@ describe('DynamicQueueDiscovery', () => {
               dataType: 'REAL',
               value: 50,
               behavior: {
-                type: 'normal',
-                parameters: { mean: 50, stddev: 5 }
+                type: 'random',
+                parameters: { min: 45, max: 55 }
               }
             }
           ]
@@ -244,6 +250,8 @@ describe('DynamicQueueDiscovery', () => {
         site: 'usa',
         type: 'mudguard', // Same type as line1 but different site
         line: 4,
+        status: 'running',
+        efficiency: 88.7,
         equipment: [
           {
             id: 'oven2',

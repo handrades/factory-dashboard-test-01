@@ -7,6 +7,9 @@ describe('EquipmentSimulator', () => {
     name: 'Test Oven',
     type: 'oven',
     lineId: 'test_line',
+    site: 'test_factory',
+    productType: 'test_product',
+    lineNumber: 1,
     currentState: 'running',
     states: [
       {

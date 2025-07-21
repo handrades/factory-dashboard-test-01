@@ -13,7 +13,12 @@ jest.mock('redis', () => ({
 
 describe('RedisPublisher', () => {
   let publisher: RedisPublisher;
-  let mockRedisClient: unknown;
+  let mockRedisClient: {
+    on: jest.MockedFunction<(event: string, listener: (...args: unknown[]) => void) => void>;
+    connect: jest.MockedFunction<() => Promise<void>>;
+    quit: jest.MockedFunction<() => Promise<void>>;
+    lPush: jest.MockedFunction<(key: string, ...values: string[]) => Promise<number>>;
+  };
   const config: RedisPublisherConfig = {
     host: 'localhost',
     port: 6379,
@@ -25,7 +30,12 @@ describe('RedisPublisher', () => {
   beforeEach(async () => {
     const redisModule = await import('redis');
     const { createClient } = redisModule;
-    mockRedisClient = createClient();
+    mockRedisClient = createClient() as unknown as {
+      on: jest.MockedFunction<(event: string, listener: (...args: unknown[]) => void) => void>;
+      connect: jest.MockedFunction<() => Promise<void>>;
+      quit: jest.MockedFunction<() => Promise<void>>;
+      lPush: jest.MockedFunction<(key: string, ...values: string[]) => Promise<number>>;
+    };
     publisher = new RedisPublisher(config);
   });
 
@@ -63,6 +73,9 @@ describe('RedisPublisher', () => {
       id: 'test-message-1',
       timestamp: new Date(),
       equipmentId: 'test-equipment',
+      site: 'test-site',
+      productType: 'test-product',
+      lineNumber: 1,
       messageType: 'DATA_UPDATE',
       tags: [
         {
@@ -124,9 +137,25 @@ describe('RedisPublisher', () => {
       publisher['isConnected'] = false;
       
       // Fill buffer beyond limit
+      const baseMessage: PLCMessage = {
+        id: 'test-message-1',
+        timestamp: new Date(),
+        equipmentId: 'test-equipment',
+        site: 'test-site',
+        productType: 'test-product',
+        lineNumber: 1,
+        messageType: 'DATA_UPDATE',
+        tags: [
+          {
+            tagId: 'temperature',
+            value: 350,
+            quality: 'GOOD'
+          }
+        ]
+      };
       for (let i = 0; i < 10001; i++) {
         await publisher.publishMessage('test-queue', {
-          ...testMessage,
+          ...baseMessage,
           id: `test-message-${i}`
         });
       }

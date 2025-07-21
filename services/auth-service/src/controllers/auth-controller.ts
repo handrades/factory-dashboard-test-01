@@ -122,7 +122,7 @@ export class AuthController {
       this.securityLogger.logTokenRefresh(
         fullUser.id,
         fullUser.username,
-        req.ip,
+        req.ip || 'unknown',
         req.get('User-Agent') || 'unknown',
         true
       );
@@ -138,7 +138,7 @@ export class AuthController {
       this.securityLogger.logTokenRefresh(
         'unknown',
         'unknown',
-        req.ip,
+        req.ip || 'unknown',
         req.get('User-Agent') || 'unknown',
         false
       );
@@ -239,7 +239,7 @@ export class AuthController {
       await this.userService.changePassword(
         req.user.userId,
         changePasswordRequest,
-        req.ip,
+        req.ip || 'unknown',
         req.get('User-Agent') || 'unknown'
       );
 

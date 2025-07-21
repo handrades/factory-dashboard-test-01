@@ -1,4 +1,4 @@
-import { PLCTag } from '@factory-dashboard/shared-types';
+import { PLCTag, TagBehavior } from '@factory-dashboard/shared-types';
 import { 
   SinusoidalGenerator, 
   RandomGenerator, 
@@ -8,7 +8,7 @@ import {
 } from '../generators/tag-generators';
 
 describe('Tag Generators', () => {
-  const createTestTag = (behavior: unknown): PLCTag => ({
+  const createTestTag = (behavior: TagBehavior): PLCTag => ({
     id: 'test_tag',
     name: 'Test Tag',
     equipmentId: 'test_equipment',

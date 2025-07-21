@@ -123,7 +123,7 @@ describe('MessageFormatter', () => {
       const result = formatter.validateMessage(invalidMessage);
       
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Timestamp is required');
+      expect(result.errors).toContain('Timestamp must be a Date object');
     });
 
     it('should reject message with invalid message type', () => {
@@ -149,7 +149,7 @@ describe('MessageFormatter', () => {
           {
             tagId: 'temperature',
             value: 350,
-            quality: 'INVALID_QUALITY' as unknown
+            quality: 'INVALID_QUALITY' as 'GOOD' | 'BAD' | 'UNCERTAIN'
           }
         ]
       };
@@ -197,7 +197,7 @@ describe('MessageFormatter', () => {
     });
 
     it('should handle serialization errors', () => {
-      const circularMessage = { ...testMessage } as unknown;
+      const circularMessage = { ...testMessage } as PLCMessage & { circular?: unknown };
       circularMessage.circular = circularMessage;
       
       expect(() => formatter.serializeMessage(circularMessage)).toThrow('Message serialization failed');

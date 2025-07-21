@@ -32,7 +32,7 @@ export class JWTManager {
       expiresIn: this.accessTokenExpiry,
       issuer: 'factory-dashboard-auth',
       audience: 'factory-dashboard-services'
-    });
+    } as jwt.SignOptions);
   }
 
   generateRefreshToken(user: User): string {
@@ -47,7 +47,7 @@ export class JWTManager {
       expiresIn: this.refreshTokenExpiry,
       issuer: 'factory-dashboard-auth',
       audience: 'factory-dashboard-services'
-    });
+    } as jwt.SignOptions);
   }
 
   verifyAccessToken(token: string): TokenPayload {
