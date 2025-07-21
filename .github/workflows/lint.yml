@@ -103,7 +103,7 @@ jobs:
         run: npm run build
 
       - name: 📦 Upload shared-types build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: shared-types-dist
           path: services/shared-types/dist/
@@ -127,7 +127,7 @@ jobs:
           cache: 'npm'
 
       - name: 📥 Download shared-types build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v3
         with:
           name: shared-types-dist
           path: services/shared-types/dist/
@@ -228,7 +228,9 @@ jobs:
       - name: 🔍 Install linting tools
         run: |
           npm install -g jsonlint yaml-lint prettier
-          pip install yamllint
+          sudo apt-get update
+          sudo apt-get install -y python3-pip
+          pip3 install yamllint
 
       - name: 🔍 JSON linting
         run: |
@@ -271,6 +273,7 @@ jobs:
           markdownlint "**/*.md" --ignore node_modules --ignore dist || true
 
       - name: 🔗 Check for broken links
+        if: hashFiles('.github/markdown-link-check-config.json') != '' && hashFiles('docs/**/*.md') != ''
         uses: gaurav-nelson/github-action-markdown-link-check@v1
         with:
           use-quiet-mode: 'yes'

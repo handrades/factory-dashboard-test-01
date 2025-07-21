@@ -31,7 +31,17 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
+      - name: ✅ Check if Dockerfile exists
+        id: dockerfile_check
+        run: |
+          if [ -f "Dockerfile" ]; then
+            echo "dockerfile_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "dockerfile_exists=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: 🔍 Dockerfile Security Scan
+        if: steps.dockerfile_check.outputs.dockerfile_exists == 'true'
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: Dockerfile
@@ -41,10 +51,15 @@ jobs:
 
       - name: 🔍 Scan service Dockerfiles
         run: |
-          find . -name "Dockerfile*" -type f | while read dockerfile; do
-            echo "🔍 Scanning $dockerfile"
-            docker run --rm -i hadolint/hadolint:latest < "$dockerfile"
-          done
+          dockerfile_count=$(find . -name "Dockerfile*" -type f | wc -l)
+          if [ "$dockerfile_count" -gt 0 ]; then
+            find . -name "Dockerfile*" -type f | while read dockerfile; do
+              echo "🔍 Scanning $dockerfile"
+              docker run --rm -i hadolint/hadolint:latest < "$dockerfile"
+            done
+          else
+            echo "No Dockerfiles found to scan"
+          fi
 
       - name: 🔐 Docker security scan with Trivy
         uses: aquasecurity/trivy-action@master
@@ -55,7 +70,7 @@ jobs:
           output: 'trivy-results.sarif'
 
       - name: 📤 Upload Trivy results
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
@@ -174,21 +189,30 @@ jobs:
         run: |
           echo "🔍 Validating Grafana dashboards..."
           
-          find monitoring/grafana/dashboards/ -name "*.json" | while read dashboard; do
-            echo "Validating $dashboard"
-            
-            # Basic JSON validation
-            python3 -m json.tool "$dashboard" > /dev/null
-            
-            # Check for required fields
-            if ! grep -q '"title"' "$dashboard"; then
-              echo "❌ Missing title in $dashboard"
+          if [ -d "monitoring/grafana/dashboards/" ]; then
+            dashboard_count=$(find monitoring/grafana/dashboards/ -name "*.json" | wc -l)
+            if [ "$dashboard_count" -gt 0 ]; then
+              find monitoring/grafana/dashboards/ -name "*.json" | while read dashboard; do
+                echo "Validating $dashboard"
+                
+                # Basic JSON validation
+                python3 -m json.tool "$dashboard" > /dev/null
+                
+                # Check for required fields
+                if ! grep -q '"title"' "$dashboard"; then
+                  echo "❌ Missing title in $dashboard"
+                fi
+                
+                if ! grep -q '"panels"' "$dashboard"; then
+                  echo "❌ Missing panels in $dashboard"
+                fi
+              done
+            else
+              echo "No Grafana dashboards found to validate"
             fi
-            
-            if ! grep -q '"panels"' "$dashboard"; then
-              echo "❌ Missing panels in $dashboard"
-            fi
-          done
+          else
+            echo "Grafana dashboards directory not found"
+          fi
 
       - name: 🔍 Alert rules validation
         run: |
@@ -274,16 +298,28 @@ except Exception as e:
           
           # Test main Dockerfile
           if [ -f "Dockerfile" ]; then
+            echo "Building main Dockerfile..."
             docker build -t factory-dashboard:test .
+          else
+            echo "No main Dockerfile found"
           fi
           
           # Test service Dockerfiles
-          find services/ -name "Dockerfile" | while read dockerfile; do
-            service_dir=$(dirname "$dockerfile")
-            service_name=$(basename "$service_dir")
-            echo "Building $service_name"
-            docker build -t "factory-$service_name:test" "$service_dir"
-          done
+          if [ -d "services/" ]; then
+            dockerfile_count=$(find services/ -name "Dockerfile" | wc -l)
+            if [ "$dockerfile_count" -gt 0 ]; then
+              find services/ -name "Dockerfile" | while read dockerfile; do
+                service_dir=$(dirname "$dockerfile")
+                service_name=$(basename "$service_dir")
+                echo "Building $service_name"
+                docker build -t "factory-$service_name:test" "$service_dir"
+              done
+            else
+              echo "No service Dockerfiles found"
+            fi
+          else
+            echo "Services directory not found"
+          fi
 
       - name: 🧪 Test Docker Compose startup
         run: |
@@ -302,9 +338,14 @@ except Exception as e:
           GRAFANA_ADMIN_PASSWORD=admin123
           EOF
           
-          # Test compose up
-          docker compose config
-          docker compose up -d --wait
+          # Test compose config first
+          if ls docker-compose*.yml 1> /dev/null 2>&1; then
+            docker compose config
+            docker compose up -d --wait
+          else
+            echo "No docker-compose files found, skipping compose test"
+            exit 0
+          fi
           
           # Basic health checks
           sleep 30
@@ -314,8 +355,10 @@ except Exception as e:
           curl -f http://localhost:8086/health || echo "InfluxDB health check failed"
           
           # Cleanup
-          docker compose down
-          rm .env
+          if ls docker-compose*.yml 1> /dev/null 2>&1; then
+            docker compose down
+          fi
+          rm -f .env
 
   # Security and Compliance
   security-compliance:
