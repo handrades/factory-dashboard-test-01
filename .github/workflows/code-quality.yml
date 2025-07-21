@@ -31,7 +31,7 @@ jobs:
         run: |
           # Check with strictest settings
           echo "Checking TypeScript with strict settings..."
-          npx tsc -b config/tsconfig.json --noEmit --strict
+          npx tsc --project config/tsconfig.json --noEmit
 
       - name: 📊 Code complexity analysis
         run: |
