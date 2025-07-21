@@ -37,17 +37,21 @@ export class AuthMiddleware {
       standardHeaders: true,
       legacyHeaders: false,
       keyGenerator: (req) => {
-        return req.ip + ':' + (req.body?.username || 'unknown');
+        return (req.ip || '0.0.0.0') + ':' + (req.body?.username || 'unknown');
       },
-      onLimitReached: (req) => {
-        this.securityLogger.logSuspiciousActivity(
-          'Rate limit exceeded for authentication',
-          req.ip,
-          req.get('User-Agent') || 'unknown',
-          undefined,
-          req.body?.username,
-          { endpoint: req.path, windowMs: 15 * 60 * 1000, maxAttempts: 5 }
-        );
+      skip: (req) => {
+        // Log rate limit attempts for monitoring
+        if (req.rateLimit && req.rateLimit.remaining === 0) {
+          this.securityLogger.logSuspiciousActivity(
+            'Rate limit exceeded for authentication',
+            req.ip || '',
+            req.get('User-Agent') || 'unknown',
+            undefined,
+            req.body?.username,
+            { endpoint: req.path, windowMs: 15 * 60 * 1000, maxAttempts: 5 }
+          );
+        }
+        return false; // Don't skip any requests
       }
     });
   }
@@ -84,7 +88,7 @@ export class AuthMiddleware {
         if (!user || !user.isActive) {
           this.securityLogger.logUnauthorizedAccess(
             req.path,
-            req.ip,
+            req.ip || '',
             req.get('User-Agent') || 'unknown',
             payload.userId,
             payload.username
@@ -108,7 +112,7 @@ export class AuthMiddleware {
           req.get('User-Agent') || 'unknown'
         );
 
-        if (error.message === 'Access token expired') {
+        if (error instanceof Error && error.message === 'Access token expired') {
           return res.status(401).json({ error: 'Token expired', code: 'TOKEN_EXPIRED' });
         }
 

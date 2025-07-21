@@ -30,7 +30,7 @@ export class AuthController {
       const userAgent = req.get('User-Agent') || 'unknown';
 
       // Authenticate user
-      const user = await this.userService.authenticateUser(username, password, ipAddress, userAgent);
+      const user = await this.userService.authenticateUser(username, password, ipAddress || '', userAgent);
       
       if (!user) {
         res.status(401).json({ error: 'Invalid credentials' });
@@ -163,7 +163,7 @@ export class AuthController {
         eventType: 'USER_LOGOUT',
         userId: req.user?.userId,
         username: req.user?.username,
-        ipAddress: req.ip,
+        ipAddress: req.ip || '',
         userAgent: req.get('User-Agent') || 'unknown',
         severity: 'low',
         details: {}
@@ -191,7 +191,7 @@ export class AuthController {
       this.securityLogger.logSecurityEvent({
         eventType: 'USER_REGISTERED',
         username: registerRequest.username,
-        ipAddress: req.ip,
+        ipAddress: req.ip || '',
         userAgent: req.get('User-Agent') || 'unknown',
         severity: 'medium',
         details: {
@@ -210,15 +210,15 @@ export class AuthController {
       this.securityLogger.logSecurityEvent({
         eventType: 'USER_REGISTRATION_FAILED',
         username: req.body?.username,
-        ipAddress: req.ip,
+        ipAddress: req.ip || '',
         userAgent: req.get('User-Agent') || 'unknown',
         severity: 'medium',
         details: {
-          error: error.message
+          error: error instanceof Error ? error.message : 'Unknown error'
         }
       });
 
-      res.status(400).json({ error: error.message });
+      res.status(400).json({ error: error instanceof Error ? error.message : 'Operation failed' });
     }
   }
 
@@ -246,7 +246,7 @@ export class AuthController {
       res.json({ message: 'Password changed successfully' });
     } catch (error: unknown) {
       console.error('Change password error:', error);
-      res.status(400).json({ error: error.message });
+      res.status(400).json({ error: error instanceof Error ? error.message : 'Operation failed' });
     }
   }
 
@@ -319,7 +319,7 @@ export class AuthController {
       res.json({ message: 'User roles updated successfully' });
     } catch (error: unknown) {
       console.error('Update user roles error:', error);
-      res.status(400).json({ error: error.message });
+      res.status(400).json({ error: error instanceof Error ? error.message : 'Operation failed' });
     }
   }
 
@@ -343,7 +343,7 @@ export class AuthController {
       res.json({ message: 'User deactivated successfully' });
     } catch (error: unknown) {
       console.error('Deactivate user error:', error);
-      res.status(400).json({ error: error.message });
+      res.status(400).json({ error: error instanceof Error ? error.message : 'Operation failed' });
     }
   }
 
