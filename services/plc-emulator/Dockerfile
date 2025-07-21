@@ -5,7 +5,7 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # Copy shared-types first
-COPY shared-types/ /shared-types/
+COPY ../shared-types/ /shared-types/
 WORKDIR /shared-types
 RUN npm install && npm run build
 
@@ -13,7 +13,7 @@ RUN npm install && npm run build
 WORKDIR /app
 
 # Copy package files
-COPY plc-emulator/package*.json ./
+COPY package*.json ./
 
 # Clear npm cache and install dependencies
 RUN npm cache clean --force && \
@@ -21,7 +21,7 @@ RUN npm cache clean --force && \
     npm install
 
 # Copy source code
-COPY plc-emulator/ .
+COPY . .
 
 # Build the application
 RUN npm run build
@@ -41,7 +41,7 @@ COPY --from=builder /shared-types /shared-types
 
 # Copy production dependencies from builder stage
 COPY --from=builder /app/node_modules ./node_modules
-COPY plc-emulator/package*.json ./
+COPY package*.json ./
 
 # Copy built application
 COPY --from=builder /app/dist ./dist

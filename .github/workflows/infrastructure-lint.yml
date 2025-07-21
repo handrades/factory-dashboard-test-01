@@ -362,7 +362,7 @@ jobs:
             -not -path "./.git/*" \
             -not -path "./node_modules/*" | \
             xargs grep -i "password\|secret\|key\|token" | \
-            grep -v "\\${" | \
+            grep -v '\\${' | \
             head -20 || echo "No obvious secrets found"
 
       - name: 🔍 Compliance checks

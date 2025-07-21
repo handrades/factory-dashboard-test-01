@@ -1,3 +1,4 @@
+---
 groups:
   - name: factory-dashboard-alerts
     rules:
@@ -9,8 +10,10 @@ groups:
           service: "{{ $labels.service }}"
         annotations:
           summary: "Service {{ $labels.service }} is down"
-          description: "Service {{ $labels.service }} has been down for more than 30 seconds"
-          runbook_url: "https://docs.factory-dashboard.com/runbooks/service-down"
+          description: >
+            Service {{ $labels.service }} has been down for more than 30 seconds
+          runbook_url: >
+            https://docs.factory-dashboard.com/runbooks/service-down
 
       - alert: HighErrorRate
         expr: rate(errors_total[5m]) > 0.1
@@ -19,8 +22,10 @@ groups:
           severity: warning
           service: "{{ $labels.service }}"
         annotations:
-          summary: "High error rate detected for {{ $labels.service }}"
-          description: "Error rate is {{ $value }} errors/sec for service {{ $labels.service }}"
+          summary: >
+            High error rate detected for {{ $labels.service }}
+          description: >
+            Error rate is {{ $value }} errors/sec for service {{ $labels.service }}
           runbook_url: "https://docs.factory-dashboard.com/runbooks/high-error-rate"
 
       - alert: QueueSizeHigh
@@ -32,18 +37,22 @@ groups:
         annotations:
           summary: "Queue {{ $labels.queue_name }} size is high"
           description: "Queue {{ $labels.queue_name }} has {{ $value }} items"
-          runbook_url: "https://docs.factory-dashboard.com/runbooks/queue-size-high"
+          runbook_url: >
+            https://docs.factory-dashboard.com/runbooks/queue-size-high
 
       - alert: ResponseTimeSlow
-        expr: histogram_quantile(0.95, rate(request_duration_ms_bucket[5m])) > 5000
+        expr: >
+          histogram_quantile(0.95, rate(request_duration_ms_bucket[5m])) > 5000
         for: 5m
         labels:
           severity: warning
           service: "{{ $labels.service }}"
         annotations:
           summary: "High response time for {{ $labels.service }}"
-          description: "95th percentile response time is {{ $value }}ms for {{ $labels.service }}"
-          runbook_url: "https://docs.factory-dashboard.com/runbooks/response-time-slow"
+          description: >
+            95th percentile response time is {{ $value }}ms for {{ $labels.service }}
+          runbook_url: >
+            https://docs.factory-dashboard.com/runbooks/response-time-slow
 
       - alert: MemoryUsageHigh
         expr: memory_usage_bytes > 1000000000  # 1GB
@@ -53,8 +62,10 @@ groups:
           service: "{{ $labels.service }}"
         annotations:
           summary: "High memory usage for {{ $labels.service }}"
-          description: "Memory usage is {{ $value }} bytes for {{ $labels.service }}"
-          runbook_url: "https://docs.factory-dashboard.com/runbooks/memory-usage-high"
+          description: >
+            Memory usage is {{ $value }} bytes for {{ $labels.service }}
+          runbook_url: >
+            https://docs.factory-dashboard.com/runbooks/memory-usage-high
 
       - alert: InfluxDBWriteErrors
         expr: rate(influxdb_write_errors_total[5m]) > 0
@@ -64,8 +75,10 @@ groups:
           service: "queue-consumer"
         annotations:
           summary: "InfluxDB write errors detected"
-          description: "InfluxDB write error rate is {{ $value }} errors/sec"
-          runbook_url: "https://docs.factory-dashboard.com/runbooks/influxdb-write-errors"
+          description: >
+            InfluxDB write error rate is {{ $value }} errors/sec
+          runbook_url: >
+            https://docs.factory-dashboard.com/runbooks/influxdb-write-errors
 
       - alert: RedisConnectionLost
         expr: redis_connected == 0
@@ -75,8 +88,10 @@ groups:
           service: "{{ $labels.service }}"
         annotations:
           summary: "Redis connection lost for {{ $labels.service }}"
-          description: "Service {{ $labels.service }} has lost connection to Redis"
-          runbook_url: "https://docs.factory-dashboard.com/runbooks/redis-connection-lost"
+          description: >
+            Service {{ $labels.service }} has lost connection to Redis
+          runbook_url: >
+            https://docs.factory-dashboard.com/runbooks/redis-connection-lost
 
       - alert: EquipmentTemperatureHigh
         expr: temperature_value > 450
@@ -85,9 +100,12 @@ groups:
           severity: critical
           equipment: "{{ $labels.equipment_id }}"
         annotations:
-          summary: "High temperature alert for {{ $labels.equipment_id }}"
-          description: "Temperature is {{ $value }}°C for equipment {{ $labels.equipment_id }}"
-          runbook_url: "https://docs.factory-dashboard.com/runbooks/equipment-temperature-high"
+          summary: >
+            High temperature alert for {{ $labels.equipment_id }}
+          description: >
+            Temperature is {{ $value }}°C for equipment {{ $labels.equipment_id }}
+          runbook_url: >
+            https://docs.factory-dashboard.com/runbooks/equipment-temperature-high
 
       - alert: EquipmentOffline
         expr: time() - equipment_last_seen > 300  # 5 minutes
@@ -96,17 +114,24 @@ groups:
           severity: warning
           equipment: "{{ $labels.equipment_id }}"
         annotations:
-          summary: "Equipment {{ $labels.equipment_id }} appears offline"
-          description: "No data received from equipment {{ $labels.equipment_id }} for over 5 minutes"
-          runbook_url: "https://docs.factory-dashboard.com/runbooks/equipment-offline"
+          summary: >
+            Equipment {{ $labels.equipment_id }} appears offline
+          description: >
+            No data received from equipment {{ $labels.equipment_id }} for over 5 minutes
+          runbook_url: >
+            https://docs.factory-dashboard.com/runbooks/equipment-offline
 
       - alert: DataQualityIssue
-        expr: avg_over_time(message_quality_ratio[10m]) < 0.8
+        expr: >
+          avg_over_time(message_quality_ratio[10m]) < 0.8
         for: 5m
         labels:
           severity: warning
           equipment: "{{ $labels.equipment_id }}"
         annotations:
-          summary: "Data quality issue for {{ $labels.equipment_id }}"
-          description: "Data quality ratio is {{ $value }} for equipment {{ $labels.equipment_id }}"
-          runbook_url: "https://docs.factory-dashboard.com/runbooks/data-quality-issue"
+          summary: >
+            Data quality issue for {{ $labels.equipment_id }}
+          description: >
+            Data quality ratio is {{ $value }} for equipment {{ $labels.equipment_id }}
+          runbook_url: >
+            https://docs.factory-dashboard.com/runbooks/data-quality-issue

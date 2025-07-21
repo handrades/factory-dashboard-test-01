@@ -13,7 +13,7 @@ describe('PLCEmulatorService', () => {
   let mockRedisPublisher: unknown;
   
   const testConfig: PLCEmulatorServiceConfig = {
-    configPath: resolve(__dirname, '../config/sample-equipment.json'),
+    configDirectory: resolve(__dirname, '../config'),
     updateInterval: 100,
     heartbeatInterval: 1000,
     gracefulShutdownTimeout: 5000,
@@ -32,6 +32,9 @@ describe('PLCEmulatorService', () => {
     name: 'Test Oven',
     type: 'oven',
     lineId: 'test_line',
+    site: 'Factory-A',
+    productType: 'Electronics',
+    lineNumber: 1,
     currentState: 'running',
     states: [
       {
@@ -76,8 +79,8 @@ describe('PLCEmulatorService', () => {
       on: jest.fn()
     };
     
-    ConfigLoader.mockImplementation(() => mockConfigLoader);
-    RedisPublisher.mockImplementation(() => mockRedisPublisher);
+    (ConfigLoader as jest.MockedClass<typeof ConfigLoader>).mockImplementation(() => mockConfigLoader as any);
+    (RedisPublisher as jest.MockedClass<typeof RedisPublisher>).mockImplementation(() => mockRedisPublisher as any);
     
     service = new PLCEmulatorService(testConfig);
   });
@@ -96,8 +99,8 @@ describe('PLCEmulatorService', () => {
       // Wait for service to start
       await expect(startPromise).resolves.not.toThrow();
       
-      expect(mockConfigLoader.loadConfiguration).toHaveBeenCalled();
-      expect(mockRedisPublisher.connect).toHaveBeenCalled();
+      expect((mockConfigLoader as any).loadConfiguration).toHaveBeenCalled();
+      expect((mockRedisPublisher as any).connect).toHaveBeenCalled();
       expect(service.isServiceRunning()).toBe(true);
     });
 
@@ -108,13 +111,13 @@ describe('PLCEmulatorService', () => {
       
       await expect(stopPromise).resolves.not.toThrow();
       
-      expect(mockConfigLoader.stopWatching).toHaveBeenCalled();
-      expect(mockRedisPublisher.disconnect).toHaveBeenCalled();
+      expect((mockConfigLoader as any).stopWatching).toHaveBeenCalled();
+      expect((mockRedisPublisher as any).disconnect).toHaveBeenCalled();
       expect(service.isServiceRunning()).toBe(false);
     });
 
     it('should handle start errors', async () => {
-      mockConfigLoader.loadConfiguration.mockRejectedValue(new Error('Config load failed'));
+      (mockConfigLoader as any).loadConfiguration.mockRejectedValue(new Error('Config load failed'));
       
       await expect(service.start()).rejects.toThrow('Config load failed');
     });
@@ -200,7 +203,7 @@ describe('PLCEmulatorService', () => {
       const errorHandler = jest.fn();
       service.on('startError', errorHandler);
       
-      mockConfigLoader.loadConfiguration.mockRejectedValue(new Error('Test error'));
+      (mockConfigLoader as any).loadConfiguration.mockRejectedValue(new Error('Test error'));
       
       await expect(service.start()).rejects.toThrow();
       expect(errorHandler).toHaveBeenCalled();
