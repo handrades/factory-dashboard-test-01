@@ -50,8 +50,8 @@ describe('DynamicQueueDiscovery', () => {
               dataType: 'REAL',
               value: 2.5,
               behavior: {
-                type: 'normal',
-                parameters: { mean: 2.5, stddev: 0.1 }
+                type: 'random',
+                parameters: { min: 2.4, max: 2.6 }
               }
             }
           ]
@@ -79,7 +79,7 @@ describe('DynamicQueueDiscovery', () => {
               value: 0,
               behavior: {
                 type: 'constant',
-                parameters: { value: 0 }
+                parameters: { constantValue: 0 }
               }
             }
           ]
@@ -258,7 +258,7 @@ describe('DynamicQueueDiscovery', () => {
                 value: 320,
                 behavior: {
                   type: 'constant',
-                  parameters: { value: 320 }
+                  parameters: { constantValue: 320 }
                 }
               }
             ]

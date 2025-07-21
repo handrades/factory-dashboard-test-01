@@ -119,7 +119,7 @@ describe('MessageFormatter', () => {
     });
 
     it('should reject message without timestamp', () => {
-      const invalidMessage = { ...validMessage, timestamp: {} as any };
+      const invalidMessage = { ...validMessage, timestamp: {} as unknown as Date };
       const result = formatter.validateMessage(invalidMessage);
       
       expect(result.isValid).toBe(false);
@@ -127,7 +127,7 @@ describe('MessageFormatter', () => {
     });
 
     it('should reject message with invalid message type', () => {
-      const invalidMessage = { ...validMessage, messageType: {} as any };
+      const invalidMessage = { ...validMessage, messageType: {} as unknown as PLCMessage['messageType'] };
       const result = formatter.validateMessage(invalidMessage);
       
       expect(result.isValid).toBe(false);
