@@ -3,8 +3,8 @@
     "collect": {
       "staticDistDir": "./dist",
       "url": [
-        "http://localhost/",
-        "http://localhost/dashboard"
+        "http://localhost:3000/",
+        "http://localhost:3000/dashboard"
       ],
       "settings": {
         "chromeFlags": "--no-sandbox --headless"
