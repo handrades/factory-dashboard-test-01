@@ -10,14 +10,14 @@ export interface InfluxDBConfig {
 export interface DataPoint {
   measurement: string;
   tags: Record<string, string>;
-  fields: Record<string, any>;
+  fields: Record<string, unknown>;
   timestamp: Date;
 }
 
 export interface QueryResult {
   measurement: string;
   tags: Record<string, string>;
-  fields: Record<string, any>;
+  fields: Record<string, unknown>;
   timestamp: Date;
 }
 

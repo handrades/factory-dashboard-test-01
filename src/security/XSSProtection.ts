@@ -62,7 +62,7 @@ export class XSSProtection {
     
     try {
       // Configure DOMPurify
-      const purifyConfig: any = {
+      const purifyConfig: Record<string, unknown> = {
         ALLOWED_TAGS: mergedConfig.allowedTags,
         ALLOWED_ATTR: mergedConfig.allowedAttributes,
         ALLOWED_URI_REGEXP: new RegExp(
@@ -75,7 +75,7 @@ export class XSSProtection {
       };
 
       // Sanitize the HTML
-      const sanitized = DOMPurify.sanitize(html, purifyConfig);
+      const sanitized = DOMPurify.sanitize(html, purifyConfig) as unknown as string;
       
       // Detect what was removed/modified
       const removed = this.detectRemovedContent(html, sanitized);
@@ -93,8 +93,8 @@ export class XSSProtection {
         removed,
         modified
       };
-    } catch (error) {
-      console.error('HTML sanitization failed:', error);
+    } catch (err) {
+      console.error('HTML sanitization failed:', err);
       // Return empty string as fallback for security
       return {
         sanitized: '',
@@ -119,7 +119,7 @@ export class XSSProtection {
       '=': '&#x3D;'
     };
 
-    return text.replace(/[&<>"'`=\/]/g, (char) => entityMap[char]);
+    return text.replace(/[&<>"'`=/]/g, (char) => entityMap[char]);
   }
 
   /**
@@ -180,7 +180,8 @@ export class XSSProtection {
     }
 
     // Remove whitespace and control characters
-    const cleanUrl = url.trim().replace(/[\x00-\x1F\x7F]/g, '');
+    // eslint-disable-next-line no-control-regex
+    const cleanUrl = url.trim().replace(/[\u0000-\u001F\u007F]/g, '');
 
     // Check for dangerous protocols
     const dangerousProtocols = [
@@ -288,11 +289,11 @@ export class XSSProtection {
   /**
    * Validate JSON input to prevent prototype pollution
    */
-  public sanitizeJSON(jsonString: string): any {
+  public sanitizeJSON(jsonString: string): unknown {
     try {
       const parsed = JSON.parse(jsonString);
       return this.removePrototypePollution(parsed);
-    } catch (error) {
+    } catch {
       throw new Error('Invalid JSON input');
     }
   }
@@ -300,7 +301,7 @@ export class XSSProtection {
   /**
    * Remove potential prototype pollution from object
    */
-  public removePrototypePollution(obj: any): any {
+  public removePrototypePollution(obj: unknown): unknown {
     if (obj === null || typeof obj !== 'object') {
       return obj;
     }
@@ -309,7 +310,7 @@ export class XSSProtection {
       return obj.map(item => this.removePrototypePollution(item));
     }
 
-    const cleaned: any = {};
+    const cleaned: Record<string, unknown> = {};
     const dangerousKeys = ['__proto__', 'constructor', 'prototype'];
 
     for (const [key, value] of Object.entries(obj)) {
@@ -352,7 +353,8 @@ export class XSSProtection {
 
   private removeControlCharacters(text: string): string {
     // Remove control characters except tab, newline, and carriage return
-    return text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+    // eslint-disable-next-line no-control-regex
+    return text.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '');
   }
 
   private limitLength(text: string, maxLength: number): string {

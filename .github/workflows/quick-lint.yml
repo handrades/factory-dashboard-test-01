@@ -1,0 +1,48 @@
+name: ⚡ Quick Lint Check
+
+on:
+  push:
+    branches: [ '**' ]  # Run on all branches
+  pull_request:
+    branches: [ '**' ]
+
+jobs:
+  quick-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📥 Install dependencies
+        run: npm ci
+
+      - name: ⚡ Quick ESLint check
+        run: npm run lint
+
+      - name: ⚡ Quick TypeScript check
+        run: npx tsc -b config/tsconfig.json --noEmit
+
+      - name: ⚡ Quick build test
+        run: npm run build
+
+  quick-docker-check:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.modified, 'Dockerfile') || contains(github.event.head_commit.modified, 'docker-compose')
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ⚡ Quick Dockerfile lint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          failure-threshold: error
+
+      - name: ⚡ Quick Compose validation
+        run: docker compose config -q

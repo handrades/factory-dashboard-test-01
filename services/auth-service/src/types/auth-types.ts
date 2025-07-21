@@ -21,7 +21,7 @@ export interface Role {
 export interface Permission {
   resource: string;
   actions: string[];
-  conditions?: Record<string, any>;
+  conditions?: Record<string, unknown>;
 }
 
 export interface LoginRequest {
@@ -74,7 +74,7 @@ export interface SecurityEvent {
   ipAddress: string;
   userAgent: string;
   timestamp: Date;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   severity: 'low' | 'medium' | 'high' | 'critical';
 }
 

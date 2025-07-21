@@ -151,7 +151,7 @@ export class PLCEmulatorService extends EventEmitter {
 
   private updateSimulators(equipmentConfigs: EquipmentConfig[]): void {
     // Remove simulators for equipment that no longer exists
-    for (const [equipmentId, simulator] of this.equipmentSimulators) {
+    for (const [equipmentId] of this.equipmentSimulators) {
       if (!equipmentConfigs.find(config => config.id === equipmentId)) {
         this.equipmentSimulators.delete(equipmentId);
         this.equipmentMetadata.delete(equipmentId);

@@ -3,9 +3,9 @@
  * Handles JWT token generation, validation, and refresh
  */
 
-import { sign, verify, JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
+import { sign, verify, JsonWebTokenError, TokenExpiredError, type SignOptions } from 'jsonwebtoken';
 import { randomBytes } from 'crypto';
-import type { UserContext, AuthToken } from '../types/auth-types';
+import type { UserContext } from '../types/auth-types';
 import { AuthErrorCode } from '../types/auth-types';
 import { secretManager } from './SecretManager';
 
@@ -22,9 +22,18 @@ export interface JWTPayload {
   aud: string;
 }
 
+export interface RefreshTokenPayload {
+  tokenId: string;
+  type: 'refresh';
+  iat: number;
+  exp: number;
+  iss: string;
+  aud: string;
+}
+
 export interface TokenValidationResult {
   valid: boolean;
-  payload?: JWTPayload;
+  payload?: JWTPayload | RefreshTokenPayload;
   error?: string;
   errorCode?: AuthErrorCode;
 }
@@ -81,6 +90,10 @@ export class JWTManager {
     userContext: UserContext,
     options: TokenGenerationOptions = {}
   ): string {
+    if (!this.jwtSecret) {
+      throw new Error('JWT Manager not initialized. Call initialize() first.');
+    }
+    
     const {
       expiresIn = options.rememberMe ? this.rememberMeExpiration : this.defaultExpiration,
       audience = this.audience,
@@ -98,28 +111,35 @@ export class JWTManager {
       aud: audience
     };
 
-    return sign(payload, this.jwtSecret, {
+    const signOptions = {
       expiresIn,
       issuer,
       audience
-    });
+    } as SignOptions;
+    
+    return sign(payload, this.jwtSecret, signOptions);
   }
 
   /**
    * Generate refresh token
    */
   public generateRefreshToken(): string {
+    if (!this.refreshSecret) {
+      throw new Error('JWT Manager not initialized. Call initialize() first.');
+    }
     const payload = {
       tokenId: randomBytes(16).toString('hex'),
       type: 'refresh',
       iat: Math.floor(Date.now() / 1000)
     };
 
-    return sign(payload, this.refreshSecret, {
+    const signOptions = {
       expiresIn: this.refreshExpiration,
       issuer: this.issuer,
       audience: this.audience
-    });
+    } as SignOptions;
+    
+    return sign(payload, this.refreshSecret, signOptions);
   }
 
   /**
@@ -190,7 +210,7 @@ export class JWTManager {
       const payload = verify(token, this.refreshSecret, {
         issuer: this.issuer,
         audience: this.audience
-      }) as any;
+      }) as RefreshTokenPayload;
 
       if (payload.type !== 'refresh') {
         return {
@@ -239,6 +259,11 @@ export class JWTManager {
 
     const payload = validation.payload;
     
+    // Type guard to ensure we have a JWTPayload (not RefreshTokenPayload)
+    if (!('userId' in payload)) {
+      return null;
+    }
+    
     return {
       id: payload.userId,
       username: payload.username,
@@ -258,7 +283,7 @@ export class JWTManager {
       const decoded = verify(token, this.jwtSecret, { ignoreExpiration: true }) as JWTPayload;
       const currentTime = Math.floor(Date.now() / 1000);
       return decoded.exp < currentTime;
-    } catch (error) {
+    } catch {
       return true;
     }
   }
@@ -270,7 +295,7 @@ export class JWTManager {
     try {
       const decoded = verify(token, this.jwtSecret, { ignoreExpiration: true }) as JWTPayload;
       return new Date(decoded.exp * 1000);
-    } catch (error) {
+    } catch {
       return null;
     }
   }

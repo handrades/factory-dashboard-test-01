@@ -7,13 +7,28 @@ jest.mock('../config/config-loader');
 jest.mock('../messaging/redis-publisher');
 jest.mock('winston');
 
+interface MockConfigLoader {
+  loadConfiguration: jest.Mock;
+  stopWatching: jest.Mock;
+  on: jest.Mock;
+}
+
+interface MockRedisPublisher {
+  connect: jest.Mock;
+  disconnect: jest.Mock;
+  publishMessage: jest.Mock;
+  isConnectedToRedis: jest.Mock;
+  getBufferSize: jest.Mock;
+  on: jest.Mock;
+}
+
 describe('PLCEmulatorService', () => {
   let service: PLCEmulatorService;
-  let mockConfigLoader: any;
-  let mockRedisPublisher: any;
+  let mockConfigLoader: MockConfigLoader;
+  let mockRedisPublisher: MockRedisPublisher;
   
   const testConfig: PLCEmulatorServiceConfig = {
-    configPath: resolve(__dirname, '../config/sample-equipment.json'),
+    configDirectory: resolve(__dirname, '../config'),
     updateInterval: 100,
     heartbeatInterval: 1000,
     gracefulShutdownTimeout: 5000,
@@ -32,6 +47,9 @@ describe('PLCEmulatorService', () => {
     name: 'Test Oven',
     type: 'oven',
     lineId: 'test_line',
+    site: 'Factory-A',
+    productType: 'Electronics',
+    lineNumber: 1,
     currentState: 'running',
     states: [
       {
@@ -55,9 +73,11 @@ describe('PLCEmulatorService', () => {
     ]
   };
 
-  beforeEach(() => {
-    const { ConfigLoader } = require('../config/config-loader');
-    const { RedisPublisher } = require('../messaging/redis-publisher');
+  beforeEach(async () => {
+    const configModule = await import('../config/config-loader');
+    const redisModule = await import('../messaging/redis-publisher');
+    const { ConfigLoader } = configModule;
+    const { RedisPublisher } = redisModule;
     
     mockConfigLoader = {
       loadConfiguration: jest.fn().mockResolvedValue([testEquipmentConfig]),
@@ -74,8 +94,8 @@ describe('PLCEmulatorService', () => {
       on: jest.fn()
     };
     
-    ConfigLoader.mockImplementation(() => mockConfigLoader);
-    RedisPublisher.mockImplementation(() => mockRedisPublisher);
+    (ConfigLoader as jest.MockedClass<typeof ConfigLoader>).mockImplementation(() => mockConfigLoader as unknown as InstanceType<typeof ConfigLoader>);
+    (RedisPublisher as jest.MockedClass<typeof RedisPublisher>).mockImplementation(() => mockRedisPublisher as unknown as InstanceType<typeof RedisPublisher>);
     
     service = new PLCEmulatorService(testConfig);
   });

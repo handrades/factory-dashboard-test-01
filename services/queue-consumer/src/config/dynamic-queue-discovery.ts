@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from 'fs';
 import { resolve, join } from 'path';
 import { LineConfig } from '@factory-dashboard/shared-types';
-import { createLogger } from 'winston';
+import winston, { createLogger } from 'winston';
 
 export interface DynamicQueueDiscoveryOptions {
   configDirectory: string;
@@ -18,9 +18,9 @@ export class DynamicQueueDiscovery {
     this.queueNamePrefix = options.queueNamePrefix || 'plc_data_';
     this.logger = createLogger({
       level: 'info',
-      format: require('winston').format.json(),
+      format: winston.format.json(),
       transports: [
-        new (require('winston').transports.Console)()
+        new winston.transports.Console()
       ]
     });
   }

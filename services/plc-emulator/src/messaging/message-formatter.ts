@@ -1,6 +1,6 @@
 import { PLCMessage, PLCTag } from '@factory-dashboard/shared-types';
 import { v4 as uuidv4 } from 'uuid';
-import { createLogger } from 'winston';
+import winston, { createLogger } from 'winston';
 
 export class MessageFormatter {
   private logger: ReturnType<typeof createLogger>;
@@ -10,9 +10,9 @@ export class MessageFormatter {
   constructor() {
     this.logger = createLogger({
       level: 'info',
-      format: require('winston').format.json(),
+      format: winston.format.json(),
       transports: [
-        new (require('winston').transports.Console)()
+        new winston.transports.Console()
       ]
     });
 
@@ -209,7 +209,7 @@ export class MessageFormatter {
     try {
       return JSON.stringify(message);
     } catch (error) {
-      this.logger.error(`Failed to serialize message: ${error}`);
+      this.logger.error(`Failed to serialize message: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw new Error('Message serialization failed');
     }
   }
@@ -225,7 +225,7 @@ export class MessageFormatter {
 
       return message;
     } catch (error) {
-      this.logger.error(`Failed to deserialize message: ${error}`);
+      this.logger.error(`Failed to deserialize message: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw new Error('Message deserialization failed');
     }
   }

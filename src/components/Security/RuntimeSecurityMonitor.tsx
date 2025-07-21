@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import './RuntimeSecurityMonitor.css';
 
 interface SecurityAlert {
@@ -9,7 +9,7 @@ interface SecurityAlert {
   message: string;
   timestamp: string;
   source: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 interface SystemHealth {
@@ -36,7 +36,7 @@ export const RuntimeSecurityMonitor: React.FC = () => {
 
   // Simulate real-time monitoring
   useEffect(() => {
-    if (!isAuthenticated || !hasPermission('security', 'monitor')) {
+    if (!isAuthenticated || !hasPermission('security:monitor')) {
       return;
     }
 
@@ -149,7 +149,7 @@ export const RuntimeSecurityMonitor: React.FC = () => {
     );
   }
 
-  if (!hasPermission('security', 'monitor')) {
+  if (!hasPermission('security:monitor')) {
     return (
       <div className="runtime-monitor-container">
         <div className="access-denied">
@@ -302,7 +302,7 @@ export const RuntimeSecurityMonitor: React.FC = () => {
                       <div className="alert-details">
                         {Object.entries(alert.details).map(([key, value]) => (
                           <span key={key} className="detail-item">
-                            {key}: {value}
+                            {key}: {String(value)}
                           </span>
                         ))}
                       </div>

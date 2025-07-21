@@ -4,6 +4,7 @@ import { EventEmitter } from 'events';
 import { EquipmentConfig } from '@factory-dashboard/shared-types';
 import { ConfigValidator } from './config-validator';
 import { createLogger } from 'winston';
+import * as winston from 'winston';
 
 export interface ConfigLoaderOptions {
   configPath: string;
@@ -28,9 +29,9 @@ export class ConfigLoader extends EventEmitter {
     this.validator = new ConfigValidator();
     this.logger = createLogger({
       level: 'info',
-      format: require('winston').format.json(),
+      format: winston.format.json(),
       transports: [
-        new (require('winston').transports.Console)()
+        new winston.transports.Console()
       ]
     });
   }

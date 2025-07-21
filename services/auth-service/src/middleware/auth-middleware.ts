@@ -10,7 +10,7 @@ export interface AuthRequest extends express.Request {
     userId: string;
     username: string;
     roles: string[];
-    permissions: any[];
+    permissions: unknown[];
   };
 }
 
@@ -37,17 +37,22 @@ export class AuthMiddleware {
       standardHeaders: true,
       legacyHeaders: false,
       keyGenerator: (req) => {
-        return req.ip + ':' + (req.body?.username || 'unknown');
+        return (req.ip || '0.0.0.0') + ':' + (req.body?.username || 'unknown');
       },
-      onLimitReached: (req) => {
+      // Note: Rate limit logging moved to error handling
+      handler: (req, res) => {
         this.securityLogger.logSuspiciousActivity(
           'Rate limit exceeded for authentication',
-          req.ip,
+          req.ip || '',
           req.get('User-Agent') || 'unknown',
           undefined,
           req.body?.username,
           { endpoint: req.path, windowMs: 15 * 60 * 1000, maxAttempts: 5 }
         );
+        res.status(429).json({
+          error: 'Too many authentication attempts',
+          retryAfter: '15 minutes'
+        });
       }
     });
   }
@@ -84,7 +89,7 @@ export class AuthMiddleware {
         if (!user || !user.isActive) {
           this.securityLogger.logUnauthorizedAccess(
             req.path,
-            req.ip,
+            req.ip || '',
             req.get('User-Agent') || 'unknown',
             payload.userId,
             payload.username
@@ -101,14 +106,14 @@ export class AuthMiddleware {
         };
 
         next();
-      } catch (error: any) {
+      } catch (error: unknown) {
         this.securityLogger.logUnauthorizedAccess(
           req.path,
-          req.ip,
+          req.ip || '',
           req.get('User-Agent') || 'unknown'
         );
 
-        if (error.message === 'Access token expired') {
+        if (error instanceof Error && error.message === 'Access token expired') {
           return res.status(401).json({ error: 'Token expired', code: 'TOKEN_EXPIRED' });
         }
 
@@ -132,7 +137,7 @@ export class AuthMiddleware {
       if (!hasRequiredRole) {
         this.securityLogger.logUnauthorizedAccess(
           req.path,
-          req.ip,
+          req.ip || 'unknown',
           req.get('User-Agent') || 'unknown',
           req.user.userId,
           req.user.username
@@ -161,7 +166,7 @@ export class AuthMiddleware {
       if (!hasPermission) {
         this.securityLogger.logUnauthorizedAccess(
           req.path,
-          req.ip,
+          req.ip || 'unknown',
           req.get('User-Agent') || 'unknown',
           req.user.userId,
           req.user.username
@@ -204,7 +209,7 @@ export class AuthMiddleware {
             permissions: payload.permissions
           };
         }
-      } catch (error) {
+      } catch {
         // Ignore token errors for optional auth
       }
 
@@ -258,25 +263,19 @@ export class AuthMiddleware {
         timestamp: new Date().toISOString()
       };
 
-      // Override res.end to capture response details
-      const originalEnd = res.end;
-      res.end = function(chunk?: any, encoding?: any) {
+      // Log response after processing
+      res.on('finish', () => {
         const responseTime = Date.now() - startTime;
         
         // Log security events for sensitive operations
         if (req.path.includes('/auth/') || req.path.includes('/users/') || res.statusCode >= 400) {
-          const severity = res.statusCode >= 500 ? 'high' : 
-                          res.statusCode >= 400 ? 'medium' : 'low';
-
           console.log(`API Request: ${req.method} ${req.path} - ${res.statusCode} (${responseTime}ms)`, {
             ...logData,
             statusCode: res.statusCode,
             responseTime
           });
         }
-
-        originalEnd.call(this, chunk, encoding);
-      };
+      });
 
       next();
     };
@@ -286,7 +285,7 @@ export class AuthMiddleware {
   sanitizeInput() {
     return (req: express.Request, res: express.Response, next: express.NextFunction) => {
       // Sanitize common injection patterns
-      const sanitize = (obj: any): any => {
+      const sanitize = (obj: unknown): unknown => {
         if (typeof obj === 'string') {
           return obj
             .replace(/<script[^>]*>.*?<\/script>/gi, '')
@@ -300,7 +299,7 @@ export class AuthMiddleware {
         }
         
         if (obj && typeof obj === 'object') {
-          const sanitized: any = {};
+          const sanitized: Record<string, unknown> = {};
           for (const [key, value] of Object.entries(obj)) {
             sanitized[key] = sanitize(value);
           }
@@ -315,7 +314,7 @@ export class AuthMiddleware {
       }
       
       if (req.query) {
-        req.query = sanitize(req.query);
+        req.query = sanitize(req.query) as typeof req.query;
       }
 
       next();
@@ -324,36 +323,43 @@ export class AuthMiddleware {
 
   // Error handling middleware
   errorHandler() {
-    return (error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    return (error: unknown, req: express.Request, res: express.Response) => {
       // Log security-related errors
-      if (error.name === 'ValidationError' || error.name === 'SecurityError') {
-        this.securityLogger.logSuspiciousActivity(
-          error.message,
-          req.ip,
-          req.get('User-Agent') || 'unknown',
-          undefined,
-          undefined,
-          { error: error.name, path: req.path }
-        );
+      if (error && typeof error === 'object' && 'name' in error && 'message' in error) {
+        const err = error as { name: string; message: string };
+        if (err.name === 'ValidationError' || err.name === 'SecurityError') {
+          this.securityLogger.logSuspiciousActivity(
+            err.message,
+            req.ip || 'unknown',
+            req.get('User-Agent') || 'unknown',
+            undefined,
+            undefined,
+            { error: err.name, path: req.path }
+          );
+        }
       }
 
       // Don't expose sensitive error details
       const isDevelopment = process.env.NODE_ENV === 'development';
       
-      if (error.statusCode) {
-        return res.status(error.statusCode).json({
-          error: error.message,
-          ...(isDevelopment && { stack: error.stack })
+      if (error && typeof error === 'object' && 'statusCode' in error) {
+        const err = error as { statusCode: number; message: string; stack?: string };
+        return res.status(err.statusCode).json({
+          error: err.message,
+          ...(isDevelopment && { stack: err.stack })
         });
       }
 
       console.error('Unhandled error:', error);
       
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      
       res.status(500).json({
         error: 'Internal server error',
         ...(isDevelopment && { 
-          message: error.message,
-          stack: error.stack 
+          message: errorMessage,
+          stack: errorStack 
         })
       });
     };

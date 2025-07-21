@@ -3,10 +3,7 @@
  * Provides secure command execution with input validation and sanitization
  */
 
-import { exec, spawn } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
+import { spawn } from 'child_process';
 
 export interface CommandResult {
   success: boolean;

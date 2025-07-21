@@ -1,6 +1,7 @@
 import { QueueConsumerService, QueueConsumerServiceConfig } from './service/queue-consumer-service';
 import { DynamicQueueDiscovery } from './config/dynamic-queue-discovery';
 import { resolve } from 'path';
+import type { Request, Response } from 'express';
 
 // Load configuration from environment variables or use defaults
 const config: QueueConsumerServiceConfig = {
@@ -259,19 +260,19 @@ async function main() {
   
   // Health check endpoint (if running in Docker or with health checks)
   if (process.env.ENABLE_HEALTH_ENDPOINT === 'true') {
-    const express = require('express');
+    const { default: express } = await import('express');
     const app = express();
     
-    app.get('/health', async (req: any, res: any) => {
+    app.get('/health', async (req: Request, res: Response) => {
       try {
         const healthCheck = await service.performHealthCheck();
         res.status(healthCheck.healthy ? 200 : 503).json(healthCheck);
-      } catch (error: any) {
-        res.status(500).json({ healthy: false, error: error.message });
+      } catch (error: unknown) {
+        res.status(500).json({ healthy: false, error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
     
-    app.get('/metrics', (req: any, res: any) => {
+    app.get('/metrics', (req: Request, res: Response) => {
       const stats = service.getDetailedStats();
       res.json(stats);
     });

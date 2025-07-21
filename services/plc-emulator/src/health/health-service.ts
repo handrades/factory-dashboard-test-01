@@ -39,7 +39,7 @@ export class HealthService {
     // Health check endpoint
     this.app.get('/health', async (req, res) => {
       const correlationId = req.headers['x-correlation-id'] as string;
-      const timer = this.logger.createTimer('health_check', correlationId);
+      const timer = this.logger.createTimer('health_check') as { done: () => void };
       
       try {
         const healthStatus = await this.getHealthStatus();
@@ -48,20 +48,20 @@ export class HealthService {
         
         res.status(statusCode).json(healthStatus);
         
-        this.logger.info('Health check completed', { correlationId }, {
+        this.logger.info('Health check completed', {
+          correlationId,
           status: healthStatus.status,
           checksCount: healthStatus.checks.length
         });
         
-        timer();
-      } catch (error) {
+        timer.done();
+      } catch (error: unknown) {
         this.logger.error('Health check failed', error as Error, { correlationId });
         res.status(500).json({
-          status: 'unhealthy',
-          message: 'Health check failed',
-          timestamp: new Date()
+          status: 'error',
+          message: error instanceof Error ? error.message : 'Unknown error'
         });
-        timer();
+        timer.done();
       }
     });
 
@@ -86,7 +86,7 @@ export class HealthService {
           ready,
           checksCount: checks.length
         });
-      } catch (error) {
+      } catch (error: unknown) {
         this.logger.error('Readiness check failed', error as Error, { correlationId });
         res.status(500).json({
           ready: false,
@@ -124,7 +124,7 @@ export class HealthService {
         }
         
         this.logger.debug('Metrics exported', { correlationId }, { format });
-      } catch (error) {
+      } catch (error: unknown) {
         this.logger.error('Metrics export failed', error as Error, { correlationId });
         res.status(500).json({ error: 'Metrics export failed' });
       }
@@ -150,8 +150,9 @@ export class HealthService {
   private registerDefaultChecks(): void {
     // System health check
     this.registerHealthCheck('system', async () => {
-      const memUsage = process.memoryUsage();
-      const cpuUsage = process.cpuUsage();
+      // System health monitoring
+      process.memoryUsage();
+      process.cpuUsage();
       
       return {
         name: 'system',
@@ -211,7 +212,7 @@ export class HealthService {
   private async getHealthStatus(): Promise<HealthStatus> {
     const checks = await this.runHealthChecks();
     
-    const healthyChecks = checks.filter(check => check.status === 'healthy');
+    checks.filter(check => check.status === 'healthy');
     const unhealthyChecks = checks.filter(check => check.status === 'unhealthy');
     const degradedChecks = checks.filter(check => check.status === 'degraded');
     

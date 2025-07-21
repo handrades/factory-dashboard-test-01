@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import { ProtectedRoute } from '../Auth/ProtectedRoute';
 import './SecurityMonitoringDashboard.css';
 
@@ -120,15 +120,6 @@ export const SecurityMonitoringDashboard: React.FC = () => {
     }, 1000);
   }, []);
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'critical': return '#ff4757';
-      case 'high': return '#ff6b6b';
-      case 'medium': return '#ffa726';
-      case 'low': return '#66bb6a';
-      default: return '#9e9e9e';
-    }
-  };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -334,7 +325,7 @@ export const SecurityMonitoringDashboard: React.FC = () => {
                         <span className={`status-indicator ${event.resolved ? 'resolved' : 'unresolved'}`}>
                           {event.resolved ? '✅ Resolved' : '🔴 Unresolved'}
                         </span>
-                        {hasPermission('security', 'manage') && !event.resolved && (
+                        {hasPermission('security:manage') && !event.resolved && (
                           <button className="resolve-btn">
                             Mark as Resolved
                           </button>

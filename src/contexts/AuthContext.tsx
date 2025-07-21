@@ -3,10 +3,11 @@
  * Provides authentication state and methods throughout the React application
  */
 
-import { createContext, useContext, useReducer, useEffect } from 'react';
+import { useReducer, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import type { UserContext, LoginCredentials, AuthResult } from '../types/auth-types';
 import { AuthErrorCode } from '../types/auth-types';
+import { AuthContext, type AuthContextType } from './auth-context-definition';
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -18,16 +19,6 @@ interface AuthState {
   sessionExpiry: Date | null;
 }
 
-interface AuthContextType extends AuthState {
-  login: (credentials: LoginCredentials) => Promise<AuthResult>;
-  logout: () => Promise<void>;
-  refreshAuth: () => Promise<boolean>;
-  clearError: () => void;
-  hasPermission: (resource: string, action?: string) => boolean;
-  hasRole: (role: string) => boolean;
-  hasAnyRole: (roles: string[]) => boolean;
-  isTokenExpired: () => boolean;
-}
 
 type AuthAction =
   | { type: 'LOGIN_START' }
@@ -120,7 +111,6 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
   }
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -134,6 +124,53 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const REFRESH_TOKEN_KEY = 'factory_dashboard_refresh_token';
   const USER_KEY = 'factory_dashboard_user';
   const EXPIRY_KEY = 'factory_dashboard_expiry';
+
+  const refreshAuth = useCallback(async (): Promise<boolean> => {
+    if (!state.refreshToken) {
+      return false;
+    }
+
+    try {
+      // This would typically make an API call to refresh the token
+      const response = await simulateTokenRefresh();
+
+      if (response.success && response.token && response.expiresAt) {
+        localStorage.setItem(TOKEN_KEY, response.token);
+        localStorage.setItem(EXPIRY_KEY, response.expiresAt.toISOString());
+
+        dispatch({
+          type: 'REFRESH_SUCCESS',
+          payload: {
+            token: response.token,
+            expiresAt: response.expiresAt
+          }
+        });
+
+        return true;
+      } else {
+        dispatch({ type: 'REFRESH_FAILURE' });
+        return false;
+      }
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      dispatch({ type: 'REFRESH_FAILURE' });
+      return false;
+    }
+  }, [state.refreshToken]);
+
+  const logout = useCallback(async (): Promise<void> => {
+    try {
+      // This would typically make an API call to invalidate the token
+      if (state.token) {
+        await simulateLogout(state.token);
+      }
+    } catch (error) {
+      console.error('Logout API call failed:', error);
+    } finally {
+      clearStoredAuth();
+      dispatch({ type: 'LOGOUT' });
+    }
+  }, [state.token]);
 
   // Initialize authentication state from localStorage
   useEffect(() => {
@@ -178,7 +215,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
 
     initializeAuth();
-  }, []);
+  }, [refreshAuth]);
 
   // Auto-refresh token before expiry
   useEffect(() => {
@@ -195,9 +232,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }, refreshTime);
 
     return () => clearTimeout(refreshTimer);
-  }, [state.sessionExpiry, state.isAuthenticated]);
+  }, [state.sessionExpiry, state.isAuthenticated, refreshAuth, logout]);
 
-  const login = async (credentials: LoginCredentials): Promise<AuthResult> => {
+  const login = async (credentials: { username: string; password: string; rememberMe?: boolean }): Promise<void> => {
     dispatch({ type: 'LOGIN_START' });
 
     try {
@@ -221,87 +258,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
             expiresAt: response.expiresAt
           }
         });
-
-        return response;
       } else {
         const errorMessage = response.error || 'Login failed';
         dispatch({ type: 'LOGIN_FAILURE', payload: errorMessage });
-        return response;
       }
-    } catch (error) {
+    } catch {
       const errorMessage = 'Network error. Please try again.';
       dispatch({ type: 'LOGIN_FAILURE', payload: errorMessage });
-      return {
-        success: false,
-        error: errorMessage,
-        errorCode: AuthErrorCode.INVALID_CREDENTIALS
-      };
     }
   };
 
-  const logout = async (): Promise<void> => {
-    try {
-      // This would typically make an API call to invalidate the token
-      if (state.token) {
-        await simulateLogout(state.token);
-      }
-    } catch (error) {
-      console.error('Logout API call failed:', error);
-    } finally {
-      clearStoredAuth();
-      dispatch({ type: 'LOGOUT' });
-    }
-  };
-
-  const refreshAuth = async (): Promise<boolean> => {
-    if (!state.refreshToken) {
-      return false;
-    }
-
-    try {
-      // This would typically make an API call to refresh the token
-      const response = await simulateTokenRefresh(state.refreshToken);
-
-      if (response.success && response.token && response.expiresAt) {
-        localStorage.setItem(TOKEN_KEY, response.token);
-        localStorage.setItem(EXPIRY_KEY, response.expiresAt.toISOString());
-
-        dispatch({
-          type: 'REFRESH_SUCCESS',
-          payload: {
-            token: response.token,
-            expiresAt: response.expiresAt
-          }
-        });
-
-        return true;
-      } else {
-        dispatch({ type: 'REFRESH_FAILURE' });
-        return false;
-      }
-    } catch (error) {
-      console.error('Token refresh failed:', error);
-      dispatch({ type: 'REFRESH_FAILURE' });
-      return false;
-    }
-  };
 
   const clearError = () => {
     dispatch({ type: 'CLEAR_ERROR' });
   };
 
-  const hasPermission = (resource: string, action?: string): boolean => {
+  const hasPermission = (permission: string): boolean => {
     if (!state.user?.permissions) return false;
-    
-    // If only resource is provided, check if user has any permission for that resource
-    if (!action) {
-      return state.user.permissions.some(p => p.resource === resource);
-    }
-    
-    // Check if user has specific resource:action permission
-    return state.user.permissions.some(p => 
-      p.resource === resource && p.actions.includes(action)
-    );
+    return state.user.permissions.includes(permission);
   };
 
   const hasRole = (role: string): boolean => {
@@ -312,9 +286,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return roles.some(role => state.user?.roles.includes(role)) || false;
   };
 
-  const isTokenExpired = (): boolean => {
-    if (!state.sessionExpiry) return true;
-    return state.sessionExpiry <= new Date();
+  const isSessionValid = (): boolean => {
+    if (!state.sessionExpiry) return false;
+    return state.sessionExpiry > new Date();
+  };
+
+  const getSessionTimeRemaining = (): number => {
+    if (!state.sessionExpiry) return 0;
+    return Math.max(0, state.sessionExpiry.getTime() - Date.now());
+  };
+
+  const getUserPermissions = (): string[] => {
+    return state.user?.permissions || [];
   };
 
   const clearStoredAuth = () => {
@@ -330,10 +313,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     logout,
     refreshAuth,
     clearError,
+    isSessionValid,
+    getSessionTimeRemaining,
+    getUserPermissions,
     hasPermission,
     hasRole,
-    hasAnyRole,
-    isTokenExpired
+    hasAnyRole
   };
 
   return (
@@ -343,13 +328,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   );
 }
 
-export function useAuth(): AuthContextType {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-}
 
 // Simulation functions (replace with actual API calls)
 async function simulateLogin(credentials: LoginCredentials): Promise<AuthResult> {
@@ -429,7 +407,7 @@ async function simulateLogout(token: string): Promise<void> {
   console.log('User logged out, token invalidated:', token.substring(0, 10) + '...');
 }
 
-async function simulateTokenRefresh(refreshToken: string): Promise<AuthResult> {
+async function simulateTokenRefresh(): Promise<AuthResult> {
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 500));
 

@@ -1,7 +1,15 @@
 import { InfluxDB, type QueryApi } from '@influxdata/influxdb-client';
-import type { Equipment } from '../context/FactoryContext';
+import type { Equipment } from '../context';
 import { InfluxQueryBuilder } from './influx-query-builder';
 // import { secretManager } from '../security/SecretManager';
+
+interface InfluxRowResult {
+  _time: string;
+  _value: unknown;
+  _measurement?: string;
+  _field?: string;
+  [key: string]: unknown;
+}
 
 export interface InfluxDBServiceConfig {
   url: string;
@@ -34,7 +42,7 @@ export interface EquipmentData {
   pressure?: number;
   status?: string;
   quality?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface TimeSeriesData {
@@ -47,11 +55,11 @@ export class InfluxDBService {
   private queryApi: QueryApi;
   private config: InfluxDBServiceConfig;
   private isConnected: boolean = false;
-  private connectionCache: Map<string, any> = new Map();
+  private connectionCache: Map<string, unknown> = new Map();
   private cacheTimeout: number = 0; // Disable caching completely for debugging
   private retryConfig: ConnectionRetryConfig;
   private diagnostics: ConnectionDiagnostics;
-  private queryBuilder: any;
+  private queryBuilder: InfluxQueryBuilder;
 
   constructor(config: InfluxDBServiceConfig, retryConfig?: Partial<ConnectionRetryConfig>) {
     this.config = config;
@@ -111,11 +119,11 @@ export class InfluxDBService {
         this.diagnostics.errorType = undefined;
         console.log('Successfully connected to InfluxDB');
         return true;
-      } catch (error: any) {
+      } catch (error: unknown) {
         this.isConnected = false;
         this.diagnostics.isConnected = false;
         this.diagnostics.consecutiveFailures++;
-        this.diagnostics.lastError = error.message || 'Unknown error';
+        this.diagnostics.lastError = error instanceof Error ? error.message : String(error);
         this.diagnostics.errorType = this.categorizeError(error);
         
         const isLastAttempt = attempt === retryConfig.maxRetries;
@@ -131,7 +139,7 @@ export class InfluxDBService {
           retryConfig.maxDelay
         );
         
-        console.warn(`InfluxDB connection attempt ${attempt + 1} failed, retrying in ${delay}ms:`, error.message);
+        console.warn(`InfluxDB connection attempt ${attempt + 1} failed, retrying in ${delay}ms:`, error instanceof Error ? error.message : String(error));
         await this.sleep(delay);
       }
     }
@@ -139,10 +147,10 @@ export class InfluxDBService {
     return false;
   }
 
-  private categorizeError(error: any): 'network' | 'auth' | 'data' | 'config' {
-    if (!error.message) return 'network';
+  private categorizeError(error: unknown): 'network' | 'auth' | 'data' | 'config' {
+    if (!(error instanceof Error) || !error.message) return 'network';
     
-    const message = error.message.toLowerCase();
+    const message = (error instanceof Error ? error.message : String(error)).toLowerCase();
     
     if (message.includes('unauthorized') || message.includes('token') || message.includes('auth')) {
       return 'auth';
@@ -171,16 +179,16 @@ export class InfluxDBService {
     try {
       const cacheKey = `latest-${equipmentIds.join(',')}`;
       const cached = this.getCachedResult(cacheKey);
-      if (cached) {
+      if (cached && Array.isArray(cached)) {
         console.log(`InfluxDB: Returning cached data for equipment [${equipmentIds.join(', ')}]`, {
           cacheKey,
-          dataCount: cached.length,
-          cacheAge: Date.now() - (this.connectionCache.get(cacheKey)?.timestamp || 0)
+          dataCount: (cached as EquipmentData[]).length,
+          cacheAge: Date.now() - ((cached as { timestamp?: number })?.timestamp || 0)
         });
-        return cached;
+        return cached as EquipmentData[];
       }
 
-      const query = this.queryBuilder.buildLatestEquipmentDataQuery(
+      const query = (this.queryBuilder as InfluxQueryBuilder).buildLatestEquipmentDataQuery(
         this.config.bucket,
         equipmentIds,
         '1h'
@@ -198,7 +206,7 @@ export class InfluxDBService {
       console.log('Detailed structure of first 3 rows:', JSON.stringify(result.slice(0, 3), null, 2));
       
       console.log('About to call transformQueryResultToEquipmentData with result.length:', result.length);
-      const equipmentData = this.transformQueryResultToEquipmentData(result);
+      const equipmentData = this.transformQueryResultToEquipmentData(result as InfluxRowResult[]);
       console.log('transformQueryResultToEquipmentData returned:', equipmentData.length, 'equipment items');
       
       console.log(`InfluxDB: Fresh data transformed for equipment:`, equipmentData.map(eq => ({
@@ -235,9 +243,9 @@ export class InfluxDBService {
     try {
       const cacheKey = `timeseries-${equipmentId}-${measurement}-${field}-${timeRange}-${interval}`;
       const cached = this.getCachedResult(cacheKey);
-      if (cached) return cached;
+      if (cached) return cached as TimeSeriesData[];
 
-      const query = this.queryBuilder.buildTimeSeriesQuery(
+      const query = (this.queryBuilder as InfluxQueryBuilder).buildTimeSeriesQuery(
         this.config.bucket,
         equipmentId,
         measurement,
@@ -248,9 +256,9 @@ export class InfluxDBService {
       );
 
       const result = await this.queryApi.collectRows(query);
-      const timeSeriesData = result.map((row: any) => ({
+      const timeSeriesData = (result as InfluxRowResult[]).map((row) => ({
         timestamp: new Date(row._time),
-        value: row._value
+        value: row._value as number
       }));
       
       this.setCachedResult(cacheKey, timeSeriesData);
@@ -269,9 +277,9 @@ export class InfluxDBService {
     try {
       const cacheKey = `status-${equipmentIds.join(',')}`;
       const cached = this.getCachedResult(cacheKey);
-      if (cached) return cached;
+      if (cached) return cached as { [equipmentId: string]: string };
 
-      const queries = this.queryBuilder.buildEquipmentStatusQuery(
+      const queries = (this.queryBuilder as InfluxQueryBuilder).buildEquipmentStatusQuery(
         this.config.bucket,
         equipmentIds,
         '10m'
@@ -291,12 +299,12 @@ export class InfluxDBService {
       const statusMap: { [equipmentId: string]: string } = {};
       
       for (const equipmentId of equipmentIds) {
-        const equipmentRows = allResults.filter((row: any) => row.equipment_id === equipmentId);
+        const equipmentRows = (allResults as InfluxRowResult[]).filter((row) => row.equipment_id === equipmentId);
         
         if (equipmentRows.length === 0) {
           statusMap[equipmentId] = 'error'; // No recent data
         } else {
-          const latestTimestamp = Math.max(...equipmentRows.map((row: any) => new Date(row._time).getTime()));
+          const latestTimestamp = Math.max(...equipmentRows.map((row) => new Date(row._time).getTime()));
           const timeDiff = Date.now() - latestTimestamp;
           
           if (timeDiff > 60000) { // No data for more than 1 minute
@@ -325,16 +333,16 @@ export class InfluxDBService {
     try {
       const cacheKey = `efficiency-${lineId}-${timeRange}`;
       const cached = this.getCachedResult(cacheKey);
-      if (cached !== undefined) return cached;
+      if (cached !== undefined) return cached as number;
 
-      const query = this.queryBuilder.buildLineEfficiencyQuery(
+      const query = (this.queryBuilder as InfluxQueryBuilder).buildLineEfficiencyQuery(
         this.config.bucket,
         lineId,
         timeRange
       );
 
       const result = await this.queryApi.collectRows(query);
-      const efficiency = result.length > 0 ? ((result[0] as any)._value * 100) : 85; // Default to 85% if no data
+      const efficiency = result.length > 0 ? ((result[0] as InfluxRowResult)._value as number * 100) : 85; // Default to 85% if no data
       
       this.setCachedResult(cacheKey, efficiency);
       return efficiency;
@@ -344,14 +352,14 @@ export class InfluxDBService {
     }
   }
 
-  private transformQueryResultToEquipmentData(result: any[]): EquipmentData[] {
+  private transformQueryResultToEquipmentData(result: InfluxRowResult[]): EquipmentData[] {
     console.log('🔧 transformQueryResultToEquipmentData called with', result.length, 'rows');
     console.log('First row sample:', result[0]);
     
     const equipmentMap = new Map<string, EquipmentData>();
 
     for (const row of result) {
-      const equipmentId = row.equipment_id;
+      const equipmentId = (row as InfluxRowResult).equipment_id as string;
       
       if (!equipmentId) {
         console.warn('Row missing equipment_id:', row);
@@ -361,57 +369,57 @@ export class InfluxDBService {
       if (!equipmentMap.has(equipmentId)) {
         equipmentMap.set(equipmentId, {
           equipmentId,
-          timestamp: new Date(row._time || Date.now())
+          timestamp: new Date((row as InfluxRowResult)._time as string || Date.now())
         });
       }
 
       const equipment = equipmentMap.get(equipmentId)!;
       
       // Update timestamp to the latest one
-      const rowTime = new Date(row._time || Date.now());
+      const rowTime = new Date((row as InfluxRowResult)._time as string || Date.now());
       if (rowTime > equipment.timestamp) {
         equipment.timestamp = rowTime;
       }
       
       // Enhanced field mapping with better type handling  
-      const measurement = row._measurement;
+      const measurement = (row as InfluxRowResult)._measurement as string;
       
       // Debug logging to see actual data structure
       console.log(`Processing row for ${equipmentId}: measurement=${measurement}`, row);
       
       // Temperature mapping - after pivot, temperature data has a 'value' column
-      if (measurement === 'temperature' && row.value !== undefined) {
-        equipment.temperature = this.parseNumericValue(row.value);
-        console.log(`🌡️ Set temperature for ${equipmentId}: ${equipment.temperature} (from row.value: ${row.value})`);
+      if (measurement === 'temperature' && (row as InfluxRowResult).value !== undefined) {
+        equipment.temperature = this.parseNumericValue((row as InfluxRowResult).value);
+        console.log(`🌡️ Set temperature for ${equipmentId}: ${equipment.temperature} (from row.value: ${(row as InfluxRowResult).value})`);
       } else if (measurement === 'temperature') {
         console.log(`🌡️ Temperature row for ${equipmentId} but no 'value' field:`, row);
       }
       
       // Speed/conveyor mapping - after pivot, speed data has a 'value' column
-      else if ((measurement === 'conveyor_speed' || measurement === 'speed') && row.value !== undefined) {
-        equipment.speed = this.parseNumericValue(row.value);
+      else if ((measurement === 'conveyor_speed' || measurement === 'speed') && (row as InfluxRowResult).value !== undefined) {
+        equipment.speed = this.parseNumericValue((row as InfluxRowResult).value);
         console.log(`Set speed for ${equipmentId}: ${equipment.speed}`);
       }
       
       // Pressure mapping - after pivot, pressure data has a 'value' column
-      else if ((measurement === 'hydraulic_pressure' || measurement === 'pressure') && row.value !== undefined) {
-        equipment.pressure = this.parseNumericValue(row.value);
+      else if ((measurement === 'hydraulic_pressure' || measurement === 'pressure') && (row as InfluxRowResult).value !== undefined) {
+        equipment.pressure = this.parseNumericValue((row as InfluxRowResult).value);
         console.log(`Set pressure for ${equipmentId}: ${equipment.pressure}`);
       }
       
       // Status mapping - after pivot, status data has direct column names
-      else if (measurement === 'heating_status' && row.enabled !== undefined) {
-        equipment.status = this.parseBooleanValue(row.enabled) ? 'running' : 'stopped';
+      else if (measurement === 'heating_status' && (row as InfluxRowResult).enabled !== undefined) {
+        equipment.status = this.parseBooleanValue((row as InfluxRowResult).enabled) ? 'running' : 'stopped';
         console.log(`Set status (heating) for ${equipmentId}: ${equipment.status}`);
       }
-      else if (measurement === 'plc_data' && row.current_state !== undefined) {
-        equipment.status = this.parseStatusValue(row.current_state);
+      else if (measurement === 'plc_data' && (row as InfluxRowResult).current_state !== undefined) {
+        equipment.status = this.parseStatusValue((row as InfluxRowResult).current_state);
         console.log(`Set status (plc_data) for ${equipmentId}: ${equipment.status}`);
       }
       
       // Quality mapping - after pivot, quality data has direct column names
-      else if (measurement === 'message_quality' && row.quality_ratio !== undefined) {
-        equipment.quality = this.parseNumericValue(row.quality_ratio)?.toString();
+      else if (measurement === 'message_quality' && (row as InfluxRowResult).quality_ratio !== undefined) {
+        equipment.quality = this.parseNumericValue((row as InfluxRowResult).quality_ratio)?.toString();
         console.log(`Set quality for ${equipmentId}: ${equipment.quality}`);
       }
       
@@ -434,7 +442,7 @@ export class InfluxDBService {
     return Array.from(equipmentMap.values());
   }
 
-  private parseNumericValue(value: any): number | undefined {
+  private parseNumericValue(value: unknown): number | undefined {
     if (typeof value === 'number') return value;
     if (typeof value === 'string') {
       const parsed = parseFloat(value);
@@ -443,7 +451,7 @@ export class InfluxDBService {
     return undefined;
   }
 
-  private parseBooleanValue(value: any): boolean {
+  private parseBooleanValue(value: unknown): boolean {
     if (typeof value === 'boolean') return value;
     if (typeof value === 'string') {
       return value.toLowerCase() === 'true' || value === '1';
@@ -454,7 +462,7 @@ export class InfluxDBService {
     return false;
   }
 
-  private parseStatusValue(value: any): 'running' | 'stopped' | 'error' {
+  private parseStatusValue(value: unknown): 'running' | 'stopped' | 'error' {
     if (typeof value === 'string') {
       const status = value.toLowerCase();
       if (status === 'running' || status === 'active' || status === 'on') return 'running';
@@ -583,20 +591,20 @@ export class InfluxDBService {
       const query = 'buckets() |> limit(n: 1)';
       await this.queryApi.collectRows(query);
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
 
-  private getCachedResult(key: string): any {
-    const cached = this.connectionCache.get(key);
+  private getCachedResult(key: string): unknown {
+    const cached = this.connectionCache.get(key) as { data: unknown; timestamp: number } | undefined;
     if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
       return cached.data;
     }
     return null;
   }
 
-  private setCachedResult(key: string, data: any): void {
+  private setCachedResult(key: string, data: unknown): void {
     this.connectionCache.set(key, {
       data,
       timestamp: Date.now()
@@ -648,11 +656,11 @@ export class InfluxDBService {
       const result = await this.queryApi.collectRows(query);
       
       // Check if we have expected measurements
-      const measurements = result.map((row: any) => row._value);
+      const measurements = (result as InfluxRowResult[]).map((row) => row._value);
       const expectedMeasurements = ['temperature', 'conveyor_speed', 'hydraulic_pressure', 'heating_status', 'motor_status', 'message_quality'];
       
       const hasExpectedData = expectedMeasurements.some(expected => 
-        measurements.some(measurement => measurement.includes(expected))
+        measurements.some(measurement => (measurement as string)?.includes(expected))
       );
       
       console.log('Data structure validation:', {

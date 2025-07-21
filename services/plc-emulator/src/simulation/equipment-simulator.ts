@@ -1,7 +1,7 @@
 import { EquipmentConfig, EquipmentState, StateTransition, PLCTag } from '@factory-dashboard/shared-types';
 import { TagGeneratorFactory, TagGenerator } from '../generators/tag-generators';
 import { EventEmitter } from 'events';
-import { createLogger } from 'winston';
+import winston, { createLogger } from 'winston';
 
 export class EquipmentSimulator extends EventEmitter {
   private config: EquipmentConfig;
@@ -16,9 +16,9 @@ export class EquipmentSimulator extends EventEmitter {
     this.currentState = this.getStateByName(config.currentState);
     this.logger = createLogger({
       level: 'info',
-      format: require('winston').format.json(),
+      format: winston.format.json(),
       transports: [
-        new (require('winston').transports.Console)()
+        new winston.transports.Console()
       ]
     });
     
@@ -61,7 +61,7 @@ export class EquipmentSimulator extends EventEmitter {
         ...tag,
         value,
         timestamp: new Date(),
-        quality: this.getTagQuality(tag)
+        quality: this.getTagQuality()
       };
 
       generatedTags.push(generatedTag);
@@ -70,7 +70,7 @@ export class EquipmentSimulator extends EventEmitter {
     return generatedTags;
   }
 
-  private getTagQuality(tag: PLCTag): 'GOOD' | 'BAD' | 'UNCERTAIN' {
+  private getTagQuality(): 'GOOD' | 'BAD' | 'UNCERTAIN' {
     // Simulate occasional quality issues
     const random = Math.random();
     if (random < 0.001) return 'BAD';
@@ -112,12 +112,14 @@ export class EquipmentSimulator extends EventEmitter {
         return Math.random() < 0.001; // Very low probability of automatic start
       case 'manual_stop':
         return Math.random() < 0.0001; // Very low probability of automatic stop
-      case 'temperature_reached':
+      case 'temperature_reached': {
         const tempTag = this.config.tags.find(t => t.name.toLowerCase().includes('temperature'));
         return tempTag ? (tempTag.value as number) > 300 : false;
-      case 'temperature_fault':
+      }
+      case 'temperature_fault': {
         const tempFaultTag = this.config.tags.find(t => t.name.toLowerCase().includes('temperature'));
         return tempFaultTag ? (tempFaultTag.value as number) > 450 : false;
+      }
       case 'belt_fault':
         return Math.random() < 0.001; // Random belt fault
       case 'fault_reset':

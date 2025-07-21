@@ -1,7 +1,7 @@
 import { InfluxDBService } from './influxdb-service';
 import { FallbackDataService } from './fallback-data-service';
 import { EnvironmentDetectionService } from './environment-detection-service';
-import type { FactoryLine, Equipment } from '../context/FactoryContext';
+import type { FactoryLine, Equipment } from '../context';
 
 export interface ConnectionStatus {
   source: 'influxdb' | 'simulation';
@@ -18,7 +18,7 @@ export interface DataSourceManager {
   getCurrentData(lines: FactoryLine[]): Promise<FactoryLine[]>;
   getConnectionStatus(): ConnectionStatus;
   isHealthy(): boolean;
-  getDataSourceInfo(): any;
+  getDataSourceInfo(): unknown;
 }
 
 export class DataSourceManagerImpl implements DataSourceManager {
@@ -27,8 +27,8 @@ export class DataSourceManagerImpl implements DataSourceManager {
   private environmentService: EnvironmentDetectionService;
   private _currentSource: 'influxdb' | 'simulation' = 'simulation';
   private connectionStatus: ConnectionStatus;
-  private healthCheckInterval: number | null = null;
-  private backgroundRetryInterval: number | null = null;
+  private healthCheckInterval: NodeJS.Timeout | null = null;
+  private backgroundRetryInterval: NodeJS.Timeout | null = null;
 
   constructor() {
     this.environmentService = EnvironmentDetectionService.getInstance();
@@ -102,9 +102,9 @@ export class DataSourceManagerImpl implements DataSourceManager {
           console.warn('InfluxDB connected but data structure validation failed');
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to switch to InfluxDB:', error);
-      this.connectionStatus.error = error.message;
+      this.connectionStatus.error = error instanceof Error ? error.message : String(error);
     }
 
     this.connectionStatus.retryCount++;
@@ -143,7 +143,7 @@ export class DataSourceManagerImpl implements DataSourceManager {
           firstLineEquipmentCount: result[0]?.equipment?.length || 0
         });
         return result;
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Error getting InfluxDB data, falling back to simulation:', error);
         
         // Switch to fallback data

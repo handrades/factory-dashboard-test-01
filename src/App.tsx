@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { FactoryProvider } from './context/FactoryContext';
+import { FactoryProvider } from './context';
 import { AuthProvider } from './contexts/AuthContext';
 import Dashboard from './pages/Dashboard';
 import LineDetail from './pages/LineDetail';

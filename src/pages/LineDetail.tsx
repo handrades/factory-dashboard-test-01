@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useFactory } from '../context/FactoryContext';
+import { useFactory } from '../context';
 import IndustrialOven from '../components/Equipment/IndustrialOven';
 import ConveyorBelt from '../components/Equipment/ConveyorBelt';
 import Press from '../components/Equipment/Press';

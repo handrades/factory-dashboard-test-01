@@ -20,17 +20,17 @@ export interface User {
 export interface Role {
   id: string;
   name: string;
-  permissions: Permission[];
+  permissions: PermissionObject[];
   description: string;
   isSystemRole: boolean;
   createdAt: Date;
 }
 
-export interface Permission {
+export interface PermissionObject {
   id: string;
   resource: string;
   actions: string[];
-  conditions?: Record<string, any>;
+  conditions?: Record<string, unknown>;
   description: string;
 }
 
@@ -153,7 +153,7 @@ export interface SecurityEvent {
   resource: string;
   action: string;
   success: boolean;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   sessionId?: string;
 }
 

@@ -8,25 +8,23 @@ import AuthMiddleware from './middleware/auth-middleware.js';
 import createAuthRoutes from './routes/auth-routes.js';
 import { AuthConfig } from './types/auth-types.js';
 
-const SecretManager = require('../../src/security/SecretManager.cjs');
+// Remove the broken import - using environment variables directly
 
 class AuthService {
   private app: express.Application;
-  private authController: AuthController;
-  private authMiddleware: AuthMiddleware;
-  private secretManager: any;
+  private authController!: AuthController;
+  private authMiddleware!: AuthMiddleware;
 
   constructor() {
     this.app = express();
-    this.secretManager = new SecretManager();
     this.setupService();
   }
 
   private setupService(): void {
     // Load configuration
     const config: AuthConfig = {
-      jwtSecret: this.secretManager.get('JWT_SECRET') || this.secretManager.generateToken(32),
-      jwtRefreshSecret: this.secretManager.get('JWT_REFRESH_SECRET') || this.secretManager.generateToken(32),
+      jwtSecret: process.env.JWT_SECRET || 'default-secret-change-in-production',
+      jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || 'default-refresh-secret-change-in-production',
       accessTokenExpiry: '15m',
       refreshTokenExpiry: '7d',
       passwordMinLength: 12,

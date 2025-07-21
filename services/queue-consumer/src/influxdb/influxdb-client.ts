@@ -1,7 +1,7 @@
 import { InfluxDB, Point, WriteApi, QueryApi } from '@influxdata/influxdb-client';
 import { InfluxDBConfig, DataPoint, WriteOptions } from '@factory-dashboard/shared-types';
 import { EventEmitter } from 'events';
-import { createLogger } from 'winston';
+import winston, { createLogger } from 'winston';
 
 export class InfluxDBClient extends EventEmitter {
   private client: InfluxDB;
@@ -23,13 +23,13 @@ export class InfluxDBClient extends EventEmitter {
     
     this.logger = createLogger({
       level: 'info',
-      format: require('winston').format.combine(
-        require('winston').format.timestamp(),
-        require('winston').format.json()
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
       ),
       transports: [
-        new (require('winston').transports.Console)(),
-        new (require('winston').transports.File)({ filename: 'influxdb-client.log' })
+        new winston.transports.Console(),
+        new winston.transports.File({ filename: 'influxdb-client.log' })
       ]
     });
 
@@ -57,12 +57,12 @@ export class InfluxDBClient extends EventEmitter {
     
     // Handle write errors
     try {
-      (this.writeApi as any).on?.('error', (error: any) => {
+      (this.writeApi as { on?: (event: string, callback: (error: Error) => void) => void }).on?.('error', (error: Error) => {
         this.logger.error(`InfluxDB write error: ${error}`);
         this.writeErrors++;
         this.emit('writeError', error);
       });
-    } catch (error) {
+    } catch {
       this.logger.debug('WriteApi event handling not available');
     }
   }
@@ -136,7 +136,7 @@ export class InfluxDBClient extends EventEmitter {
 
     // Add tags
     for (const [key, value] of Object.entries(dataPoint.tags)) {
-      point.tag(key, value);
+      point.tag(key, value as string);
     }
 
     // Add fields
@@ -214,7 +214,7 @@ export class InfluxDBClient extends EventEmitter {
     }, this.writeOptions.flushInterval);
   }
 
-  async query(fluxQuery: string): Promise<any[]> {
+  async query(fluxQuery: string): Promise<unknown[]> {
     try {
       const result = await this.queryApi.collectRows(fluxQuery);
       return result;
@@ -224,7 +224,7 @@ export class InfluxDBClient extends EventEmitter {
     }
   }
 
-  async getLatestEquipmentData(equipmentId: string, timeRange: string = '1h'): Promise<any[]> {
+  async getLatestEquipmentData(equipmentId: string, timeRange: string = '1h'): Promise<unknown[]> {
     const query = `
       from(bucket: "${this.config.bucket}")
         |> range(start: -${timeRange})
@@ -242,7 +242,7 @@ export class InfluxDBClient extends EventEmitter {
     field: string,
     timeRange: string = '1h',
     interval: string = '1m'
-  ): Promise<any[]> {
+  ): Promise<unknown[]> {
     const query = `
       from(bucket: "${this.config.bucket}")
         |> range(start: -${timeRange})
@@ -256,7 +256,7 @@ export class InfluxDBClient extends EventEmitter {
     return this.query(query);
   }
 
-  async getEquipmentMetrics(equipmentIds: string[], timeRange: string = '1h'): Promise<any[]> {
+  async getEquipmentMetrics(equipmentIds: string[], timeRange: string = '1h'): Promise<unknown[]> {
     const equipmentFilter = equipmentIds.map(id => `r.equipment_id == "${id}"`).join(' or ');
     
     const query = `

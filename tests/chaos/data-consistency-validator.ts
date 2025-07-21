@@ -1,6 +1,5 @@
 import { createClient } from 'redis';
 import { InfluxDB } from '@influxdata/influxdb-client';
-import { PLCMessage } from '@factory-dashboard/shared-types';
 
 interface ConsistencyTestResults {
   totalMessages: number;
@@ -14,9 +13,9 @@ interface ConsistencyTestResults {
 }
 
 export class DataConsistencyValidator {
-  private redisClient: any;
+  private redisClient: unknown;
   private influxDB: InfluxDB;
-  private queryApi: any;
+  private queryApi: unknown;
 
   constructor() {
     this.redisClient = createClient({
@@ -52,7 +51,7 @@ export class DataConsistencyValidator {
     return results;
   }
 
-  private async getInfluxMessages(startTime: Date, endTime: Date): Promise<any[]> {
+  private async getInfluxMessages(startTime: Date, endTime: Date): Promise<unknown[]> {
     const query = `
       from(bucket: "${process.env.INFLUXDB_BUCKET || 'factory-data-test'}")
         |> range(start: ${startTime.toISOString()}, stop: ${endTime.toISOString()})
@@ -64,14 +63,14 @@ export class DataConsistencyValidator {
     try {
       const result = await this.queryApi.collectRows(query);
       return result;
-    } catch (error) {
+    } catch {
       console.error('Error querying InfluxDB:', error);
       return [];
     }
   }
 
-  private async getRedisMessages(): Promise<any[]> {
-    const messages: any[] = [];
+  private async getRedisMessages(): Promise<unknown[]> {
+    const messages: unknown[] = [];
     
     try {
       // Get all queue names
@@ -83,26 +82,26 @@ export class DataConsistencyValidator {
           try {
             const message = JSON.parse(messageStr);
             messages.push(message);
-          } catch (error) {
+          } catch {
             console.error('Error parsing Redis message:', error);
           }
         }
       }
-    } catch (error) {
+    } catch {
       console.error('Error getting Redis messages:', error);
     }
     
     return messages;
   }
 
-  private async analyzeConsistency(influxMessages: any[], redisMessages: any[]): Promise<ConsistencyTestResults> {
+  private async analyzeConsistency(influxMessages: unknown[], redisMessages: unknown[]): Promise<ConsistencyTestResults> {
     // Extract sequence numbers from InfluxDB messages
     const influxSequences = influxMessages.map(msg => parseInt(msg._value)).sort((a, b) => a - b);
     
     // Extract sequence numbers from Redis messages
     const redisSequences = redisMessages
       .map(msg => {
-        const sequenceTag = msg.tags?.find((tag: any) => tag.tagId === 'test_sequence');
+        const sequenceTag = msg.tags?.find((tag: unknown) => tag.tagId === 'test_sequence');
         return sequenceTag ? parseInt(sequenceTag.value) : null;
       })
       .filter(seq => seq !== null)
@@ -149,8 +148,8 @@ export class DataConsistencyValidator {
     return duplicates;
   }
 
-  private findOutOfOrderMessages(messages: any[]): any[] {
-    const outOfOrder: any[] = [];
+  private findOutOfOrderMessages(messages: unknown[]): unknown[] {
+    const outOfOrder: unknown[] = [];
     
     for (let i = 1; i < messages.length; i++) {
       const currentTime = new Date(messages[i]._time);
@@ -192,7 +191,7 @@ export class DataConsistencyValidator {
     return (actualProcessed / totalExpected) * 100;
   }
 
-  private calculateTemporalConsistencyScore(messages: any[]): number {
+  private calculateTemporalConsistencyScore(messages: unknown[]): number {
     if (messages.length < 2) return 100;
     
     let consistentMessages = 0;
@@ -249,7 +248,7 @@ export class DataConsistencyValidator {
         };
         
         await this.redisClient.lPush(`plc_data_${equipmentId}`, JSON.stringify(message));
-      } catch (error) {
+      } catch {
         console.error('Data generation error:', error);
       }
     }, 1000);

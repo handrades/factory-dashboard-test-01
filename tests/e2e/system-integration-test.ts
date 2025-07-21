@@ -36,9 +36,9 @@ interface PerformanceMetrics {
 }
 
 export class SystemIntegrationTester {
-  private redisClient: any;
+  private redisClient: unknown;
   private influxDB: InfluxDB;
-  private queryApi: any;
+  private queryApi: unknown;
   private dataGenerator: TestDataGenerator;
   private testStartTime: number = 0;
   private messagesSent: number = 0;
@@ -120,7 +120,7 @@ export class SystemIntegrationTester {
       
       return results;
       
-    } catch (error) {
+    } catch {
       return {
         testName: 'Full System Integration Test',
         duration: (Date.now() - this.testStartTime) / 1000,
@@ -186,7 +186,7 @@ export class SystemIntegrationTester {
       await this.queryApi.collectRows(query);
       results.influxdb = true;
       
-    } catch (error) {
+    } catch {
       console.error('Health check error:', error);
     }
 
@@ -283,7 +283,7 @@ export class SystemIntegrationTester {
 
       const result = await this.queryApi.collectRows(query);
       return result.length > 0 ? result[0]._value : 0;
-    } catch (error) {
+    } catch {
       console.error('Error counting processed messages:', error);
       return 0;
     }
@@ -296,7 +296,7 @@ export class SystemIntegrationTester {
     
     console.log(`Running high-frequency test: ${highFreqRate} msg/s for ${highFreqDuration}s`);
     
-    const startTime = Date.now();
+    // const _startTime = Date.now();
     const processingTimes: number[] = [];
     
     for (let i = 0; i < highFreqDuration * highFreqRate; i++) {
@@ -354,7 +354,7 @@ export class SystemIntegrationTester {
       // This would depend on your dashboard implementation
       
       return true;
-    } catch (error) {
+    } catch {
       console.error('Dashboard integration test failed:', error);
       return false;
     }
@@ -389,7 +389,7 @@ export class SystemIntegrationTester {
   }
 
   private determineOverallSuccess(
-    serviceHealth: any,
+    serviceHealth: unknown,
     dataFlowValidation: DataFlowValidation,
     performanceMetrics: PerformanceMetrics
   ): boolean {
@@ -416,7 +416,7 @@ export class SystemIntegrationTester {
     
     // Generate realistic factory data
     const equipmentTypes = ['oven', 'conveyor', 'press', 'assembly'];
-    const equipmentData: { [key: string]: any } = {};
+    const equipmentData: { [key: string]: unknown } = {};
     
     // Initialize equipment states
     for (let i = 0; i < 20; i++) {
@@ -495,7 +495,7 @@ export class SystemIntegrationTester {
     return results;
   }
 
-  private generateRealisticValues(equipmentType: string): { [key: string]: any } {
+  private generateRealisticValues(equipmentType: string): { [key: string]: unknown } {
     switch (equipmentType) {
       case 'oven':
         return {
@@ -530,7 +530,7 @@ export class SystemIntegrationTester {
     }
   }
 
-  private updateRealisticValues(currentValues: any, equipmentType: string): any {
+  private updateRealisticValues(currentValues: unknown, equipmentType: string): unknown {
     // Apply realistic changes to current values
     const updated = { ...currentValues };
     
@@ -613,15 +613,17 @@ if (require.main === module) {
     const testType = process.argv[2] || 'full';
     
     switch (testType) {
-      case 'full':
+      case 'full': {
         const fullResults = await tester.runFullSystemIntegrationTest();
         console.log('\n' + tester.generateSystemReport(fullResults));
         break;
+      }
         
-      case 'realtime':
+      case 'realtime': {
         const realtimeResults = await tester.runRealTimeDataValidation();
         console.log('\n' + tester.generateSystemReport(realtimeResults));
         break;
+      }
         
       default:
         console.log('Usage: node system-integration-test.js [full|realtime]');

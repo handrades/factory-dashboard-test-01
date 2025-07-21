@@ -30,7 +30,7 @@ export class AuthController {
       const userAgent = req.get('User-Agent') || 'unknown';
 
       // Authenticate user
-      const user = await this.userService.authenticateUser(username, password, ipAddress, userAgent);
+      const user = await this.userService.authenticateUser(username, password, ipAddress || '', userAgent);
       
       if (!user) {
         res.status(401).json({ error: 'Invalid credentials' });
@@ -59,7 +59,7 @@ export class AuthController {
       };
 
       res.json(response);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error);
       res.status(500).json({ error: 'Login failed' });
     }
@@ -122,7 +122,7 @@ export class AuthController {
       this.securityLogger.logTokenRefresh(
         fullUser.id,
         fullUser.username,
-        req.ip,
+        req.ip || 'unknown',
         req.get('User-Agent') || 'unknown',
         true
       );
@@ -132,13 +132,13 @@ export class AuthController {
         refreshToken: newRefreshToken,
         expiresIn: this.jwtManager.getAccessTokenExpiryTime()
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Token refresh error:', error);
       
       this.securityLogger.logTokenRefresh(
         'unknown',
         'unknown',
-        req.ip,
+        req.ip || 'unknown',
         req.get('User-Agent') || 'unknown',
         false
       );
@@ -163,14 +163,14 @@ export class AuthController {
         eventType: 'USER_LOGOUT',
         userId: req.user?.userId,
         username: req.user?.username,
-        ipAddress: req.ip,
+        ipAddress: req.ip || '',
         userAgent: req.get('User-Agent') || 'unknown',
         severity: 'low',
         details: {}
       });
 
       res.json({ message: 'Logged out successfully' });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Logout error:', error);
       res.status(500).json({ error: 'Logout failed' });
     }
@@ -191,7 +191,7 @@ export class AuthController {
       this.securityLogger.logSecurityEvent({
         eventType: 'USER_REGISTERED',
         username: registerRequest.username,
-        ipAddress: req.ip,
+        ipAddress: req.ip || '',
         userAgent: req.get('User-Agent') || 'unknown',
         severity: 'medium',
         details: {
@@ -204,21 +204,21 @@ export class AuthController {
         message: 'User created successfully',
         user
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Registration error:', error);
       
       this.securityLogger.logSecurityEvent({
         eventType: 'USER_REGISTRATION_FAILED',
         username: req.body?.username,
-        ipAddress: req.ip,
+        ipAddress: req.ip || '',
         userAgent: req.get('User-Agent') || 'unknown',
         severity: 'medium',
         details: {
-          error: error.message
+          error: error instanceof Error ? error.message : 'Unknown error'
         }
       });
 
-      res.status(400).json({ error: error.message });
+      res.status(400).json({ error: error instanceof Error ? error.message : 'Operation failed' });
     }
   }
 
@@ -239,14 +239,14 @@ export class AuthController {
       await this.userService.changePassword(
         req.user.userId,
         changePasswordRequest,
-        req.ip,
+        req.ip || 'unknown',
         req.get('User-Agent') || 'unknown'
       );
 
       res.json({ message: 'Password changed successfully' });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Change password error:', error);
-      res.status(400).json({ error: error.message });
+      res.status(400).json({ error: error instanceof Error ? error.message : 'Operation failed' });
     }
   }
 
@@ -269,7 +269,7 @@ export class AuthController {
         user,
         permissions
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Get profile error:', error);
       res.status(500).json({ error: 'Failed to get profile' });
     }
@@ -287,7 +287,7 @@ export class AuthController {
         user: req.user,
         expiresIn: this.jwtManager.getAccessTokenExpiryTime()
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Validate token error:', error);
       res.status(401).json({ error: 'Token validation failed' });
     }
@@ -298,7 +298,7 @@ export class AuthController {
     try {
       const users = this.userService.getAllUsers();
       res.json({ users });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Get all users error:', error);
       res.status(500).json({ error: 'Failed to get users' });
     }
@@ -317,9 +317,9 @@ export class AuthController {
       await this.userService.updateUserRoles(userId, roles, req.user!.userId);
 
       res.json({ message: 'User roles updated successfully' });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Update user roles error:', error);
-      res.status(400).json({ error: error.message });
+      res.status(400).json({ error: error instanceof Error ? error.message : 'Operation failed' });
     }
   }
 
@@ -341,9 +341,9 @@ export class AuthController {
       await this.userService.deactivateUser(userId, req.user!.userId);
 
       res.json({ message: 'User deactivated successfully' });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Deactivate user error:', error);
-      res.status(400).json({ error: error.message });
+      res.status(400).json({ error: error instanceof Error ? error.message : 'Operation failed' });
     }
   }
 
@@ -351,7 +351,7 @@ export class AuthController {
     try {
       const roles = this.userService.getAllRoles();
       res.json({ roles });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Get roles error:', error);
       res.status(500).json({ error: 'Failed to get roles' });
     }
@@ -371,7 +371,7 @@ export class AuthController {
           username: event.username || 'anonymous'
         }))
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Get stats error:', error);
       res.status(500).json({ error: 'Failed to get statistics' });
     }

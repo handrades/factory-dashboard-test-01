@@ -4,7 +4,7 @@
  */
 
 import type { ReactNode } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import { LoginForm } from './LoginForm';
 import { UserRole } from '../../types/auth-types';
 import './ProtectedRoute.css';

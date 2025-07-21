@@ -1,5 +1,5 @@
 import { MessageTransformer, TransformationConfig } from '../message-transformer';
-import { PLCMessage, DataPoint } from '@factory-dashboard/shared-types';
+import { PLCMessage } from '@factory-dashboard/shared-types';
 
 describe('MessageTransformer', () => {
   let transformer: MessageTransformer;
@@ -26,7 +26,7 @@ describe('MessageTransformer', () => {
           measurement: 'pressure',
           field: 'value',
           validate: (value) => typeof value === 'number' && value >= 0 && value <= 1000,
-          transform: (value) => value * 1.01 // Apply calibration factor
+          transform: (value: unknown) => (typeof value === 'number' ? value * 1.01 : value) // Apply calibration factor
         },
         {
           tagId: 'speed',
@@ -380,11 +380,11 @@ describe('MessageTransformer', () => {
         id: '',
         timestamp: null,
         equipmentId: 'oven1'
-      } as any;
+      } as unknown as PLCMessage;
 
       try {
         await transformer.transformMessage(invalidMessage);
-      } catch (error) {
+      } catch {
         // Expected to throw
       }
 

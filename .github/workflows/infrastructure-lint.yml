@@ -1,0 +1,385 @@
+name: 🏗️ Infrastructure & Deployment Validation
+
+on:
+  push:
+    branches: [ main, develop, fix-deployment-issues ]
+    paths:
+      - 'docker/**'
+      - 'docker-compose*.yml'
+      - 'Dockerfile*'
+      - 'scripts/**'
+      - 'monitoring/**'
+      - 'infrastructure/**'
+      - '.github/workflows/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'docker/**'
+      - 'docker-compose*.yml'
+      - 'Dockerfile*'
+      - 'scripts/**'
+      - 'monitoring/**'
+      - 'infrastructure/**'
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+jobs:
+  # Docker and Container Validation
+  docker-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ✅ Check if Dockerfile exists
+        id: dockerfile_check
+        run: |
+          if [ -f "Dockerfile" ]; then
+            echo "dockerfile_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "dockerfile_exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🔍 Dockerfile Security Scan
+        if: steps.dockerfile_check.outputs.dockerfile_exists == 'true'
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          failure-threshold: warning
+          format: sarif
+          output-file: hadolint-results.sarif
+
+      - name: 🔍 Scan service Dockerfiles
+        run: |
+          dockerfile_count=$(find . -name "Dockerfile*" -type f | wc -l)
+          if [ "$dockerfile_count" -gt 0 ]; then
+            find . -name "Dockerfile*" -type f | while read dockerfile; do
+              echo "🔍 Scanning $dockerfile"
+              docker run --rm -i hadolint/hadolint:latest < "$dockerfile"
+            done
+          else
+            echo "No Dockerfiles found to scan"
+          fi
+
+      - name: 🔐 Docker security scan with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: 📤 Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Docker Compose Validation
+  compose-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔍 Docker Compose validation
+        run: |
+          # Validate all docker-compose files
+          for compose_file in docker-compose*.yml; do
+            if [ -f "$compose_file" ]; then
+              echo "🔍 Validating $compose_file"
+              docker compose -f "$compose_file" config -q
+              
+              # Check for security best practices
+              echo "🔐 Checking security practices in $compose_file"
+              
+              # Check for exposed ports
+              if grep -q "ports:" "$compose_file"; then
+                echo "⚠️  Warning: Found exposed ports in $compose_file"
+                grep -n "ports:" "$compose_file" || true
+              fi
+              
+              # Check for privileged containers
+              if grep -q "privileged: true" "$compose_file"; then
+                echo "❌ Error: Found privileged containers in $compose_file"
+                exit 1
+              fi
+              
+              # Check for host network mode
+              if grep -q "network_mode: host" "$compose_file"; then
+                echo "⚠️  Warning: Found host network mode in $compose_file"
+              fi
+            fi
+          done
+
+      - name: 🔍 Environment variable validation
+        run: |
+          echo "🔍 Checking for required environment variables..."
+          
+          # Check for .env.example or documentation of required vars
+          if [ -f ".env.example" ]; then
+            echo "✅ Found .env.example"
+          else
+            echo "⚠️  No .env.example found"
+          fi
+          
+          # Extract required env vars from docker-compose files
+          grep -h "\\${.*}" docker-compose*.yml | sed 's/.*\\${\\([^}]*\\)}.*/\\1/' | sort -u > required-vars.txt
+          
+          echo "📋 Required environment variables:"
+          cat required-vars.txt
+
+  # Shell Script Validation
+  script-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔍 ShellCheck analysis
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: './scripts'
+          severity: error
+          additional_files: '*.sh'
+
+      - name: 🔍 Script permissions check
+        run: |
+          echo "🔍 Checking script permissions..."
+          find scripts/ -name "*.sh" | while read script; do
+            if [ ! -x "$script" ]; then
+              echo "⚠️  Script $script is not executable"
+            else
+              echo "✅ Script $script is executable"
+            fi
+          done
+
+      - name: 🔍 Script security analysis
+        run: |
+          echo "🔐 Checking for security issues in scripts..."
+          
+          # Check for potential security issues
+          find scripts/ -name "*.sh" | while read script; do
+            echo "Analyzing $script"
+            
+            # Check for hardcoded passwords/secrets
+            if grep -i "password\|secret\|key\|token" "$script" | grep -v "\\$"; then
+              echo "⚠️  Potential hardcoded secrets in $script"
+            fi
+            
+            # Check for unsafe practices
+            if grep -q "curl.*http://" "$script"; then
+              echo "⚠️  Insecure HTTP usage in $script"
+            fi
+            
+            # Check for eval usage
+            if grep -q "eval" "$script"; then
+              echo "⚠️  Eval usage detected in $script"
+            fi
+          done
+
+  # Monitoring Configuration Validation
+  monitoring-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔍 Grafana dashboard validation
+        run: |
+          echo "🔍 Validating Grafana dashboards..."
+          
+          if [ -d "monitoring/grafana/dashboards/" ]; then
+            dashboard_count=$(find monitoring/grafana/dashboards/ -name "*.json" | wc -l)
+            if [ "$dashboard_count" -gt 0 ]; then
+              find monitoring/grafana/dashboards/ -name "*.json" | while read dashboard; do
+                echo "Validating $dashboard"
+                
+                # Basic JSON validation
+                python3 -m json.tool "$dashboard" > /dev/null
+                
+                # Check for required fields
+                if ! grep -q '"title"' "$dashboard"; then
+                  echo "❌ Missing title in $dashboard"
+                fi
+                
+                if ! grep -q '"panels"' "$dashboard"; then
+                  echo "❌ Missing panels in $dashboard"
+                fi
+              done
+            else
+              echo "No Grafana dashboards found to validate"
+            fi
+          else
+            echo "Grafana dashboards directory not found"
+          fi
+
+      - name: 🔍 Alert rules validation
+        run: |
+          echo "🔍 Validating alert rules..."
+          
+          if [ -f "monitoring/alerts/alert-rules.yml" ]; then
+            # Install yamllint
+            pip3 install yamllint
+            yamllint monitoring/alerts/alert-rules.yml
+            
+            # Basic validation for Prometheus alert syntax
+            echo "Checking alert rules structure..."
+            if grep -q "alert:" monitoring/alerts/alert-rules.yml; then
+              echo "✅ Alert rules found"
+            else
+              echo "⚠️  No alert rules found"
+            fi
+          fi
+
+  # Infrastructure as Code Validation
+  iac-validation:
+    runs-on: ubuntu-latest
+    if: false  # Enable when you add IaC files
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔍 Terraform validation
+        if: hashFiles('**/*.tf') != ''
+        run: |
+          # Install Terraform
+          wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com jammy main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+          sudo apt update && sudo apt install terraform
+          
+          # Validate Terraform files
+          find . -name "*.tf" -exec dirname {} \; | sort -u | while read dir; do
+            echo "Validating Terraform in $dir"
+            cd "$dir"
+            terraform init -backend=false
+            terraform validate
+            cd - > /dev/null
+          done
+
+      - name: 🔍 Kubernetes manifests validation
+        if: hashFiles('**/*.yaml', '**/*.yml') != ''
+        run: |
+          # Install kubeval
+          wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
+          tar xf kubeval-linux-amd64.tar.gz
+          sudo mv kubeval /usr/local/bin
+          
+          # Validate K8s manifests
+          find . -name "*.yaml" -o -name "*.yml" | grep -E "(k8s|kubernetes)" | while read manifest; do
+            echo "Validating $manifest"
+            kubeval "$manifest"
+          done
+
+  # Deployment Smoke Tests
+  deployment-smoke-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Test Docker build
+        run: |
+          echo "🏗️ Testing Docker builds..."
+          
+          # Test main Dockerfile
+          if [ -f "Dockerfile" ]; then
+            echo "Building main Dockerfile..."
+            docker build -t factory-dashboard:test .
+          else
+            echo "No main Dockerfile found"
+          fi
+          
+          # Test service Dockerfiles
+          if [ -d "services/" ]; then
+            dockerfile_count=$(find services/ -name "Dockerfile" | wc -l)
+            if [ "$dockerfile_count" -gt 0 ]; then
+              find services/ -name "Dockerfile" | while read dockerfile; do
+                service_dir=$(dirname "$dockerfile")
+                service_name=$(basename "$service_dir")
+                echo "Building $service_name"
+                # Use services/ as context for services that depend on shared-types
+                if [ "$service_name" = "plc-emulator" ] || [ "$service_name" = "queue-consumer" ] || [ "$service_name" = "auth-service" ]; then
+                  docker build -f "$dockerfile" -t "factory-$service_name:test" services/
+                else
+                  docker build -t "factory-$service_name:test" "$service_dir"
+                fi
+              done
+            else
+              echo "No service Dockerfiles found"
+            fi
+          else
+            echo "Services directory not found"
+          fi
+
+      - name: 🧪 Test Docker Compose startup
+        run: |
+          echo "🧪 Testing Docker Compose startup..."
+          
+          # Create minimal .env file for testing
+          cat > .env << EOF
+          REDIS_PASSWORD=test123
+          INFLUXDB_INIT_USERNAME=admin
+          INFLUXDB_INIT_PASSWORD=password123
+          INFLUXDB_INIT_ORG=factory-dashboard
+          INFLUXDB_INIT_BUCKET=factory-data
+          INFLUXDB_INIT_ADMIN_TOKEN=test-token
+          JWT_SECRET=test-jwt-secret-key-that-is-long-enough
+          JWT_REFRESH_SECRET=test-refresh-secret-key-that-is-long-enough
+          GRAFANA_ADMIN_PASSWORD=admin123
+          EOF
+          
+          # Test compose config first
+          if ls docker-compose*.yml 1> /dev/null 2>&1; then
+            docker compose config
+            docker compose up -d --wait
+          else
+            echo "No docker-compose files found, skipping compose test"
+            exit 0
+          fi
+          
+          # Basic health checks
+          sleep 30
+          docker compose ps
+          
+          # Check if services are responding
+          curl -f http://localhost:8086/health || echo "InfluxDB health check failed"
+          
+          # Cleanup
+          if ls docker-compose*.yml 1> /dev/null 2>&1; then
+            docker compose down
+          fi
+          rm -f .env
+
+  # Security and Compliance
+  security-compliance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔐 Check for secrets in configs
+        run: |
+          echo "🔐 Scanning for potential secrets..."
+          
+          # Use grep to find potential secrets (basic check)
+          find . -type f \( -name "*.yml" -o -name "*.yaml" -o -name "*.json" -o -name "*.sh" \) \
+            -not -path "./.git/*" \
+            -not -path "./node_modules/*" | \
+            xargs grep -i "password\|secret\|key\|token" | \
+            grep -v '\\${' | \
+            head -20 || echo "No obvious secrets found"
+
+      - name: 🔍 Compliance checks
+        run: |
+          echo "🔍 Running compliance checks..."
+          
+          # Check for security headers in nginx config
+          if [ -f "nginx/nginx.conf" ]; then
+            echo "Checking nginx security headers..."
+            if grep -q "X-Frame-Options\|X-Content-Type-Options\|X-XSS-Protection" nginx/nginx.conf; then
+              echo "✅ Security headers found in nginx config"
+            else
+              echo "⚠️  No security headers found in nginx config"
+            fi
+          fi

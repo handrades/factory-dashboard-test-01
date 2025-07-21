@@ -19,6 +19,8 @@ describe('LineConfigLoader', () => {
       site: 'mexico',
       type: 'mudguard',
       line: 1,
+      status: 'running',
+      efficiency: 85.5,
       equipment: [
         {
           id: 'oven1',
@@ -42,8 +44,8 @@ describe('LineConfigLoader', () => {
               dataType: 'BOOL',
               value: false,
               behavior: {
-                type: 'discrete',
-                parameters: { values: [true, false], probabilities: [0.1, 0.9] }
+                type: 'stepped',
+                parameters: { stepValues: [true, false], stepDuration: 100 }
               }
             }
           ]
@@ -60,8 +62,8 @@ describe('LineConfigLoader', () => {
               dataType: 'REAL',
               value: 2.5,
               behavior: {
-                type: 'normal',
-                parameters: { mean: 2.5, stddev: 0.1 }
+                type: 'random',
+                parameters: { min: 2.4, max: 2.6 }
               }
             }
           ]
@@ -75,6 +77,8 @@ describe('LineConfigLoader', () => {
       site: 'usa',
       type: 'esm',
       line: 2,
+      status: 'stopped',
+      efficiency: 92.3,
       equipment: [
         {
           id: 'press1',
@@ -89,7 +93,7 @@ describe('LineConfigLoader', () => {
               value: 0,
               behavior: {
                 type: 'constant',
-                parameters: { value: 0 }
+                parameters: { constantValue: 0 }
               }
             }
           ]
@@ -167,8 +171,8 @@ describe('LineConfigLoader', () => {
       expect(doorTag?.name).toBe('Door Status');
       expect(doorTag?.dataType).toBe('BOOL');
       expect(doorTag?.behavior).toEqual({
-        type: 'discrete',
-        parameters: { values: [true, false], probabilities: [0.1, 0.9] }
+        type: 'stepped',
+        parameters: { stepValues: [true, false], stepDuration: 100 }
       });
     });
 
@@ -245,6 +249,8 @@ describe('LineConfigLoader', () => {
             site: 'china',
             type: 'fleece',
             line: 3,
+            status: 'running',
+            efficiency: 88.7,
             equipment: [
               {
                 id: 'assembly1',
@@ -258,8 +264,8 @@ describe('LineConfigLoader', () => {
                     dataType: 'REAL',
                     value: 45,
                     behavior: {
-                      type: 'normal',
-                      parameters: { mean: 45, stddev: 5 }
+                      type: 'random',
+                      parameters: { min: 40, max: 50 }
                     }
                   }
                 ]

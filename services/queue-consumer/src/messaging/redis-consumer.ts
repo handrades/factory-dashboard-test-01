@@ -1,7 +1,7 @@
 import { createClient, RedisClientType } from 'redis';
 import { PLCMessage, ConsumerConfig } from '@factory-dashboard/shared-types';
 import { EventEmitter } from 'events';
-import { createLogger } from 'winston';
+import winston, { createLogger } from 'winston';
 
 export interface RedisConsumerConfig {
   host: string;
@@ -38,13 +38,13 @@ export class RedisConsumer extends EventEmitter {
     this.config = config;
     this.logger = createLogger({
       level: 'info',
-      format: require('winston').format.combine(
-        require('winston').format.timestamp(),
-        require('winston').format.json()
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
       ),
       transports: [
-        new (require('winston').transports.Console)(),
-        new (require('winston').transports.File)({ filename: 'queue-consumer.log' })
+        new winston.transports.Console(),
+        new winston.transports.File({ filename: 'queue-consumer.log' })
       ]
     });
 
@@ -67,7 +67,7 @@ export class RedisConsumer extends EventEmitter {
       this.emit('connected');
     });
 
-    this.client.on('error', (error) => {
+    this.client.on('error', (error: Error) => {
       this.logger.error(`Redis consumer error: ${error}`);
       this.emit('error', error);
     });
@@ -130,8 +130,8 @@ export class RedisConsumer extends EventEmitter {
         { MKSTREAM: true }
       );
       this.logger.info(`Created consumer group ${this.config.consumerGroup} for queue ${queueName}`);
-    } catch (error: any) {
-      if (error.message.includes('BUSYGROUP')) {
+    } catch (error: unknown) {
+      if ((error as Error)?.message?.includes('BUSYGROUP')) {
         this.logger.debug(`Consumer group ${this.config.consumerGroup} already exists for queue ${queueName}`);
       } else {
         throw error;
@@ -172,7 +172,7 @@ export class RedisConsumer extends EventEmitter {
     }
   }
 
-  private async processMessages(streamResults: any[], consumerConfig: ConsumerConfig): Promise<void> {
+  private async processMessages(streamResults: Array<{ name: string; messages: Array<{ id: string; message: Record<string, unknown> }> }>, consumerConfig: ConsumerConfig): Promise<void> {
     for (const streamResult of streamResults) {
       const queueName = streamResult.name;
       const messages = streamResult.messages;
@@ -191,7 +191,7 @@ export class RedisConsumer extends EventEmitter {
   private async processMessage(
     queueName: string,
     messageId: string,
-    messageData: any,
+    messageData: Record<string, unknown>,
     consumerConfig: ConsumerConfig
   ): Promise<void> {
     const startTime = Date.now();
@@ -210,7 +210,7 @@ export class RedisConsumer extends EventEmitter {
       const plcMessage = this.parseMessage(messageData);
       
       // Emit message for processing
-      const processingPromise = new Promise<MessageProcessingResult>((resolve, reject) => {
+      const processingPromise = new Promise<MessageProcessingResult>((resolve) => {
         this.emit('message', plcMessage, (error?: Error) => {
           const processingTime = Date.now() - startTime;
           
@@ -254,10 +254,10 @@ export class RedisConsumer extends EventEmitter {
     }
   }
 
-  private parseMessage(messageData: any): PLCMessage {
+  private parseMessage(messageData: Record<string, unknown>): PLCMessage {
     try {
       const messageJson = messageData.message || messageData;
-      const parsedMessage = JSON.parse(messageJson);
+      const parsedMessage = JSON.parse(messageJson as string);
       
       // Convert timestamp string back to Date
       if (typeof parsedMessage.timestamp === 'string') {

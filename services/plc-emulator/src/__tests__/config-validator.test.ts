@@ -15,6 +15,9 @@ describe('ConfigValidator', () => {
         name: 'Industrial Oven',
         type: 'oven',
         lineId: 'line1',
+        site: 'test_factory',
+        productType: 'test_product',
+        lineNumber: 1,
         currentState: 'running',
         states: [
           {
@@ -73,6 +76,9 @@ describe('ConfigValidator', () => {
         name: 'Industrial Oven',
         type: 'oven',
         lineId: 'line1',
+        site: 'test_factory',
+        productType: 'test_product',
+        lineNumber: 1,
         currentState: 'invalid_state',
         states: [
           {
@@ -107,6 +113,9 @@ describe('ConfigValidator', () => {
         name: 'Industrial Oven',
         type: 'oven',
         lineId: 'line1',
+        site: 'test_factory',
+        productType: 'test_product',
+        lineNumber: 1,
         currentState: 'running',
         states: [
           {

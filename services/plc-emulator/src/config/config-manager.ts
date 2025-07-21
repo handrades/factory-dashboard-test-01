@@ -9,9 +9,9 @@ export interface ConfigTemplate {
   id: string;
   name: string;
   type: string;
-  template: any;
+  template: unknown;
   requiredVariables: string[];
-  defaultValues: Record<string, any>;
+  defaultValues: Record<string, unknown>;
 }
 
 export interface ConfigGenerationParams {
@@ -19,7 +19,7 @@ export interface ConfigGenerationParams {
   equipmentName: string;
   lineId: string;
   equipmentType: 'oven' | 'conveyor' | 'press' | 'assembly' | 'oven-conveyor';
-  customParams?: Record<string, any>;
+  customParams?: Record<string, unknown>;
 }
 
 export interface EnvironmentConfig {
@@ -108,7 +108,7 @@ export class ConfigManager {
     this.logger.info(`Loaded ${this.templates.size} configuration templates`);
   }
 
-  private extractVariables(template: any): string[] {
+  private extractVariables(template: unknown): string[] {
     const variables: Set<string> = new Set();
     const templateStr = JSON.stringify(template);
     const matches = templateStr.match(/\{\{([^}]+)\}\}/g);
@@ -123,8 +123,8 @@ export class ConfigManager {
     return Array.from(variables);
   }
 
-  private getDefaultValues(type: string): Record<string, any> {
-    const defaults: Record<string, Record<string, any>> = {
+  private getDefaultValues(type: string): Record<string, unknown> {
+    const defaults: Record<string, Record<string, unknown>> = {
       oven: {
         DEFAULT_TEMP: 350,
         MIN_TEMP: 300,
@@ -187,7 +187,7 @@ export class ConfigManager {
     return config;
   }
 
-  private substituteVariables(template: string, variables: Record<string, any>): string {
+  private substituteVariables(template: string, variables: Record<string, unknown>): string {
     let result = template;
     
     for (const [key, value] of Object.entries(variables)) {
@@ -316,7 +316,7 @@ export class ConfigManager {
     };
   }
 
-  migrateConfiguration(oldConfigPath: string, newConfigPath: string, migrationRules?: Record<string, any>): void {
+  migrateConfiguration(oldConfigPath: string, newConfigPath: string, migrationRules?: Record<string, unknown>): void {
     try {
       const oldConfig = this.loadConfiguration(oldConfigPath);
       const migratedConfig = this.applyMigrationRules(oldConfig, migrationRules || {});
@@ -331,7 +331,7 @@ export class ConfigManager {
     }
   }
 
-  private applyMigrationRules(config: EquipmentConfig[], rules: Record<string, any>): EquipmentConfig[] {
+  private applyMigrationRules(config: EquipmentConfig[], rules: Record<string, unknown>): EquipmentConfig[] {
     // Apply migration rules to transform old configuration format to new format
     // This is a simplified implementation - real migration would be more complex
     return config.map(equipment => ({
@@ -344,7 +344,7 @@ export class ConfigManager {
     return Array.from(this.templates.values());
   }
 
-  validateAllConfigurations(configDir: string): { valid: EquipmentConfig[]; invalid: { file: string; errors: string[] }[] } {
+  validateAllConfigurations(/* _configDir: string */): { valid: EquipmentConfig[]; invalid: { file: string; errors: string[] }[] } {
     const valid: EquipmentConfig[] = [];
     const invalid: { file: string; errors: string[] }[] = [];
     

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useFactory } from '../context/FactoryContext';
-import { useAuth } from '../contexts/AuthContext';
+import { useFactory } from '../context';
+import { useAuth } from '../hooks/useAuth';
 import { ConnectionStatus } from '../components/ConnectionStatus';
 import { LoginForm } from '../components/Auth/LoginForm';
 import { UserMenu } from '../components/Auth/UserMenu';
@@ -114,7 +114,7 @@ const Dashboard: React.FC = () => {
       )}
       
       {/* Permission Notice */}
-      {isAuthenticated && !hasPermission('dashboard', 'read') && (
+      {isAuthenticated && !hasPermission('dashboard:read') && (
         <div className="permission-notice">
           <div className="notice-content">
             <h3>🔒 Limited Access</h3>

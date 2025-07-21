@@ -1,5 +1,4 @@
 import { PLCTag, EquipmentConfig } from '@factory-dashboard/shared-types';
-import { TagGeneratorFactory } from './tag-generators';
 
 export class OvenTagGenerator {
   static createOvenTags(equipmentId: string): PLCTag[] {

@@ -12,7 +12,7 @@ RUN npm install && npm run build
 # Switch back to app directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files first for better layer caching
 COPY plc-emulator/package*.json ./
 
 # Clear npm cache and install dependencies
@@ -39,11 +39,9 @@ RUN addgroup -g 1001 -S nodejs && \
 # Copy shared-types for production
 COPY --from=builder /shared-types /shared-types
 
-# Copy package files
+# Copy production dependencies from builder stage
+COPY --from=builder /app/node_modules ./node_modules
 COPY plc-emulator/package*.json ./
-
-# Install only production dependencies
-RUN npm install --only=production && npm cache clean --force
 
 # Copy built application
 COPY --from=builder /app/dist ./dist

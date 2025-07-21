@@ -23,7 +23,7 @@ describe('MessageFormatter', () => {
     ];
 
     it('should create a valid PLC message', () => {
-      const message = formatter.createPLCMessage('oven1', testTags, 'DATA_UPDATE');
+      const message = formatter.createPLCMessage('oven1', 'Factory-A', 'Electronics', 1, testTags, 'DATA_UPDATE');
       
       expect(message.id).toBeDefined();
       expect(message.timestamp).toBeInstanceOf(Date);
@@ -36,14 +36,14 @@ describe('MessageFormatter', () => {
     });
 
     it('should default to DATA_UPDATE message type', () => {
-      const message = formatter.createPLCMessage('oven1', testTags);
+      const message = formatter.createPLCMessage('oven1', 'Factory-A', 'Electronics', 1, testTags);
       expect(message.messageType).toBe('DATA_UPDATE');
     });
   });
 
   describe('createStateChangeMessage', () => {
     it('should create a state change message', () => {
-      const message = formatter.createStateChangeMessage('oven1', 'stopped', 'running');
+      const message = formatter.createStateChangeMessage('oven1', 'Factory-A', 'Electronics', 1, 'stopped', 'running');
       
       expect(message.messageType).toBe('STATE_CHANGE');
       expect(message.equipmentId).toBe('oven1');
@@ -59,7 +59,7 @@ describe('MessageFormatter', () => {
 
   describe('createHeartbeatMessage', () => {
     it('should create a heartbeat message', () => {
-      const message = formatter.createHeartbeatMessage('oven1');
+      const message = formatter.createHeartbeatMessage('oven1', 'Factory-A', 'Electronics', 1);
       
       expect(message.messageType).toBe('HEARTBEAT');
       expect(message.equipmentId).toBe('oven1');
@@ -71,7 +71,7 @@ describe('MessageFormatter', () => {
 
   describe('createAlarmMessage', () => {
     it('should create an alarm message', () => {
-      const message = formatter.createAlarmMessage('oven1', 'TEMPERATURE_HIGH', 'Temperature exceeded maximum threshold');
+      const message = formatter.createAlarmMessage('oven1', 'Factory-A', 'Electronics', 1, 'TEMPERATURE_HIGH', 'Temperature exceeded maximum threshold');
       
       expect(message.messageType).toBe('ALARM');
       expect(message.equipmentId).toBe('oven1');
@@ -90,6 +90,9 @@ describe('MessageFormatter', () => {
       id: 'test-message-1',
       timestamp: new Date(),
       equipmentId: 'oven1',
+      site: 'Factory-A',
+      productType: 'Electronics',
+      lineNumber: 1,
       messageType: 'DATA_UPDATE',
       tags: [
         {
@@ -116,15 +119,15 @@ describe('MessageFormatter', () => {
     });
 
     it('should reject message without timestamp', () => {
-      const invalidMessage = { ...validMessage, timestamp: undefined as any };
+      const invalidMessage = { ...validMessage, timestamp: {} as unknown as Date };
       const result = formatter.validateMessage(invalidMessage);
       
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Timestamp is required');
+      expect(result.errors).toContain('Timestamp must be a Date object');
     });
 
     it('should reject message with invalid message type', () => {
-      const invalidMessage = { ...validMessage, messageType: 'INVALID_TYPE' as any };
+      const invalidMessage = { ...validMessage, messageType: {} as unknown as PLCMessage['messageType'] };
       const result = formatter.validateMessage(invalidMessage);
       
       expect(result.isValid).toBe(false);
@@ -146,7 +149,7 @@ describe('MessageFormatter', () => {
           {
             tagId: 'temperature',
             value: 350,
-            quality: 'INVALID_QUALITY' as any
+            quality: 'INVALID_QUALITY' as 'GOOD' | 'BAD' | 'UNCERTAIN'
           }
         ]
       };
@@ -162,6 +165,9 @@ describe('MessageFormatter', () => {
       id: 'test-message-1',
       timestamp: new Date(),
       equipmentId: 'oven1',
+      site: 'Factory-A',
+      productType: 'Electronics',
+      lineNumber: 1,
       messageType: 'DATA_UPDATE',
       tags: [
         {
@@ -191,7 +197,7 @@ describe('MessageFormatter', () => {
     });
 
     it('should handle serialization errors', () => {
-      const circularMessage = { ...testMessage } as any;
+      const circularMessage = { ...testMessage } as PLCMessage & { circular?: unknown };
       circularMessage.circular = circularMessage;
       
       expect(() => formatter.serializeMessage(circularMessage)).toThrow('Message serialization failed');

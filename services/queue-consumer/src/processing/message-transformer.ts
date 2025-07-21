@@ -1,13 +1,13 @@
 import { PLCMessage, DataPoint } from '@factory-dashboard/shared-types';
-import { createLogger } from 'winston';
+import winston, { createLogger } from 'winston';
 
 export interface TransformationRule {
   tagId: string | RegExp;
   measurement: string;
   field: string;
   tags?: Record<string, string>;
-  transform?: (value: any) => any;
-  validate?: (value: any) => boolean;
+  transform?: (value: unknown) => unknown;
+  validate?: (value: unknown) => boolean;
 }
 
 export interface TransformationConfig {
@@ -35,13 +35,13 @@ export class MessageTransformer {
     this.config = config;
     this.logger = createLogger({
       level: 'info',
-      format: require('winston').format.combine(
-        require('winston').format.timestamp(),
-        require('winston').format.json()
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
       ),
       transports: [
-        new (require('winston').transports.Console)(),
-        new (require('winston').transports.File)({ filename: 'message-transformer.log' })
+        new winston.transports.Console(),
+        new winston.transports.File({ filename: 'message-transformer.log' })
       ]
     });
   }
@@ -81,7 +81,7 @@ export class MessageTransformer {
     }
   }
 
-  private async transformTag(message: PLCMessage, tag: any): Promise<DataPoint[]> {
+  private async transformTag(message: PLCMessage, tag: { tagId: string; value: unknown; quality: string }): Promise<DataPoint[]> {
     const dataPoints: DataPoint[] = [];
     
     // Find transformation rule for this tag
@@ -152,7 +152,7 @@ export class MessageTransformer {
       const additionalPoints = this.createDataPointsFromObject(
         measurement,
         baseTags,
-        transformedValue,
+        transformedValue as Record<string, unknown>,
         message.timestamp
       );
       dataPoints.push(...additionalPoints);
@@ -164,7 +164,7 @@ export class MessageTransformer {
   private createDataPointsFromObject(
     measurement: string,
     baseTags: Record<string, string>,
-    obj: any,
+    obj: Record<string, unknown>,
     timestamp: Date,
     prefix: string = ''
   ): DataPoint[] {
@@ -178,7 +178,7 @@ export class MessageTransformer {
         const nestedPoints = this.createDataPointsFromObject(
           measurement,
           baseTags,
-          value,
+          value as Record<string, unknown>,
           timestamp,
           fieldName
         );
@@ -201,9 +201,9 @@ export class MessageTransformer {
   }
 
   private createQualityDataPoint(message: PLCMessage): DataPoint | null {
-    const goodQualityCount = message.tags.filter(t => t.quality === 'GOOD').length;
-    const badQualityCount = message.tags.filter(t => t.quality === 'BAD').length;
-    const uncertainQualityCount = message.tags.filter(t => t.quality === 'UNCERTAIN').length;
+    const goodQualityCount = message.tags.filter((t: PLCMessage['tags'][0]) => t.quality === 'GOOD').length;
+    const badQualityCount = message.tags.filter((t: PLCMessage['tags'][0]) => t.quality === 'BAD').length;
+    const uncertainQualityCount = message.tags.filter((t: PLCMessage['tags'][0]) => t.quality === 'UNCERTAIN').length;
     
     return {
       measurement: 'message_quality',

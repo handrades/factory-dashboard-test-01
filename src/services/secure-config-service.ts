@@ -4,7 +4,7 @@
  */
 
 import { secretManager } from '../security/SecretManager';
-import { InfluxDBServiceConfig } from './influxdb-service';
+import type { InfluxDBServiceConfig } from './influxdb-service';
 
 export interface RedisConfig {
   host: string;
@@ -204,7 +204,7 @@ export class SecureConfigService {
   /**
    * Get configuration summary (without sensitive data)
    */
-  public async getConfigurationSummary(): Promise<any> {
+  public async getConfigurationSummary(): Promise<Record<string, unknown>> {
     if (!this.initialized) {
       await this.initialize();
     }
