@@ -4,7 +4,7 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import './UserMenu.css';
 
 interface UserMenuProps {
@@ -12,7 +12,7 @@ interface UserMenuProps {
 }
 
 export function UserMenu({ className = '' }: UserMenuProps) {
-  const { user, logout, isTokenExpired } = useAuth();
+  const { user, logout, isSessionValid } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -91,7 +91,7 @@ export function UserMenu({ className = '' }: UserMenuProps) {
     return null;
   }
 
-  const isExpired = isTokenExpired();
+  const isExpired = !isSessionValid();
   const primaryRole = user.roles[0] || 'viewer';
 
   return (

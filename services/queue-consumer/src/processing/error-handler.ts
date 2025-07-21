@@ -101,7 +101,7 @@ export class ErrorHandler extends EventEmitter {
         
         return result;
         
-      } catch {
+      } catch (error) {
         lastError = error as Error;
         const processingTime = Date.now() - startTime;
         

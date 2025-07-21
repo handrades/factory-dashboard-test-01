@@ -1,4 +1,4 @@
-import type { Equipment } from '../context/FactoryContext';
+import type { Equipment } from '../context';
 
 export class FallbackDataService {
   private simulationInterval?: number;
@@ -35,22 +35,22 @@ export class FallbackDataService {
 
   private updateSimulatedData(): void {
     const now = Date.now();
-    const elapsed = (now - this.simulatedData.get('last_update')) / 1000;
+    const elapsed = (now - (this.simulatedData.get('last_update') as number || now)) / 1000;
     
     // Update temperature with sinusoidal pattern
-    const tempBase = this.simulatedData.get('temperature_base');
+    const tempBase = this.simulatedData.get('temperature_base') as number || 75;
     const tempVariation = 15 * Math.sin(elapsed * 0.1);
-    this.simulatedData.set('current_temperature', tempBase + tempVariation);
+    this.simulatedData.set('current_temperature', (tempBase as number) + tempVariation);
     
     // Update speed with random variation
-    const speedBase = this.simulatedData.get('speed_base');
+    const speedBase = this.simulatedData.get('speed_base') as number || 2.5;
     const speedVariation = 0.3 * (Math.random() - 0.5);
-    this.simulatedData.set('current_speed', Math.max(0, speedBase + speedVariation));
+    this.simulatedData.set('current_speed', Math.max(0, (speedBase as number) + speedVariation));
     
     // Update pressure with linear trend
-    const pressureBase = this.simulatedData.get('pressure_base');
+    const pressureBase = this.simulatedData.get('pressure_base') as number || 101325;
     const pressureVariation = 20 * Math.sin(elapsed * 0.05) + 10 * (Math.random() - 0.5);
-    this.simulatedData.set('current_pressure', Math.max(0, pressureBase + pressureVariation));
+    this.simulatedData.set('current_pressure', Math.max(0, (pressureBase as number) + pressureVariation));
     
     this.simulatedData.set('last_update', now);
   }
@@ -59,13 +59,13 @@ export class FallbackDataService {
     return equipment.map(eq => ({
       ...eq,
       temperature: eq.type === 'oven' || eq.type === 'oven-conveyor' 
-        ? this.simulatedData.get('current_temperature') || eq.temperature
+        ? (this.simulatedData.get('current_temperature') as number) || eq.temperature
         : eq.temperature,
       speed: eq.type === 'conveyor' || eq.type === 'oven-conveyor'
-        ? this.simulatedData.get('current_speed') || eq.speed
+        ? (this.simulatedData.get('current_speed') as number) || eq.speed
         : eq.speed,
       pressure: eq.type === 'press'
-        ? this.simulatedData.get('current_pressure') || eq.pressure
+        ? (this.simulatedData.get('current_pressure') as number) || eq.pressure
         : eq.pressure,
       status: this.getSimulatedStatus()
     }));

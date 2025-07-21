@@ -449,7 +449,7 @@ export class SecurityLogger {
 
   private sanitizeDetails(details: unknown): Record<string, unknown> {
     // Use SecretManager to mask sensitive data in log details
-    return secretManager.maskSensitiveData(details);
+    return secretManager.maskSensitiveData(details) as Record<string, unknown>;
   }
 
   private generateEventId(): string {

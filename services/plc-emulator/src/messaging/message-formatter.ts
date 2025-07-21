@@ -208,8 +208,8 @@ export class MessageFormatter {
   serializeMessage(message: PLCMessage): string {
     try {
       return JSON.stringify(message);
-    } catch {
-      this.logger.error(`Failed to serialize message: ${error}`);
+    } catch (error) {
+      this.logger.error(`Failed to serialize message: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw new Error('Message serialization failed');
     }
   }
@@ -224,8 +224,8 @@ export class MessageFormatter {
       }
 
       return message;
-    } catch {
-      this.logger.error(`Failed to deserialize message: ${error}`);
+    } catch (error) {
+      this.logger.error(`Failed to deserialize message: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw new Error('Message deserialization failed');
     }
   }

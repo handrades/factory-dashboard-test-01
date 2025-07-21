@@ -9,7 +9,8 @@ import type {
   LoginCredentials, 
   AuthResult, 
   UserRegistrationRequest,
-  PasswordChangeRequest
+  PasswordChangeRequest,
+  Role
 } from '../types/auth-types';
 import { 
   AuthErrorCode,
@@ -362,8 +363,7 @@ export class UserService {
    * Refresh authentication token
    */
   public async refreshToken(
-    refreshToken: string,
-    _ipAddress: string
+    refreshToken: string
   ): Promise<AuthResult> {
     try {
       // Validate refresh token
@@ -600,10 +600,10 @@ export class UserService {
     // This would be more sophisticated in production
     const permissions: string[] = [];
     
-    for (const role of roles) {
-      if (role.name === UserRole.ADMIN) {
+    for (const role of roles as Role[]) {
+      if ((role as Role).name === UserRole.ADMIN) {
         permissions.push(...Object.values(UserPermission));
-      } else if (role.name === UserRole.OPERATOR) {
+      } else if ((role as Role).name === UserRole.OPERATOR) {
         permissions.push(
           UserPermission.VIEW_DASHBOARD,
           UserPermission.VIEW_EQUIPMENT,
@@ -611,7 +611,7 @@ export class UserService {
           UserPermission.VIEW_DATA,
           UserPermission.EXPORT_DATA
         );
-      } else if (role.name === UserRole.VIEWER) {
+      } else if ((role as Role).name === UserRole.VIEWER) {
         permissions.push(
           UserPermission.VIEW_DASHBOARD,
           UserPermission.VIEW_EQUIPMENT,
@@ -623,7 +623,7 @@ export class UserService {
     return [...new Set(permissions)]; // Remove duplicates
   }
 
-  private getDefaultRole(): unknown {
+  private getDefaultRole(): Role {
     return {
       id: 'role_viewer',
       name: UserRole.VIEWER,

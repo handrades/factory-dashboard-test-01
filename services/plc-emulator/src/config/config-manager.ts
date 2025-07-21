@@ -100,7 +100,7 @@ export class ConfigManager {
             defaultValues: this.getDefaultValues(type)
           });
         }
-      } catch {
+      } catch (error) {
         this.logger.error(`Failed to load template for ${type}`, error as Error);
       }
     }
@@ -235,7 +235,7 @@ export class ConfigManager {
       this.logger.info(`Saved configuration to ${filePath}`, undefined, {
         equipmentCount: config.length
       });
-    } catch {
+    } catch (error) {
       this.logger.error(`Failed to save configuration to ${filePath}`, error as Error);
       throw error;
     }
@@ -260,7 +260,7 @@ export class ConfigManager {
       });
       
       return configs;
-    } catch {
+    } catch (error) {
       this.logger.error(`Failed to load configuration from ${filePath}`, error as Error);
       throw error;
     }
@@ -325,7 +325,7 @@ export class ConfigManager {
       this.logger.info(`Migrated configuration from ${oldConfigPath} to ${newConfigPath}`, undefined, {
         equipmentCount: migratedConfig.length
       });
-    } catch {
+    } catch (error) {
       this.logger.error(`Failed to migrate configuration`, error as Error);
       throw error;
     }

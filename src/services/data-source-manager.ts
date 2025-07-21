@@ -1,7 +1,7 @@
 import { InfluxDBService } from './influxdb-service';
 import { FallbackDataService } from './fallback-data-service';
 import { EnvironmentDetectionService } from './environment-detection-service';
-import type { FactoryLine, Equipment } from '../context/FactoryContext';
+import type { FactoryLine, Equipment } from '../context';
 
 export interface ConnectionStatus {
   source: 'influxdb' | 'simulation';
@@ -104,7 +104,7 @@ export class DataSourceManagerImpl implements DataSourceManager {
       }
     } catch (error: unknown) {
       console.error('Failed to switch to InfluxDB:', error);
-      this.connectionStatus.error = error.message;
+      this.connectionStatus.error = error instanceof Error ? error.message : String(error);
     }
 
     this.connectionStatus.retryCount++;

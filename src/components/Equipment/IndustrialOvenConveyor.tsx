@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
-import type { Equipment } from '../../context/FactoryContext';
+import type { Equipment } from '../../context';
 import './IndustrialOvenConveyor.css';
 
 interface IndustrialOvenConveyorProps {

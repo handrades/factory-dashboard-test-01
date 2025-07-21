@@ -1,9 +1,18 @@
 import React, { useState } from 'react';
-import { useFactory } from '../context/FactoryContext';
+import { useFactory, type EnvironmentInfo } from '../context';
 import './ConnectionStatus.css';
 
 interface ConnectionStatusProps {
   detailed?: boolean;
+}
+
+interface DiagnosticInfo {
+  diagnostics: {
+    lastConnectionAttempt: string;
+    consecutiveFailures: number;
+    lastError?: string;
+    errorType?: string;
+  };
 }
 
 export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ detailed = false }) => {
@@ -149,7 +158,7 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ detailed = f
 };
 
 interface ConnectionDetailsProps {
-  environmentInfo: unknown;
+  environmentInfo: EnvironmentInfo;
   dataSource: 'influxdb' | 'simulation';
   lastDataUpdate: Date | null;
   getDataSourceInfo: () => unknown;
@@ -161,11 +170,11 @@ const ConnectionDetails: React.FC<ConnectionDetailsProps> = ({
   lastDataUpdate,
   getDataSourceInfo 
 }) => {
-  const [diagnostics, setDiagnostics] = useState<unknown>(null);
+  const [diagnostics, setDiagnostics] = useState<DiagnosticInfo | null>(null);
 
   React.useEffect(() => {
     const updateDiagnostics = () => {
-      const info = getDataSourceInfo();
+      const info = getDataSourceInfo() as DiagnosticInfo | null;
       setDiagnostics(info);
     };
 

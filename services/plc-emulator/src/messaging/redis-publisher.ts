@@ -72,8 +72,8 @@ export class RedisPublisher extends EventEmitter {
     try {
       await this.client.connect();
       this.logger.info('Successfully connected to Redis');
-    } catch {
-      this.logger.error(`Failed to connect to Redis: ${error}`);
+    } catch (error) {
+      this.logger.error(`Failed to connect to Redis: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw error;
     }
   }
@@ -97,8 +97,8 @@ export class RedisPublisher extends EventEmitter {
       const serializedMessage = JSON.stringify(message);
       await this.client.xAdd(queueName, '*', { message: serializedMessage });
       this.logger.debug(`Published message to stream ${queueName}: ${message.id}`);
-    } catch {
-      this.logger.error(`Failed to publish message: ${error}`);
+    } catch (error) {
+      this.logger.error(`Failed to publish message: ${error instanceof Error ? error.message : 'Unknown error'}`);
       this.bufferMessage(message);
       throw error;
     }
@@ -116,8 +116,8 @@ export class RedisPublisher extends EventEmitter {
         await this.client.xAdd(queueName, '*', { message: serializedMessage });
       }
       this.logger.debug(`Published batch of ${messages.length} messages to stream ${queueName}`);
-    } catch {
-      this.logger.error(`Failed to publish batch: ${error}`);
+    } catch (error) {
+      this.logger.error(`Failed to publish batch: ${error instanceof Error ? error.message : 'Unknown error'}`);
       this.bufferMessages(messages);
       throw error;
     }
@@ -173,8 +173,8 @@ export class RedisPublisher extends EventEmitter {
       }
 
       this.logger.info('Successfully flushed buffered messages');
-    } catch {
-      this.logger.error(`Failed to flush buffered messages: ${error}`);
+    } catch (error: unknown) {
+      this.logger.error(`Failed to flush buffered messages: ${error instanceof Error ? error.message : error}`);
       // Put messages back in buffer for retry
       this.messageBuffer.unshift(...messagesToFlush);
     }
@@ -193,8 +193,8 @@ export class RedisPublisher extends EventEmitter {
       this.logger.info(`Attempting to reconnect (attempt ${this.retryAttempts}/${this.config.maxRetries})`);
       try {
         await this.connect();
-      } catch {
-        this.logger.error(`Reconnection attempt failed: ${error}`);
+      } catch (error: unknown) {
+        this.logger.error(`Reconnection attempt failed: ${error instanceof Error ? error.message : error}`);
         this.scheduleReconnect();
       }
     }, delay);

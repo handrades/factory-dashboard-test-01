@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import { ProtectedRoute } from '../Auth/ProtectedRoute';
 import './SecurityMonitoringDashboard.css';
 
@@ -325,7 +325,7 @@ export const SecurityMonitoringDashboard: React.FC = () => {
                         <span className={`status-indicator ${event.resolved ? 'resolved' : 'unresolved'}`}>
                           {event.resolved ? '✅ Resolved' : '🔴 Unresolved'}
                         </span>
-                        {hasPermission('security', 'manage') && !event.resolved && (
+                        {hasPermission('security:manage') && !event.resolved && (
                           <button className="resolve-btn">
                             Mark as Resolved
                           </button>

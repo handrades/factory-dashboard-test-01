@@ -63,8 +63,7 @@ export class RBACService {
     userContext: UserContext,
     resource: string,
     action: string,
-    resourceId?: string,
-    ipAddress?: string
+    resourceId?: string
   ): AccessControlResult {
     try {
       // Get access rules for resource
@@ -85,7 +84,7 @@ export class RBACService {
           userPermissions: userContext.permissions
         };
 
-        this.logAuthorizationEvent(userContext, resource, action, generalPermission, result.granted, ipAddress);
+        this.logAuthorizationEvent(userContext, resource, action, generalPermission, result.granted);
         return result;
       }
 
@@ -102,7 +101,7 @@ export class RBACService {
           userPermissions: userContext.permissions
         };
 
-        this.logAuthorizationEvent(userContext, resource, action, applicableRule.requiredPermissions.join(', '), false, ipAddress);
+        this.logAuthorizationEvent(userContext, resource, action, applicableRule.requiredPermissions.join(', '), false);
         return result;
       }
 
@@ -117,7 +116,7 @@ export class RBACService {
             userPermissions: userContext.permissions
           };
 
-          this.logAuthorizationEvent(userContext, resource, action, 'conditions', false, ipAddress);
+          this.logAuthorizationEvent(userContext, resource, action, 'conditions', false);
           return result;
         }
       }
@@ -129,10 +128,10 @@ export class RBACService {
         userPermissions: userContext.permissions
       };
 
-      this.logAuthorizationEvent(userContext, resource, action, applicableRule.requiredPermissions.join(', '), true, ipAddress);
+      this.logAuthorizationEvent(userContext, resource, action, applicableRule.requiredPermissions.join(', '), true);
       return result;
 
-    } catch {
+    } catch (error) {
       console.error('Permission check failed:', error);
       
       const result: AccessControlResult = {
@@ -141,7 +140,7 @@ export class RBACService {
         userPermissions: userContext.permissions
       };
 
-      this.logAuthorizationEvent(userContext, resource, action, 'error', false, ipAddress);
+      this.logAuthorizationEvent(userContext, resource, action, 'error', false);
       return result;
     }
   }
@@ -216,37 +215,45 @@ export class RBACService {
       customCheck?: (userContext: UserContext) => boolean;
     } = {}
   ) {
-    return (req: unknown, res: unknown, next: unknown) => {
+    return (req: { userContext?: UserContext; [key: string]: unknown }, res: { status?: (code: number) => { json: (data: unknown) => void } }, next: (() => void) | undefined) => {
       const userContext = req.userContext as UserContext;
-      const ipAddress = req.ip || req.connection.remoteAddress;
 
       if (!userContext) {
-        return res.status(401).json({
-          error: 'Authentication required',
-          code: AuthErrorCode.TOKEN_INVALID
-        });
+        if (res.status) {
+          return res.status(401).json({
+            error: 'Authentication required',
+            code: AuthErrorCode.TOKEN_INVALID
+          });
+        }
+        return;
       }
 
       // Custom check if provided
       if (options.customCheck && !options.customCheck(userContext)) {
-        return res.status(403).json({
-          error: 'Access denied',
-          code: AuthErrorCode.INSUFFICIENT_PERMISSIONS
-        });
+        if (res.status) {
+          return res.status(403).json({
+            error: 'Access denied',
+            code: AuthErrorCode.INSUFFICIENT_PERMISSIONS
+          });
+        }
+        return;
       }
 
       // Permission check
-      const accessResult = this.hasPermission(userContext, resource, action, undefined, ipAddress);
+      const accessResult = this.hasPermission(userContext, resource, action, undefined);
       
       if (!accessResult.granted) {
-        return res.status(403).json({
-          error: accessResult.reason || 'Insufficient permissions',
-          code: AuthErrorCode.INSUFFICIENT_PERMISSIONS,
-          requiredPermissions: accessResult.requiredPermissions
-        });
+        if (res.status) {
+          return res.status(403).json({
+            error: accessResult.reason || 'Insufficient permissions',
+            code: AuthErrorCode.INSUFFICIENT_PERMISSIONS,
+            requiredPermissions: accessResult.requiredPermissions
+          });
+        }
+        return;
       }
 
-      next();
+      if (next) next();
     };
   }
 
@@ -532,8 +539,7 @@ export class RBACService {
     resource: string,
     action: string,
     permission: string,
-    granted: boolean,
-    _ipAddress?: string
+    granted: boolean
   ): void {
     securityLogger.logAuthorizationEvent({
       userId: userContext.id,

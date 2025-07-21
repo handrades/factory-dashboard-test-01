@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import type { LoginCredentials } from '../../types/auth-types';
 import { AuthErrorCode } from '../../types/auth-types';
 import './LoginForm.css';
@@ -57,16 +57,15 @@ export function LoginForm({ onSuccess, redirectTo }: LoginFormProps) {
     }
 
     try {
-      const result = await login(credentials);
+      await login(credentials);
       
-      if (result.success) {
-        console.log('Login successful');
-        onSuccess?.();
-        
-        // Redirect if specified
-        if (redirectTo) {
-          window.location.href = redirectTo;
-        }
+      // If we reach here without error, login was successful
+      console.log('Login successful');
+      onSuccess?.();
+      
+      // Redirect if specified
+      if (redirectTo) {
+        window.location.href = redirectTo;
       }
       // Error handling is managed by the AuthContext
     } catch (error) {

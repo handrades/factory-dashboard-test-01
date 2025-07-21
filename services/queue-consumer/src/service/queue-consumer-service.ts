@@ -177,7 +177,7 @@ export class QueueConsumerService extends EventEmitter {
       this.logger.info('Queue Consumer Service started successfully');
       this.emit('started');
       
-    } catch {
+    } catch (error) {
       this.logger.error(`Failed to start service: ${error}`);
       this.emit('startError', error);
       throw error;
@@ -233,7 +233,7 @@ export class QueueConsumerService extends EventEmitter {
       this.logger.debug(`Successfully processed message ${message.id} in ${processingTime}ms`);
       callback();
       
-    } catch {
+    } catch (error) {
       this.metrics.messagesFailedProcessing++;
       this.logger.error(`Failed to process message ${message.id}: ${error}`);
       callback(error as Error);
@@ -291,7 +291,7 @@ export class QueueConsumerService extends EventEmitter {
       await this.stop();
       clearTimeout(shutdownTimeout);
       process.exit(0);
-    } catch {
+    } catch (error) {
       this.logger.error(`Error during shutdown: ${error}`);
       clearTimeout(shutdownTimeout);
       process.exit(1);

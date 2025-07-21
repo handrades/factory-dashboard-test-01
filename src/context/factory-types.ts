@@ -1,3 +1,12 @@
+export interface EnvironmentInfo {
+  environment: 'github-pages' | 'docker' | 'development';
+  dataSource: 'influxdb' | 'simulation';
+  shouldUseInfluxDB: boolean;
+  isProduction: boolean;
+  showConnectionErrors: boolean;
+  influxDBUrl?: string;
+}
+
 export interface Equipment {
   id: string;
   name: string;
@@ -24,7 +33,7 @@ export interface FactoryContextType {
   isUsingFallbackData: boolean;
   connectionStatus: 'connected' | 'connecting' | 'disconnected' | 'error';
   dataSource: 'influxdb' | 'simulation';
-  environmentInfo: unknown;
+  environmentInfo: EnvironmentInfo;
   lastDataUpdate: Date | null;
   forceReconnect: () => Promise<boolean>;
   forceClearCache: () => void;

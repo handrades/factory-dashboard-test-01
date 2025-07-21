@@ -62,7 +62,7 @@ export class PasswordManager {
       const hashedPassword = await hash(password, salt);
       
       return hashedPassword;
-    } catch {
+    } catch (error) {
       console.error('Password hashing failed:', error);
       throw new Error('Failed to hash password');
     }
@@ -74,7 +74,7 @@ export class PasswordManager {
   public async verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
     try {
       return await compare(password, hashedPassword);
-    } catch {
+    } catch (error) {
       console.error('Password verification failed:', error);
       return false;
     }

@@ -38,7 +38,7 @@ export class DynamicQueueDiscovery {
 
       this.logger.info(`Discovered ${queueNames.length} queue names from ${lineFiles.length} line configurations`);
       return queueNames;
-    } catch {
+    } catch (error) {
       this.logger.error(`Failed to discover queue names: ${error}`);
       throw error;
     }
@@ -53,7 +53,7 @@ export class DynamicQueueDiscovery {
       
       this.logger.info(`Found ${lineFiles.length} line configuration files in ${this.configDirectory}`);
       return lineFiles;
-    } catch {
+    } catch (error) {
       this.logger.error(`Failed to read config directory: ${error}`);
       throw error;
     }
@@ -66,7 +66,7 @@ export class DynamicQueueDiscovery {
       
       this.logger.debug(`Loaded line config: ${lineConfig.name} (Line ${lineConfig.line})`);
       return lineConfig;
-    } catch {
+    } catch (error) {
       this.logger.error(`Failed to load line config from ${filePath}: ${error}`);
       throw error;
     }

@@ -4,6 +4,7 @@
  */
 
 import type { RateLimitInfo } from '../types/auth-types';
+import { SecuritySeverity } from '../types/auth-types';
 import { securityLogger } from './security-logger';
 
 export interface RateLimitConfig {
@@ -162,7 +163,7 @@ export class RateLimiter {
       securityLogger.logSecurityViolationEvent({
         violationType: 'rate_limit_exceeded',
         description: `Rate limit exceeded for ${configName}`,
-        riskLevel: 'medium' as unknown,
+        riskLevel: SecuritySeverity.MEDIUM,
         automaticResponse: 'Request blocked',
         additionalContext: {
           configName,
@@ -292,20 +293,22 @@ export class RateLimiter {
     skipFailedRequests?: boolean;
     onLimitReached?: (req: unknown, res: unknown, info: RateLimitInfo) => void;
   } = {}) {
-    return (req: unknown, res: unknown, next: unknown) => {
+    return (req: { ip?: string; connection?: { remoteAddress?: string }; [key: string]: unknown }, res: { set?: (headers: Record<string, string>) => void; status?: (code: number) => { json: (data: unknown) => void } }, next: (() => void) | undefined) => {
       const identifier = options.keyGenerator ? 
         options.keyGenerator(req) : 
-        req.ip || req.connection.remoteAddress || 'unknown';
+        req.ip || req.connection?.remoteAddress || 'unknown';
 
       const result = this.isAllowed(configName, identifier);
 
       // Add rate limit headers
-      res.set({
+      if (res.set) {
+        res.set({
         'X-RateLimit-Limit': result.info.maxRequests.toString(),
         'X-RateLimit-Remaining': Math.max(0, result.info.maxRequests - result.info.requestCount).toString(),
         'X-RateLimit-Reset': Math.ceil(result.info.resetTime.getTime() / 1000).toString(),
         'X-RateLimit-Window': result.info.windowDuration.toString()
-      });
+        });
+      }
 
       if (!result.allowed) {
         // Call custom handler if provided
@@ -315,7 +318,8 @@ export class RateLimiter {
         }
 
         // Default response
-        res.status(429).json({
+        if (res.status) {
+          res.status(429).json({
           error: 'Too Many Requests',
           message: 'Rate limit exceeded. Please try again later.',
           retryAfter: Math.ceil((result.info.resetTime.getTime() - Date.now()) / 1000),
@@ -323,10 +327,11 @@ export class RateLimiter {
           remaining: 0,
           resetTime: result.info.resetTime.toISOString()
         });
+        }
         return;
       }
 
-      next();
+      if (next) next();
     };
   }
 
@@ -403,7 +408,7 @@ rateLimiter.configure('login', {
   windowMs: 15 * 60 * 1000, // 15 minutes
   maxRequests: 5, // 5 attempts per 15 minutes
   skipSuccessfulRequests: true,
-  onLimitReached: (identifier, _info) => {
+  onLimitReached: (identifier) => {
     console.log(`🚨 Login rate limit exceeded for: ${identifier}`);
   }
 });
@@ -411,7 +416,7 @@ rateLimiter.configure('login', {
 rateLimiter.configure('api', {
   windowMs: 15 * 60 * 1000, // 15 minutes
   maxRequests: 100, // 100 requests per 15 minutes
-  onLimitReached: (identifier, _info) => {
+  onLimitReached: (identifier) => {
     console.log(`🚨 API rate limit exceeded for: ${identifier}`);
   }
 });
@@ -419,7 +424,7 @@ rateLimiter.configure('api', {
 rateLimiter.configure('password_reset', {
   windowMs: 60 * 60 * 1000, // 1 hour
   maxRequests: 3, // 3 attempts per hour
-  onLimitReached: (identifier, _info) => {
+  onLimitReached: (identifier) => {
     console.log(`🚨 Password reset rate limit exceeded for: ${identifier}`);
   }
 });

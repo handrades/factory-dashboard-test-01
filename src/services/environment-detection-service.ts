@@ -14,7 +14,7 @@ export interface EnvironmentConfig {
 }
 
 export class EnvironmentDetectionService {
-  private static instance: EnvironmentDetectionService;
+  private static instance: EnvironmentDetectionService | null = null;
   private config: EnvironmentConfig | null = null;
 
   private constructor() {}
@@ -191,6 +191,6 @@ export class EnvironmentDetectionService {
     if (EnvironmentDetectionService.instance) {
       EnvironmentDetectionService.instance.config = null;
     }
-    EnvironmentDetectionService.instance = null as unknown;
+    EnvironmentDetectionService.instance = null;
   }
 }

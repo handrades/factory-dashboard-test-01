@@ -3,7 +3,7 @@
  * Handles JWT token generation, validation, and refresh
  */
 
-import { sign, verify, JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
+import { sign, verify, JsonWebTokenError, TokenExpiredError, type SignOptions } from 'jsonwebtoken';
 import { randomBytes } from 'crypto';
 import type { UserContext } from '../types/auth-types';
 import { AuthErrorCode } from '../types/auth-types';
@@ -22,9 +22,18 @@ export interface JWTPayload {
   aud: string;
 }
 
+export interface RefreshTokenPayload {
+  tokenId: string;
+  type: 'refresh';
+  iat: number;
+  exp: number;
+  iss: string;
+  aud: string;
+}
+
 export interface TokenValidationResult {
   valid: boolean;
-  payload?: JWTPayload;
+  payload?: JWTPayload | RefreshTokenPayload;
   error?: string;
   errorCode?: AuthErrorCode;
 }
@@ -102,11 +111,11 @@ export class JWTManager {
       aud: audience
     };
 
-    const signOptions: any = {
-      expiresIn: expiresIn,
-      issuer: issuer,
-      audience: audience
-    };
+    const signOptions = {
+      expiresIn,
+      issuer,
+      audience
+    } as SignOptions;
     
     return sign(payload, this.jwtSecret, signOptions);
   }
@@ -124,11 +133,11 @@ export class JWTManager {
       iat: Math.floor(Date.now() / 1000)
     };
 
-    const signOptions: any = {
+    const signOptions = {
       expiresIn: this.refreshExpiration,
       issuer: this.issuer,
       audience: this.audience
-    };
+    } as SignOptions;
     
     return sign(payload, this.refreshSecret, signOptions);
   }
@@ -201,7 +210,7 @@ export class JWTManager {
       const payload = verify(token, this.refreshSecret, {
         issuer: this.issuer,
         audience: this.audience
-      }) as unknown;
+      }) as RefreshTokenPayload;
 
       if (payload.type !== 'refresh') {
         return {
@@ -249,6 +258,11 @@ export class JWTManager {
     }
 
     const payload = validation.payload;
+    
+    // Type guard to ensure we have a JWTPayload (not RefreshTokenPayload)
+    if (!('userId' in payload)) {
+      return null;
+    }
     
     return {
       id: payload.userId,

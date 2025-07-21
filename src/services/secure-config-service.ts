@@ -61,7 +61,7 @@ export class SecureConfigService {
       await secretManager.initialize();
       this.initialized = true;
       console.log('✅ SecureConfigService initialized successfully');
-    } catch {
+    } catch (error) {
       console.error('❌ Failed to initialize SecureConfigService:', error);
       throw new Error('SecureConfigService initialization failed');
     }
@@ -195,7 +195,7 @@ export class SecureConfigService {
 
       console.log('✅ All configurations validated successfully');
       return true;
-    } catch {
+    } catch (error) {
       console.error('❌ Configuration validation failed:', error);
       return false;
     }

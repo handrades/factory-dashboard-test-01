@@ -93,8 +93,8 @@ export class XSSProtection {
         removed,
         modified
       };
-    } catch {
-      console.error('HTML sanitization failed:', error);
+    } catch (err) {
+      console.error('HTML sanitization failed:', err);
       // Return empty string as fallback for security
       return {
         sanitized: '',
@@ -310,7 +310,7 @@ export class XSSProtection {
       return obj.map(item => this.removePrototypePollution(item));
     }
 
-    const cleaned: unknown = {};
+    const cleaned: Record<string, unknown> = {};
     const dangerousKeys = ['__proto__', 'constructor', 'prototype'];
 
     for (const [key, value] of Object.entries(obj)) {

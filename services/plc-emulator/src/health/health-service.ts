@@ -39,7 +39,7 @@ export class HealthService {
     // Health check endpoint
     this.app.get('/health', async (req, res) => {
       const correlationId = req.headers['x-correlation-id'] as string;
-      const timer = this.logger.createTimer('health_check', correlationId);
+      const timer = this.logger.createTimer('health_check') as { done: () => void };
       
       try {
         const healthStatus = await this.getHealthStatus();
@@ -48,20 +48,20 @@ export class HealthService {
         
         res.status(statusCode).json(healthStatus);
         
-        this.logger.info('Health check completed', { correlationId }, {
+        this.logger.info('Health check completed', {
+          correlationId,
           status: healthStatus.status,
           checksCount: healthStatus.checks.length
         });
         
-        timer();
-      } catch {
+        timer.done();
+      } catch (error: unknown) {
         this.logger.error('Health check failed', error as Error, { correlationId });
         res.status(500).json({
-          status: 'unhealthy',
-          message: 'Health check failed',
-          timestamp: new Date()
+          status: 'error',
+          message: error instanceof Error ? error.message : 'Unknown error'
         });
-        timer();
+        timer.done();
       }
     });
 
@@ -86,7 +86,7 @@ export class HealthService {
           ready,
           checksCount: checks.length
         });
-      } catch {
+      } catch (error: unknown) {
         this.logger.error('Readiness check failed', error as Error, { correlationId });
         res.status(500).json({
           ready: false,
@@ -124,7 +124,7 @@ export class HealthService {
         }
         
         this.logger.debug('Metrics exported', { correlationId }, { format });
-      } catch {
+      } catch (error: unknown) {
         this.logger.error('Metrics export failed', error as Error, { correlationId });
         res.status(500).json({ error: 'Metrics export failed' });
       }
@@ -195,7 +195,7 @@ export class HealthService {
           ...result,
           duration
         });
-      } catch {
+      } catch (error) {
         checks.push({
           name,
           status: 'unhealthy',

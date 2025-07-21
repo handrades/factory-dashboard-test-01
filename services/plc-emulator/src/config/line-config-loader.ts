@@ -3,6 +3,7 @@ import { resolve, join } from 'path';
 import { EventEmitter } from 'events';
 import { EquipmentConfig, LineConfig } from '@factory-dashboard/shared-types';
 import { createLogger } from 'winston';
+import * as winston from 'winston';
 
 export interface LineConfigLoaderOptions {
   configDirectory: string;
@@ -51,7 +52,7 @@ export class LineConfigLoader extends EventEmitter {
       }
 
       return allEquipmentConfigs;
-    } catch {
+    } catch (error) {
       this.logger.error(`Failed to load line configurations: ${error}`);
       throw error;
     }
@@ -66,7 +67,7 @@ export class LineConfigLoader extends EventEmitter {
       
       this.logger.info(`Found ${lineFiles.length} line configuration files`);
       return lineFiles;
-    } catch {
+    } catch (error) {
       this.logger.error(`Failed to read config directory: ${error}`);
       throw error;
     }
@@ -79,7 +80,7 @@ export class LineConfigLoader extends EventEmitter {
       
       this.logger.debug(`Loaded line config: ${lineConfig.name} (Line ${lineConfig.line})`);
       return lineConfig;
-    } catch {
+    } catch (error) {
       this.logger.error(`Failed to load line config from ${filePath}: ${error}`);
       throw error;
     }
@@ -93,7 +94,7 @@ export class LineConfigLoader extends EventEmitter {
       const equipmentConfig: EquipmentConfig = {
         id: equipment.id,
         name: equipment.name,
-        type: equipment.type as unknown,
+        type: equipment.type as "oven" | "conveyor" | "press" | "assembly" | "oven-conveyor",
         lineId: `line${lineConfig.line}`,
         site: lineConfig.site,
         productType: lineConfig.type,
@@ -109,7 +110,7 @@ export class LineConfigLoader extends EventEmitter {
           quality: 'GOOD' as const,
           behavior: tag.behavior
         })),
-        states: this.generateDefaultStates(equipment.type, equipment.status),
+        states: this.generateDefaultStates(equipment.type),
         currentState: equipment.status
       };
 
@@ -182,7 +183,7 @@ export class LineConfigLoader extends EventEmitter {
       const newConfigs = await this.loadConfiguration();
       this.emit('configReloaded', newConfigs);
       this.logger.info('Line configurations reloaded successfully');
-    } catch {
+    } catch (error) {
       this.emit('configError', error);
       this.logger.error(`Failed to reload line configurations: ${error}`);
     }

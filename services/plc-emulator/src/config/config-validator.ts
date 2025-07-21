@@ -1,10 +1,10 @@
-import Ajv from 'ajv';
+import Ajv, { ValidateFunction } from 'ajv';
 import { EquipmentConfig } from '@factory-dashboard/shared-types';
 import equipmentConfigSchema from '../schemas/equipment-config.schema.json';
 
 export class ConfigValidator {
   private ajv: Ajv;
-  private validateEquipmentConfig: unknown;
+  private validateEquipmentConfig: ValidateFunction;
 
   constructor() {
     this.ajv = new Ajv({ allErrors: true });
@@ -12,19 +12,20 @@ export class ConfigValidator {
   }
 
   validateEquipment(config: unknown): { isValid: boolean; errors: string[] } {
-    const isValid = this.validateEquipmentConfig(config);
+    const isValid = this.validateEquipmentConfig(config) as boolean;
     
     if (!isValid) {
-      const errors = this.validateEquipmentConfig.errors?.map(error => {
-        const instancePath = error.instancePath || 'root';
+      const validationErrors = (this.validateEquipmentConfig.errors || []).map(error => {
+        const instancePath = error.instancePath || '';
         const message = error.message || 'Unknown error';
         return `${instancePath}: ${message}`;
-      }) || [];
-      
-      return { isValid: false, errors };
+      });
+      return { isValid: false, errors: validationErrors };
     }
-
-    const customErrors = this.performCustomValidation(config);
+    
+    // If schema validation passed, we can safely cast to EquipmentConfig
+    const equipmentConfig = config as EquipmentConfig;
+    const customErrors = this.performCustomValidation(equipmentConfig);
     return { 
       isValid: customErrors.length === 0, 
       errors: customErrors 

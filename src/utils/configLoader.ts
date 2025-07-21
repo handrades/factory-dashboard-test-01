@@ -1,4 +1,4 @@
-import type { FactoryLine, Equipment } from '../context/FactoryContext';
+import type { FactoryLine, Equipment } from '../context';
 
 interface ConfigEquipment {
   id: string;

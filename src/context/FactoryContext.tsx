@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { loadProductionLines } from '../utils/configLoader';
 import { getDataSourceManager } from '../services/data-source-manager';
 import { EnvironmentDetectionService } from '../services/environment-detection-service';
@@ -45,7 +45,7 @@ const FactoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) 
     return dataSourceManager.getDataSourceInfo();
   };
 
-  const updateConnectionState = () => {
+  const updateConnectionState = useCallback(() => {
     const connStatus = dataSourceManager.getConnectionStatus();
     const currentSource = dataSourceManager.currentSource;
     
@@ -58,9 +58,9 @@ const FactoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) 
     } else {
       setConnectionStatus('disconnected');
     }
-  };
+  }, [dataSourceManager]);
 
-  const updateData = async () => {
+  const updateData = useCallback(async () => {
     try {
       const updatedLines = await dataSourceManager.getCurrentData(lines);
       setLines(updatedLines);
@@ -72,7 +72,7 @@ const FactoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) 
       console.error('Error updating factory data:', error);
       updateConnectionState();
     }
-  };
+  }, [lines, updateConnectionState, dataSourceManager]);
 
   // Initialize environment and data source
   useEffect(() => {

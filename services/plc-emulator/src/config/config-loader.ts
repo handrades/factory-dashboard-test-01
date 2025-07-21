@@ -4,6 +4,7 @@ import { EventEmitter } from 'events';
 import { EquipmentConfig } from '@factory-dashboard/shared-types';
 import { ConfigValidator } from './config-validator';
 import { createLogger } from 'winston';
+import * as winston from 'winston';
 
 export interface ConfigLoaderOptions {
   configPath: string;
@@ -65,7 +66,7 @@ export class ConfigLoader extends EventEmitter {
       }
       
       return validatedConfigs;
-    } catch {
+    } catch (error) {
       this.logger.error(`Failed to load configuration: ${error}`);
       throw error;
     }
@@ -92,7 +93,7 @@ export class ConfigLoader extends EventEmitter {
       const newConfig = await this.loadConfiguration();
       this.emit('configReloaded', newConfig);
       this.logger.info('Configuration reloaded successfully');
-    } catch {
+    } catch (error) {
       this.emit('configError', error);
       this.logger.error(`Failed to reload configuration: ${error}`);
     }

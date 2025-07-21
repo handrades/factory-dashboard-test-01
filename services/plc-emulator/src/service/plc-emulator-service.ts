@@ -122,7 +122,7 @@ export class PLCEmulatorService extends EventEmitter {
       this.logger.info('PLC Emulator Service started successfully');
       this.emit('started');
       
-    } catch {
+    } catch (error) {
       this.logger.error(`Failed to start service: ${error}`);
       this.emit('startError', error);
       throw error;
@@ -248,7 +248,7 @@ export class PLCEmulatorService extends EventEmitter {
         await this.publishMessage(message);
       }
       
-    } catch {
+    } catch (error) {
       this.logger.error(`Error during update: ${error}`);
       this.emit('updateError', error);
     }
@@ -272,7 +272,7 @@ export class PLCEmulatorService extends EventEmitter {
         );
         await this.publishMessage(heartbeatMessage);
       }
-    } catch {
+    } catch (error) {
       this.logger.error(`Error sending heartbeats: ${error}`);
     }
   }
@@ -291,7 +291,7 @@ export class PLCEmulatorService extends EventEmitter {
       
       this.messagesPublished++;
       
-    } catch {
+    } catch (error) {
       this.logger.error(`Failed to publish message: ${error}`);
     }
   }
@@ -329,7 +329,7 @@ export class PLCEmulatorService extends EventEmitter {
       await this.stop();
       clearTimeout(shutdownTimeout);
       process.exit(0);
-    } catch {
+    } catch (error) {
       this.logger.error(`Error during shutdown: ${error}`);
       clearTimeout(shutdownTimeout);
       process.exit(1);
@@ -369,7 +369,7 @@ export class PLCEmulatorService extends EventEmitter {
       simulator.forceStateTransition(stateName);
       this.logger.info(`Forced state transition for ${equipmentId} to ${stateName}`);
       return true;
-    } catch {
+    } catch (error) {
       this.logger.error(`Failed to force state transition: ${error}`);
       return false;
     }
