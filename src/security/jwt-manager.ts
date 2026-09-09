@@ -5,7 +5,7 @@
 
 import { sign, verify, JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 import { randomBytes } from 'crypto';
-import type { UserContext, AuthToken } from '../types/auth-types';
+import type { UserContext } from '../types/auth-types';
 import { AuthErrorCode } from '../types/auth-types';
 import { secretManager } from './SecretManager';
 
@@ -98,11 +98,11 @@ export class JWTManager {
       aud: audience
     };
 
-    return sign(payload, this.jwtSecret, {
+    return sign(payload, this.jwtSecret as any, {
       expiresIn,
       issuer,
       audience
-    });
+    } as any);
   }
 
   /**
@@ -115,11 +115,11 @@ export class JWTManager {
       iat: Math.floor(Date.now() / 1000)
     };
 
-    return sign(payload, this.refreshSecret, {
+    return sign(payload, this.refreshSecret as any, {
       expiresIn: this.refreshExpiration,
       issuer: this.issuer,
       audience: this.audience
-    });
+    } as any);
   }
 
   /**

@@ -3,14 +3,12 @@
  * Handles authorization, permissions, and access control
  */
 
-import { 
-  UserContext, 
-  Role, 
-  Permission as PermissionType,
-  UserRole,
+import {
+  AuthErrorCode,
   Permission as UserPermission,
-  AuthErrorCode
+  UserRole
 } from '../types/auth-types';
+import type { UserContext } from '../types/auth-types';
 import { securityLogger } from './security-logger';
 
 export interface AccessControlResult {
@@ -533,7 +531,7 @@ export class RBACService {
     action: string,
     permission: string,
     granted: boolean,
-    ipAddress?: string
+    _ipAddress?: string
   ): void {
     securityLogger.logAuthorizationEvent({
       userId: userContext.id,

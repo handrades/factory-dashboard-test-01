@@ -27,8 +27,8 @@ export class DataSourceManagerImpl implements DataSourceManager {
   private environmentService: EnvironmentDetectionService;
   private _currentSource: 'influxdb' | 'simulation' = 'simulation';
   private connectionStatus: ConnectionStatus;
-  private healthCheckInterval: number | null = null;
-  private backgroundRetryInterval: number | null = null;
+  private healthCheckInterval: ReturnType<typeof setInterval> | null = null;
+  private backgroundRetryInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
     this.environmentService = EnvironmentDetectionService.getInstance();

@@ -1,6 +1,5 @@
 // Browser-compatible InfluxDB Query Builder
 export class InfluxQueryBuilder {
-  private allowedTimeUnits = ['s', 'm', 'h', 'd', 'w'];
   private allowedFunctions = ['mean', 'sum', 'count', 'min', 'max', 'first', 'last'];
   private allowedMeasurements = [
     'temperature', 'conveyor_speed', 'hydraulic_pressure', 
@@ -11,10 +10,6 @@ export class InfluxQueryBuilder {
     'value', 'enabled', 'open', 'current_state', 'quality_ratio',
     'heartbeat', 'pressure', 'speed', 'temperature'
   ];
-  private allowedColumns = [
-    'equipment_id', 'line_id', '_measurement', '_field', '_time', '_value'
-  ];
-
   validateIdentifier(identifier: string, allowedValues: string[] | null = null): string {
     if (!identifier || typeof identifier !== 'string') {
       throw new Error('Identifier must be a non-empty string');
